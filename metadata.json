@@ -1,0 +1,6 @@
+{
+  "name": "Central de Auditoria e Handoffs",
+  "description": "Central de governança, auditoria independente e orquestração de handoffs multiagente para qualquer repositório.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
