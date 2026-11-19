@@ -1,4 +1,5 @@
 import { GoogleGenAI, ThinkingLevel, Type, type Content, type FunctionDeclaration } from '@google/genai';
+import { getDb } from './db';
 import { OFFICIAL_AGENTS } from '../src/data/agentsRoster';
 import type {
   AgentBotMessage,
@@ -23,10 +24,19 @@ import {
 const MODEL_ID = 'gemini-4-hydrogen';
 
 function getGeminiClient(): GoogleGenAI {
-  const apiKey = process.env.GEMINI_API_KEY;
+  // Prioridade: env → config salva em Conexões de IA (SQLite local).
+  let apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    try {
+      const row = getDb()
+        .prepare("SELECT config FROM provider_configs WHERE provider_id = 'gemini'")
+        .get() as { config: string } | undefined;
+      apiKey = row ? (JSON.parse(row.config) as { apiKey?: string }).apiKey : undefined;
+    } catch { /* db indisponível */ }
+  }
   if (!apiKey) {
     throw new Error(
-      'GEMINI_API_KEY não configurada. Configure a chave no painel Settings > Secrets para executar agentes autônomos.'
+      'GEMINI_API_KEY não configurada. Configure a chave no painel Conexões de IA ou em Settings > Secrets para executar agentes autônomos.'
     );
   }
   return new GoogleGenAI({

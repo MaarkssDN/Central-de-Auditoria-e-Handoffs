@@ -3,7 +3,10 @@ import {
   ArrowLeftRight,
   Bot,
   FolderGit2,
+  FolderOpen,
   Landmark,
+  MessageSquare,
+  PlugZap,
   Radar,
   ShieldCheck,
   Users,
@@ -12,6 +15,9 @@ import {
 import { OFFICIAL_AGENTS } from '../data/agentsRoster';
 
 export type NavSection =
+  | 'chat'
+  | 'providers'
+  | 'arquivos'
   | 'central'
   | 'ondas'
   | 'bots'
@@ -35,6 +41,9 @@ const NAV_ITEMS: Array<{
   icon: typeof Activity;
   neonHex: string;
 }> = [
+  { id: 'chat', label: 'Chat Boot', icon: MessageSquare, neonHex: '#00F0FF' },
+  { id: 'providers', label: 'Conexões de IA', icon: PlugZap, neonHex: '#BF5AF2' },
+  { id: 'arquivos', label: 'Arquivos Locais', icon: FolderOpen, neonHex: '#38F9FF' },
   { id: 'bots', label: 'Personagens e Bots', icon: Bot, neonHex: '#00F0FF' },
   { id: 'ondas', label: 'Ondas e Missões', icon: Activity, neonHex: '#BF5AF2' },
   { id: 'handoffs', label: 'Central de Handoffs', icon: ArrowLeftRight, neonHex: '#FF2E97' },

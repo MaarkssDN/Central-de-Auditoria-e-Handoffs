@@ -46,9 +46,88 @@
   --color-violet-400: #bf5af2;
 }
 
+/* ── Tema claro ──────────────────────────────────────────────
+   As utilities Tailwind referenciam var(--color-*), então redefinir
+   os tokens sob [data-theme='light'] inverte a paleta inteira
+   (ink-* = superfícies, paper-* = texto) sem tocar nos componentes. */
+[data-theme='light'] {
+  color-scheme: light;
+
+  --color-ink-950: #f4f7fb;
+  --color-ink-900: #ffffff;
+  --color-ink-850: #f8fafc;
+  --color-ink-800: #eef2f7;
+  --color-ink-750: #e2e8f0;
+  --color-ink-700: #cbd5e1;
+  --color-ink-600: #94a3b8;
+  --color-ink-500: #64748b;
+
+  --color-paper-100: #0f172a;
+  --color-paper-200: #1e293b;
+  --color-paper-300: #475569;
+  --color-paper-400: #64748b;
+  --color-paper-500: #94a3b8;
+}
+
 @layer base {
   html {
     color-scheme: dark;
+  }
+
+  [data-theme='light'] body {
+    background-image:
+      radial-gradient(1200px 600px at 80% -10%, rgba(14, 165, 233, 0.05), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(167, 139, 250, 0.04), transparent 60%);
+  }
+
+  [data-theme='light'] .panel {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+    border-color: rgba(148, 163, 184, 0.5);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+
+  [data-theme='light'] .panel-corner::before {
+    border-color: var(--color-signal-500);
+  }
+  [data-theme='light'] .panel-corner::after {
+    border-color: var(--color-signal-500);
+  }
+
+  [data-theme='light'] .chip {
+    background: rgba(241, 245, 249, 0.9);
+    border-color: var(--color-ink-600);
+    color: var(--color-paper-300);
+  }
+
+  [data-theme='light'] .btn {
+    background: var(--color-ink-800);
+    border-color: var(--color-ink-600);
+    color: var(--color-paper-200);
+  }
+  [data-theme='light'] .btn:hover {
+    background: var(--color-ink-750);
+    border-color: var(--color-signal-500);
+  }
+
+  [data-theme='light'] .input {
+    background: #ffffff;
+    border-color: var(--color-ink-600);
+    color: var(--color-paper-100);
+  }
+  [data-theme='light'] select.input option {
+    background: #ffffff;
+    color: var(--color-paper-100);
+  }
+
+  [data-theme='light'] ::-webkit-scrollbar-thumb {
+    background: var(--color-ink-600);
+    border-color: var(--color-ink-950);
+  }
+
+  [data-theme='light'] input,
+  [data-theme='light'] select,
+  [data-theme='light'] textarea {
+    color-scheme: light;
   }
 
   body {

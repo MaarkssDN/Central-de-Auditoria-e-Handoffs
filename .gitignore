@@ -11,3 +11,7 @@ data/
 
 # src/data é código-fonte do app, não o store volátil
 !src/data/
+
+# artefatos de runtime do coordenador
+central/estado/coordinator-runs/
+central/estado/executions/

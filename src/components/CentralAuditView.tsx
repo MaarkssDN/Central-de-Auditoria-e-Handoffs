@@ -1,14 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
+  Activity,
   Bot,
   CheckCircle2,
   ChevronDown,
   ClipboardCopy,
+  FileDown,
   FileText,
+  GitPullRequest,
   Loader2,
+  Plus,
   Radio,
   RefreshCw,
   Send,
+  Trash2,
   XCircle,
 } from 'lucide-react';
 
@@ -56,6 +61,25 @@ const PRIO_META: Record<string, { bar: string; text: string; label: string }> = 
   P3: { bar: 'bg-paper-500', text: 'text-paper-400', label: 'P3' },
 };
 
+interface CentralEvent {
+  ts: string;
+  type: string;
+  data: Record<string, unknown>;
+}
+interface CentralMetrics {
+  generatedAt: string;
+  totals: { handoffs: number; byStatus: Record<string, number> };
+  quality: {
+    concluidos: number; reprovados24: number; aguardando24: number; bloqueados: number;
+    reprovacao24Pct: number | null; blockedByDecision: number;
+  };
+  leadTime: { avgDispatchToReviewMs: number | null; avgDispatchToDoneMs: number | null; samples: number };
+  executions: {
+    total: number; active: number; prs: number;
+    byProvider: Record<string, { count: number; avgDurationMs: number | null; failures: number }>;
+  };
+}
+
 type Tab = 'geral' | 'handoffs' | 'decisoes' | 'ondas' | 'docs' | 'agentes';
 
 const TABS: { id: Tab; label: string }[] = [
@@ -76,6 +100,9 @@ export function CentralAuditView() {
   const [filter, setFilter] = useState({ status: '', prio: '', q: '' });
   const [dispatch, setDispatch] = useState<Record<string, { agent: string; worktree: string; open: boolean; msg?: string }>>({});
   const [busy, setBusy] = useState<string | null>(null);
+  const [liveEvents, setLiveEvents] = useState<CentralEvent[]>([]);
+  const [liveConnected, setLiveConnected] = useState(false);
+  const [metrics, setMetrics] = useState<CentralMetrics | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -89,6 +116,32 @@ export function CentralAuditView() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // Fase 3 — live status via SSE + métricas
+  useEffect(() => {
+    const es = new EventSource('/api/central/events');
+    es.onopen = () => setLiveConnected(true);
+    es.onerror = () => setLiveConnected(false);
+    es.onmessage = (m) => {
+      try {
+        const ev = JSON.parse(m.data) as CentralEvent & { events?: CentralEvent[] };
+        if (ev.type === 'snapshot' && Array.isArray(ev.events)) {
+          setLiveEvents(ev.events.slice(-40));
+        } else if (ev.type) {
+          setLiveEvents((p) => [ev, ...p].slice(0, 40));
+        }
+      } catch { /* ignore */ }
+    };
+    return () => es.close();
+  }, []);
+
+  const loadMetrics = useCallback(async () => {
+    try {
+      const res = await fetch('/api/central/metrics');
+      if (res.ok) setMetrics(await res.json());
+    } catch { /* métricas são best-effort */ }
+  }, []);
+  useEffect(() => { loadMetrics(); }, [loadMetrics, data?.generatedAt]);
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -201,6 +254,18 @@ export function CentralAuditView() {
         })}
       </div>
 
+      {/* ── Métricas do sistema (Fase 3) ────────────────── */}
+      {metrics && (
+        <div className="rise-in rise-in-2 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          <MetricCell label="Execuções" value={String(metrics.executions.total)} sub={`${metrics.executions.active} ativas`} />
+          <MetricCell label="PRs abertos" value={String(metrics.executions.prs)} icon={<GitPullRequest className="w-3 h-3" />} />
+          <MetricCell label="Lead time →24" value={fmtMs(metrics.leadTime.avgDispatchToReviewMs)} sub={`${metrics.leadTime.samples} amostras`} />
+          <MetricCell label="Reprovação 24" value={metrics.quality.reprovacao24Pct == null ? '—' : `${metrics.quality.reprovacao24Pct}%`} tone={metrics.quality.reprovacao24Pct != null && metrics.quality.reprovacao24Pct > 30 ? 'alert' : 'ok'} />
+          <MetricCell label="Bloq. por decisão" value={String(metrics.quality.blockedByDecision)} tone={metrics.quality.blockedByDecision > 0 ? 'warn' : 'ok'} />
+          <MetricCell label="Concluídos" value={`${metrics.quality.concluidos}/${metrics.totals.handoffs}`} sub={`${metrics.quality.reprovados24} reprovados`} />
+        </div>
+      )}
+
       {/* ── Channel tabs ───────────────────────────────── */}
       <div className="rise-in rise-in-2 flex gap-1 border-b border-ink-700 overflow-x-auto">
         {TABS.map((t) => {
@@ -289,6 +354,38 @@ export function CentralAuditView() {
                   <p className="text-xs text-paper-500">Sem detecção — rode <code className="font-mono">node central/agents/detect-agents.mjs</code></p>
                 )}
               </div>
+            </div>
+            <div className="panel p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-paper-200 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-signal-400" /> Sinal ao vivo
+                </h3>
+                <span className="chip" data-tone={liveConnected ? 'ok' : 'alert'}>
+                  <span className={`led ${liveConnected ? 'led-ok led-pulse' : 'led-alert'}`} />
+                  {liveConnected ? 'SSE' : 'offline'}
+                </span>
+              </div>
+              {liveEvents.length === 0 ? (
+                <p className="text-xs text-paper-500">Nenhum evento ainda. Despache um handoff ou mude um status para ver o fluxo em tempo real.</p>
+              ) : (
+                <ul className="space-y-1.5 max-h-72 overflow-y-auto">
+                  {liveEvents.map((ev, i) => (
+                    <li key={`${ev.ts}-${i}`} className="flex items-start gap-2 text-[11px] font-mono">
+                      <span className={`led mt-1 shrink-0 ${evTone(ev.type)}`} />
+                      <div className="min-w-0">
+                        <span className="text-signal-300">{ev.type}</span>
+                        <span className="text-paper-500"> · {fmtTime(ev.ts)}</span>
+                        {typeof ev.data?.handoff === 'string' && (
+                          <div className="text-paper-400 truncate" title={ev.data.handoff}>{String(ev.data.handoff)}</div>
+                        )}
+                        {typeof ev.data?.prUrl === 'string' && (
+                          <a href={ev.data.prUrl} target="_blank" rel="noreferrer" className="text-ok-400 hover:underline truncate block">{String(ev.data.prUrl)}</a>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>
@@ -435,20 +532,30 @@ export function CentralAuditView() {
       )}
 
       {tab === 'ondas' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {data.waves.map((w) => (
-            <div key={w.name} className="panel p-5">
-              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-signal-400 mb-1">Onda</div>
-              <div className="font-display text-sm font-semibold text-paper-100">{w.name}</div>
-              <div className="font-mono text-[11px] text-paper-500 mt-1 tabular-nums">{w.handoffs} handoffs</div>
-              <div className="flex flex-wrap gap-1.5 mt-3">
-                {Object.entries(w.byStatus).map(([s, n]) => {
-                  const m = STATUS_META[s];
-                  return <span key={s} className="chip" data-tone={m?.tone || ''}>{m?.label || s} · {n}</span>;
-                })}
+        <div className="space-y-4">
+          <WaveOnboardPanel onDone={load} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.waves.map((w) => (
+              <div key={w.name} className="panel p-5">
+                <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-signal-400 mb-1">Onda</div>
+                <div className="font-display text-sm font-semibold text-paper-100">{w.name}</div>
+                <div className="font-mono text-[11px] text-paper-500 mt-1 tabular-nums">{w.handoffs} handoffs</div>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {Object.entries(w.byStatus).map(([s, n]) => {
+                    const m = STATUS_META[s];
+                    return <span key={s} className="chip" data-tone={m?.tone || ''}>{m?.label || s} · {n}</span>;
+                  })}
+                </div>
+                <a
+                  href={`/api/central/report?wave=${encodeURIComponent(w.name)}`}
+                  target="_blank" rel="noreferrer"
+                  className="btn !py-1 !px-2.5 !text-[10px] mt-4"
+                >
+                  <FileDown className="w-3 h-3" /> Relatório executivo
+                </a>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -516,6 +623,36 @@ export function CentralAuditView() {
   );
 }
 
+function MetricCell({ label, value, sub, tone, icon }: { label: string; value: string; sub?: string; tone?: 'ok' | 'warn' | 'alert'; icon?: ReactNode }) {
+  const toneClass = tone === 'alert' ? 'text-alert-400' : tone === 'warn' ? 'text-amberx-400' : 'text-paper-100';
+  return (
+    <div className="panel px-3 py-2.5">
+      <div className="font-mono text-[9px] uppercase tracking-widest text-paper-500 flex items-center gap-1">{icon}{label}</div>
+      <div className={`font-mono text-lg font-bold tabular-nums leading-none mt-1 ${toneClass}`}>{value}</div>
+      {sub && <div className="font-mono text-[9px] text-paper-500 mt-1 truncate">{sub}</div>}
+    </div>
+  );
+}
+
+function fmtMs(ms: number | null): string {
+  if (ms == null) return '—';
+  if (ms < 60000) return `${Math.round(ms / 1000)}s`;
+  if (ms < 3600000) return `${Math.round(ms / 60000)}min`;
+  return `${(ms / 3600000).toFixed(1)}h`;
+}
+
+function fmtTime(ts: string): string {
+  const d = new Date(ts);
+  return Number.isNaN(d.getTime()) ? ts : d.toLocaleTimeString('pt-BR', { hour12: false });
+}
+
+function evTone(type: string): string {
+  if (type === 'exec_done' || type === 'pr_created') return 'led-ok';
+  if (type === 'exec_started' || type === 'handoff_dispatched' || type === 'exec_heartbeat' || type === 'exec_output') return 'led-warn led-pulse';
+  if (type === 'handoff_status_changed' || type === 'decision_pending' || type === 'coordinator_run_done') return 'led-warn';
+  return 'led-idle';
+}
+
 function DossierSection({ title, text, accent }: { title: string; text: string; accent?: boolean }) {
   return (
     <div>
@@ -523,6 +660,115 @@ function DossierSection({ title, text, accent }: { title: string; text: string; 
       <pre className={`text-[13px] leading-relaxed whitespace-pre-wrap font-sans rounded-lg p-3 border ${
         accent ? 'text-paper-200 bg-signal-500/5 border-signal-500/20' : 'text-paper-300 bg-ink-900/50 border-ink-700/60'
       }`}>{text}</pre>
+    </div>
+  );
+}
+
+interface OnboardRow { para: string; titulo: string; prioridade: string; dependencias: string }
+
+function WaveOnboardPanel({ onDone }: { onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [repoPath, setRepoPath] = useState('C:\\Github\\Birthub-360');
+  const [baseline, setBaseline] = useState('main');
+  const [rows, setRows] = useState<OnboardRow[]>([{ para: '00', titulo: '', prioridade: 'P2', dependencias: '' }]);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  function setRow(i: number, patch: Partial<OnboardRow>) {
+    setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  }
+
+  async function submit() {
+    if (!name.trim()) { setMsg({ ok: false, text: 'Informe o nome da onda.' }); return; }
+    const invalid = rows.find((r) => !r.para.trim() || !r.titulo.trim());
+    if (invalid) { setMsg({ ok: false, text: 'Todo handoff precisa de "para" e "título".' }); return; }
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await fetch('/api/central/waves/onboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          repoPath: repoPath.trim() || undefined,
+          baseline: baseline.trim() || undefined,
+          handoffs: rows.map((r) => ({
+            para: r.para.trim(),
+            titulo: r.titulo.trim(),
+            prioridade: r.prioridade || 'P2',
+            dependencias: r.dependencias.split(',').map((s) => s.trim()).filter(Boolean),
+          })),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        setMsg({ ok: false, text: json.error || 'Falha ao criar onda.' });
+      } else {
+        setMsg({ ok: true, text: `Onda criada: ${json.waveDir} — ${json.files?.length ?? 0} arquivo(s).` });
+        setName('');
+        setRows([{ para: '00', titulo: '', prioridade: 'P2', dependencias: '' }]);
+        onDone();
+      }
+    } catch (e) {
+      setMsg({ ok: false, text: e instanceof Error ? e.message : 'Erro de rede.' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} className="btn">
+        <Plus className="w-3.5 h-3.5" /> Nova onda (wizard)
+      </button>
+    );
+  }
+
+  return (
+    <div className="panel panel-corner p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-signal-400">Onboarding de onda</div>
+          <div className="font-display text-sm font-semibold text-paper-100 mt-0.5">Gerar handoffs a partir de template</div>
+        </div>
+        <button onClick={() => setOpen(false)} className="btn !px-2.5 !py-1 !text-[10px]">fechar</button>
+      </div>
+
+      <div className="grid sm:grid-cols-3 gap-2">
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome da onda (ex.: onda-2-hardening)" className="input !py-1.5 !text-xs font-mono" />
+        <input value={repoPath} onChange={(e) => setRepoPath(e.target.value)} placeholder="Repo alvo" className="input !py-1.5 !text-xs font-mono" />
+        <input value={baseline} onChange={(e) => setBaseline(e.target.value)} placeholder="Baseline / branch" className="input !py-1.5 !text-xs font-mono" />
+      </div>
+
+      <div className="space-y-2">
+        {rows.map((r, i) => (
+          <div key={i} className="flex gap-2 items-center flex-wrap">
+            <input value={r.para} onChange={(e) => setRow(i, { para: e.target.value })} placeholder="para (ex.: 10)" className="input !w-20 !py-1.5 !text-xs font-mono" />
+            <input value={r.titulo} onChange={(e) => setRow(i, { titulo: e.target.value })} placeholder="Título do handoff" className="input flex-1 min-w-40 !py-1.5 !text-xs" />
+            <select value={r.prioridade} onChange={(e) => setRow(i, { prioridade: e.target.value })} className="input !w-auto !py-1.5 !text-xs font-mono">
+              {['P0', 'P1', 'P2', 'P3'].map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+            <input value={r.dependencias} onChange={(e) => setRow(i, { dependencias: e.target.value })} placeholder="deps (D-01, …)" className="input !w-36 !py-1.5 !text-xs font-mono" />
+            <button onClick={() => setRows((rs) => rs.filter((_, idx) => idx !== i))} className="btn !px-2 !py-1.5" aria-label="Remover handoff">
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ))}
+        <button onClick={() => setRows((rs) => [...rs, { para: '00', titulo: '', prioridade: 'P2', dependencias: '' }])} className="btn !py-1.5">
+          <Plus className="w-3.5 h-3.5" /> Adicionar handoff
+        </button>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button onClick={submit} disabled={busy} className="btn btn-primary !py-1.5">
+          {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+          Criar onda
+        </button>
+        {msg && (
+          <span className={`font-mono text-[11px] ${msg.ok ? 'text-ok-400' : 'text-alert-400'}`}>{msg.text}</span>
+        )}
+      </div>
     </div>
   );
 }

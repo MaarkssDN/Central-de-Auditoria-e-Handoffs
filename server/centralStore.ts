@@ -1,8 +1,20 @@
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
+import { canTransition, normalizeStatus } from './phase1/stateMachine';
+import { claimLock, getLock, releaseLock, newExecutionId } from './phase1/locks';
+import { appendEvent, logStatusTransition } from './phase1/executions';
+import { atomicWriteFile } from './persistence';
 
 export const CENTRAL_DIR = path.resolve(process.cwd(), process.env.CENTRAL_DIR || 'central');
+
+export const RUNS_DIR = path.join(CENTRAL_DIR, 'estado', 'coordinator-runs');
+
+export function readHandoffRaw(relPath: string): string | null {
+  const abs = path.resolve(CENTRAL_DIR, relPath);
+  if (!abs.startsWith(CENTRAL_DIR) || !fs.existsSync(abs)) return null;
+  return fs.readFileSync(abs, 'utf-8');
+}
 
 export interface ParsedHandoff {
   file: string;
@@ -156,7 +168,8 @@ export function getCentralState(): CentralState {
 }
 
 export function updateHandoffStatus(relPath: string, status: string, resolution?: string): { ok: boolean; error?: string } {
-  if (!VALID_STATUS.includes(status.toUpperCase())) {
+  const normalized = normalizeStatus(status);
+  if (!normalized) {
     return { ok: false, error: `Status inválido. Use: ${VALID_STATUS.join(', ')}` };
   }
   const safe = path.normalize(relPath);
@@ -164,11 +177,16 @@ export function updateHandoffStatus(relPath: string, status: string, resolution?
   if (!abs.startsWith(CENTRAL_DIR) || !fs.existsSync(abs)) {
     return { ok: false, error: 'Handoff não encontrado.' };
   }
+  const before = parseHandoff(abs);
+  const transition = canTransition(before.status, normalized);
+  if (!transition.ok) {
+    return { ok: false, error: transition.error };
+  }
   let text = fs.readFileSync(abs, 'utf-8');
   if (/^- Status:/m.test(text)) {
-    text = text.replace(/^- Status:.*$/m, `- Status: ${status.toUpperCase()}`);
+    text = text.replace(/^- Status:.*$/m, `- Status: ${normalized}`);
   } else {
-    text = text.replace(/(- Para:.*)$/m, `$1\n- Status: ${status.toUpperCase()}`);
+    text = text.replace(/(- Para:.*)$/m, `$1\n- Status: ${normalized}`);
   }
   if (resolution && resolution.trim()) {
     const block = `\n\n## Resolução\n${resolution.trim()}\n- Atualizado via Central em ${new Date().toISOString()}\n`;
@@ -178,7 +196,19 @@ export function updateHandoffStatus(relPath: string, status: string, resolution?
       text += block;
     }
   }
-  fs.writeFileSync(abs, text, 'utf-8');
+  atomicWriteFile(abs, text);
+  const lock = getLock(relPath);
+  const executionId = lock?.executionId || newExecutionId();
+  if (before.status !== normalized) {
+    logStatusTransition({
+      executionId,
+      handoff: relPath.replace(/\\/g, '/'),
+      from: before.status,
+      to: normalized,
+      actor: lock?.owner || 'central-api',
+      detail: resolution ? 'status+resolucao' : 'status',
+    });
+  }
   return { ok: true };
 }
 
@@ -242,11 +272,27 @@ export function queueDispatch(opts: {
     branch: opts.branch,
     repoPath: opts.repoPath,
   });
+  const claim = claimLock({
+    handoffRelPath: opts.handoffRelPath,
+    owner: agentCfg.id || opts.agentId || 'desconhecido',
+    worktree: opts.worktree,
+  });
+  if (!claim.ok) {
+    return { ok: false, error: `Handoff já está em execução por '${claim.conflict.owner}' até ${claim.conflict.expiresAt} (executionId ${claim.conflict.executionId}).` };
+  }
+  appendEvent({
+    executionId: claim.lock.executionId,
+    handoff: opts.handoffRelPath.replace(/\\/g, '/'),
+    type: 'DISPATCHED',
+    actor: agentCfg.id || opts.agentId,
+    detail: 'Despacho enfileirado',
+    meta: { worktree: opts.worktree, branch: opts.branch },
+  });
   const filaDir = path.join(CENTRAL_DIR, 'estado', 'fila');
   fs.mkdirSync(filaDir, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   const outFile = path.join(filaDir, `${stamp}-${agentCfg.id}-${path.basename(abs, '.md')}.md`);
-  fs.writeFileSync(outFile, prompt, 'utf-8');
+  atomicWriteFile(outFile, prompt);
 
   // Registra despacho no handoff (Status EM_EXECUÇÃO se ainda PENDENTE)
   const current = parseHandoff(abs);

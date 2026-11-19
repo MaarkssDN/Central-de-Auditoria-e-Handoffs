@@ -37,6 +37,27 @@
       "dispatch": "shim interativo — gerar prompt em estado/fila/; execução manual no VS Code"
     },
     {
+      "id": "chatgpt-api",
+      "nome": "ChatGPT (API OpenAI)",
+      "tipo": "api",
+      "detect": [],
+      "dispatch": "POST /v1/chat/completions com OPENAI_API_KEY — configurável em Conexões de IA (/api/providers)"
+    },
+    {
+      "id": "gemini-api",
+      "nome": "Gemini (API Google)",
+      "tipo": "api",
+      "detect": [],
+      "dispatch": "generateContent com GEMINI_API_KEY — mesma chave do runtime de bots"
+    },
+    {
+      "id": "grok-api",
+      "nome": "Grok (xAI API)",
+      "tipo": "api",
+      "detect": [],
+      "dispatch": "POST https://api.x.ai/v1/chat/completions com XAI_API_KEY — formato OpenAI"
+    },
+    {
       "id": "generico",
       "nome": "Agente genérico / outro",
       "tipo": "manual",

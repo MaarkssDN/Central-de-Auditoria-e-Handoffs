@@ -4,10 +4,15 @@ import { AgentsRosterView } from './components/AgentsRosterView';
 import { AuditReviewView } from './components/AuditReviewView';
 import { CentralAuditView } from './components/CentralAuditView';
 import { ConnectRepoModal } from './components/ConnectRepoModal';
+import { CoordinatorChatView } from './components/CoordinatorChatView';
+import { FilesView } from './components/FilesView';
 import { HandoffsCenterView } from './components/HandoffsCenterView';
+import { LoginModal } from './components/LoginModal';
+import { ProvidersView } from './components/ProvidersView';
 import { RepositoriesView } from './components/RepositoriesView';
 import { Sidebar, type NavSection } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
+import type { ThemeMode } from './components/ThemeToggle';
 import { WaveOrchestratorView } from './components/WaveOrchestratorView';
 import { createSeedWorkspace } from './data/seedWorkspace';
 import type {
@@ -24,17 +29,51 @@ import type {
 import { buildGatesForRepoScripts } from './utils/governanceEngine';
 import type { WebhookEventType } from './utils/webhookNotifier';
 
+const THEME_KEY = '@central-auditoria:theme';
+
+function getInitialTheme(): ThemeMode {
+  if (typeof window === 'undefined') return 'light';
+  const saved = window.localStorage.getItem(THEME_KEY);
+  return saved === 'dark' || saved === 'light' ? saved : 'light';
+}
+
 export default function App() {
   const [workspace, setWorkspace] = useState<WorkspaceState | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [webhookNotice, setWebhookNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
-  const [activeSection, setActiveSection] = useState<NavSection>('bots');
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [activeSection, setActiveSection] = useState<NavSection>('chat');
   const [selectedBotAgentId, setSelectedBotAgentId] = useState<string>('00');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [connectModalOpen, setConnectModalOpen] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>(getInitialTheme);
 
   useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      window.localStorage.setItem(THEME_KEY, theme);
+    } catch { /* storage indisponível */ }
+  }, [theme]);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => setAuthenticated(r.ok))
+      .catch(() => setAuthenticated(false))
+      .finally(() => setAuthChecked(true));
+  }, []);
+
+  function handleLogout() {
+    fetch('/api/auth/logout', { method: 'POST' }).finally(() => {
+      setAuthenticated(false);
+      setWorkspace(null);
+      setLoading(true);
+    });
+  }
+
+  useEffect(() => {
+    if (!authenticated) return;
     let cancelled = false;
     async function load() {
       try {
@@ -57,7 +96,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authenticated]);
 
   function commitWorkspace(updater: (prev: WorkspaceState) => WorkspaceState) {
     setWorkspace((prev) => {
@@ -72,6 +111,31 @@ export default function App() {
       });
       return next;
     });
+  }
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen blueprint-grid flex items-center justify-center p-6 bg-ink-950">
+        <div className="panel panel-corner p-6 w-full max-w-md space-y-3">
+          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-paper-400">
+            Verificando sessão…
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen blueprint-grid bg-ink-950">
+        <LoginModal
+          onSuccess={() => {
+            setAuthenticated(true);
+            setLoading(true);
+          }}
+        />
+      </div>
+    );
   }
 
   if (loading || !workspace) {
@@ -424,6 +488,9 @@ export default function App() {
           onSelectRepo={handleSelectRepo}
           onOpenConnectRepo={() => setConnectModalOpen(true)}
           onOpenMobileMenu={() => setMobileMenuOpen(true)}
+          theme={theme}
+          onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+          onLogout={handleLogout}
         />
 
         <main className="flex-1 p-4 lg:p-8 max-w-[1600px] w-full mx-auto">
@@ -458,6 +525,12 @@ export default function App() {
               </button>
             </div>
           )}
+
+          {activeSection === 'chat' && <CoordinatorChatView />}
+
+          {activeSection === 'providers' && <ProvidersView />}
+
+          {activeSection === 'arquivos' && <FilesView />}
 
           {activeSection === 'central' && <CentralAuditView />}
 

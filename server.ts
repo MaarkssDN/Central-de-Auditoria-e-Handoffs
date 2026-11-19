@@ -14,10 +14,20 @@ import {
 } from './src/utils/webhookNotifier';
 import { runAgentBotTurn, runSwarmSequence } from './server/agentRuntime';
 import { createCentralRouter } from './server/centralApi';
+import { ensureAdminUser, authRouter, requireAuth } from './server/auth';
+import { closeDb, getDb } from './server/db';
+import { fsRouter } from './server/fsApi';
+import { providersRouter } from './server/providers';
+import { atomicWriteFile, withFileLockSync } from './server/persistence';
+import { createTaskQueue } from './server/taskQueue';
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const STORE_PATH = path.join(DATA_DIR, 'workspace.json');
+const STORE_LOCK = path.join(DATA_DIR, '.locks', 'workspace.lock');
+
+// Fase 4: fila interna com concorrência limitada para execuções de agentes.
+const agentQueue = createTaskQueue(Math.max(1, Number(process.env.CENTRAL_MAX_CONCURRENCY) || 2));
 
 function ensureStore(): WorkspaceState {
   if (!fs.existsSync(DATA_DIR)) {
@@ -25,7 +35,7 @@ function ensureStore(): WorkspaceState {
   }
   if (!fs.existsSync(STORE_PATH)) {
     const seed = createSeedWorkspace();
-    fs.writeFileSync(STORE_PATH, JSON.stringify(seed, null, 2), 'utf-8');
+    atomicWriteFile(STORE_PATH, JSON.stringify(seed, null, 2));
     return seed;
   }
   try {
@@ -33,16 +43,20 @@ function ensureStore(): WorkspaceState {
     return JSON.parse(raw) as WorkspaceState;
   } catch {
     const seed = createSeedWorkspace();
-    fs.writeFileSync(STORE_PATH, JSON.stringify(seed, null, 2), 'utf-8');
+    atomicWriteFile(STORE_PATH, JSON.stringify(seed, null, 2));
     return seed;
   }
 }
 
 function saveStore(state: WorkspaceState) {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  fs.writeFileSync(STORE_PATH, JSON.stringify(state, null, 2), 'utf-8');
+  // Fase 4: escrita atômica (tmp+rename) sob lock de arquivo — nunca deixa
+  // workspace.json truncado nem corrompido por escritas concorrentes.
+  withFileLockSync(STORE_LOCK, () => {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    atomicWriteFile(STORE_PATH, JSON.stringify(state, null, 2));
+  });
 }
 
 function parseGitHubRepoInput(input: string): { owner: string; repo: string } | null {
@@ -70,14 +84,20 @@ async function fetchGitHubJson(url: string) {
 }
 
 async function startServer() {
+  ensureAdminUser();
+  getDb(); // inicializa o SQLite (data/central.db) antes de aceitar tráfego
+
   const app = express();
   app.use(express.json({ limit: '2mb' }));
 
-  app.use('/api/central', createCentralRouter());
+  // Auth local: login/logout/me são públicos; todo o resto de /api exige sessão.
+  app.use('/api/auth', authRouter());
+  app.use('/api/health', (_req, res) => res.json({ ok: true }));
+  app.use('/api', requireAuth);
 
-  app.get('/api/health', (_req, res) => {
-    res.json({ ok: true });
-  });
+  app.use('/api/central', createCentralRouter());
+  app.use('/api/fs', fsRouter());
+  app.use('/api/providers', providersRouter());
 
   app.get('/api/workspace', (_req, res) => {
     const state = ensureStore();
@@ -287,7 +307,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/agents/execute', async (req, res) => {
+  app.post('/api/agents/execute', agentQueue.middleware, async (req, res) => {
     const { agentId, prompt, workspace: clientWorkspace } = req.body as {
       agentId?: string;
       prompt?: string;
@@ -330,7 +350,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/agents/swarm-turn', async (req, res) => {
+  app.post('/api/agents/swarm-turn', agentQueue.middleware, async (req, res) => {
     const { specialistAgentId, missionGoal, workspace: clientWorkspace } = req.body as {
       specialistAgentId?: string;
       missionGoal?: string;
@@ -373,7 +393,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/agents/execute-stream', async (req, res) => {
+  app.post('/api/agents/execute-stream', agentQueue.middleware, async (req, res) => {
     const { agentId, prompt, workspace: clientWorkspace } = req.body as {
       agentId?: string;
       prompt?: string;
@@ -434,7 +454,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/agents/swarm-turn-stream', async (req, res) => {
+  app.post('/api/agents/swarm-turn-stream', agentQueue.middleware, async (req, res) => {
     const { specialistAgentId, missionGoal, workspace: clientWorkspace } = req.body as {
       specialistAgentId?: string;
       missionGoal?: string;
@@ -509,9 +529,31 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Central de Auditoria e Handoffs executando em http://localhost:${PORT}`);
+    console.log(`Fila de agentes: máx ${agentQueue.stats().max} execução(ões) simultânea(s) (CENTRAL_MAX_CONCURRENCY)`);
   });
+
+  // Fase 4: graceful shutdown — para de aceitar conexões, drena a fila de
+  // agentes em andamento e fecha o SQLite antes de sair.
+  let shuttingDown = false;
+  const shutdown = (signal: string) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(`[shutdown] ${signal} recebido — drenando ${agentQueue.stats().active} execução(ões)…`);
+    server.close(() => {
+      closeDb();
+      process.exit(0);
+    });
+    agentQueue.drain(15000).then((drained) => {
+      if (!drained) console.log('[shutdown] fila não drenou em 15s — encerrando mesmo assim');
+      closeDb();
+      process.exit(0);
+    });
+    setTimeout(() => { closeDb(); process.exit(1); }, 20000).unref();
+  };
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
 
 startServer();

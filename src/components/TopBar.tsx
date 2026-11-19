@@ -1,6 +1,7 @@
-import { Menu, Plus } from 'lucide-react';
+import { LogOut, Menu, Plus } from 'lucide-react';
 import type { RepositoryTarget } from '../types/governance';
 import type { NavSection } from './Sidebar';
+import { ThemeToggle, type ThemeMode } from './ThemeToggle';
 
 interface TopBarProps {
   activeSection: NavSection;
@@ -9,9 +10,15 @@ interface TopBarProps {
   onSelectRepo: (repoId: string) => void;
   onOpenConnectRepo: () => void;
   onOpenMobileMenu: () => void;
+  theme: ThemeMode;
+  onToggleTheme: () => void;
+  onLogout: () => void;
 }
 
 const SECTION_TITLES: Record<NavSection, string> = {
+  chat: 'Chat Boot — Coordenador',
+  providers: 'Conexões de IA',
+  arquivos: 'Arquivos Locais',
   central: 'Central Local',
   bots: 'Personagens e Bots',
   ondas: 'Ondas e Missões',
@@ -28,6 +35,9 @@ export function TopBar({
   onSelectRepo,
   onOpenConnectRepo,
   onOpenMobileMenu,
+  theme,
+  onToggleTheme,
+  onLogout,
 }: TopBarProps) {
   const activeRepo = repositories.find((r) => r.id === activeRepoId) ?? repositories[0];
   const openBlockers = activeRepo?.blockers.filter((b) => b.status === 'aberto').length ?? 0;
@@ -63,6 +73,17 @@ export function TopBar({
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
+          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+          <button
+            type="button"
+            onClick={onLogout}
+            aria-label="Sair"
+            title="Sair"
+            className="p-2 rounded-xl text-[#A6B7D9] hover:text-white hover:bg-white/[0.06] transition-colors"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+
           <div className="hidden md:flex items-center gap-3">
             {openBlockers > 0 && (
               <span className="text-xs font-mono text-[#FFB800] tabular-nums whitespace-nowrap">
