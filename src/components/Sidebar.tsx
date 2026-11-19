@@ -41,16 +41,16 @@ const NAV_ITEMS: Array<{
   icon: typeof Activity;
   neonHex: string;
 }> = [
-  { id: 'chat', label: 'Chat Boot', icon: MessageSquare, neonHex: '#00F0FF' },
-  { id: 'providers', label: 'Conexões de IA', icon: PlugZap, neonHex: '#BF5AF2' },
-  { id: 'arquivos', label: 'Arquivos Locais', icon: FolderOpen, neonHex: '#38F9FF' },
-  { id: 'bots', label: 'Personagens e Bots', icon: Bot, neonHex: '#00F0FF' },
-  { id: 'ondas', label: 'Ondas e Missões', icon: Activity, neonHex: '#BF5AF2' },
-  { id: 'handoffs', label: 'Central de Handoffs', icon: ArrowLeftRight, neonHex: '#FF2E97' },
-  { id: 'auditoria', label: 'Auditoria e Parecer 24', icon: ShieldCheck, neonHex: '#FF073A' },
-  { id: 'agentes', label: 'Agentes e Propriedade', icon: Users, neonHex: '#00FFA3' },
-  { id: 'repositorios', label: 'Repositórios', icon: FolderGit2, neonHex: '#FFB800' },
-  { id: 'central', label: 'Central Local', icon: Landmark, neonHex: '#38F9FF' },
+  { id: 'chat', label: 'Chat Boot', icon: MessageSquare, neonHex: '#2563EB' },
+  { id: 'providers', label: 'Conexões de IA', icon: PlugZap, neonHex: '#7C3AED' },
+  { id: 'arquivos', label: 'Arquivos Locais', icon: FolderOpen, neonHex: '#22D3EE' },
+  { id: 'bots', label: 'Personagens e Bots', icon: Bot, neonHex: '#2563EB' },
+  { id: 'ondas', label: 'Ondas e Missões', icon: Activity, neonHex: '#7C3AED' },
+  { id: 'handoffs', label: 'Central de Handoffs', icon: ArrowLeftRight, neonHex: '#DB2777' },
+  { id: 'auditoria', label: 'Auditoria e Parecer 24', icon: ShieldCheck, neonHex: '#DC2626' },
+  { id: 'agentes', label: 'Agentes e Propriedade', icon: Users, neonHex: '#047857' },
+  { id: 'repositorios', label: 'Repositórios', icon: FolderGit2, neonHex: '#D97706' },
+  { id: 'central', label: 'Central Local', icon: Landmark, neonHex: '#22D3EE' },
 ];
 
 export function Sidebar({
@@ -62,26 +62,26 @@ export function Sidebar({
   onCloseMobile,
 }: SidebarProps) {
   const navContent = (
-    <div className="flex h-full flex-col bg-[#070B16]/95 backdrop-blur-xl border-r border-cyan-400/15">
+    <div className="flex h-full flex-col bg-ink-900/95 backdrop-blur-xl border-r border-ink-700/60">
       {/* Brand header */}
-      <div className="px-5 py-5 border-b border-cyan-400/15">
+      <div className="px-5 py-5 border-b border-ink-700/60">
         <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-2xl grid place-items-center shrink-0"
             style={{
               background:
-                'linear-gradient(135deg, rgba(0,240,255,0.22), rgba(191,90,242,0.28), rgba(255,46,151,0.22))',
-              border: '1px solid rgba(0,240,255,0.55)',
-              boxShadow: '0 0 22px -6px rgba(0,240,255,0.75)',
+                'var(--color-ink-800)',
+              border: '1px solid var(--color-ink-600)',
+              
             }}
           >
-            <Radar className="w-5 h-5 text-[#00F0FF]" strokeWidth={2} />
+            <Radar className="w-5 h-5 text-signal-400" strokeWidth={2} />
           </div>
           <div className="min-w-0">
-            <div className="font-display font-bold text-base leading-tight tracking-tight text-white">
+            <div className="font-display font-bold text-base leading-tight tracking-tight text-paper-100">
               Governança <span className="neon-text-gradient">360</span>
             </div>
-            <div className="text-[11px] text-[#7C90B8] mt-0.5 truncate">
+            <div className="text-[11px] text-paper-400 mt-0.5 truncate">
               Orquestração Multiagente
             </div>
           </div>
@@ -89,7 +89,7 @@ export function Sidebar({
             type="button"
             onClick={onCloseMobile}
             aria-label="Fechar menu lateral"
-            className="lg:hidden ml-auto p-2 text-[#A6B7D9] hover:text-white rounded-xl"
+            className="lg:hidden ml-auto p-2 text-paper-300 hover:text-paper-100 rounded-xl"
           >
             <X className="w-4 h-4" />
           </button>
@@ -119,29 +119,29 @@ export function Sidebar({
               aria-current={isActive ? 'page' : undefined}
               className={`group relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-left transition-all duration-200 ${
                 isActive
-                  ? 'text-white'
-                  : 'text-[#A6B7D9] hover:bg-white/[0.04] hover:text-white'
+                  ? 'text-paper-100'
+                  : 'text-paper-300 hover:bg-ink-800/60 hover:text-paper-100'
               }`}
               style={
                 isActive
                   ? {
-                      background: `linear-gradient(125deg, ${item.neonHex}22 0%, rgba(12,18,37,0.92) 85%)`,
+                      background: `linear-gradient(125deg, ${item.neonHex}22 0%, var(--color-ink-900) 85%)`,
                       border: `1px solid ${item.neonHex}66`,
-                      boxShadow: `0 0 22px -10px ${item.neonHex}aa`,
+                      
                     }
                   : { border: '1px solid transparent' }
               }
             >
               <Icon
                 className="w-4 h-4 shrink-0 transition-colors"
-                style={{ color: isActive ? item.neonHex : '#7C90B8' }}
+                style={{ color: isActive ? item.neonHex : 'var(--color-paper-400)' }}
                 strokeWidth={2}
               />
               <span className="flex-1 text-[13px] font-medium truncate">{item.label}</span>
               {typeof count === 'number' && count > 0 && (
                 <span
                   className="font-mono text-[11px] font-semibold tabular-nums"
-                  style={{ color: isActive ? item.neonHex : '#FFB800' }}
+                  style={{ color: isActive ? item.neonHex : 'var(--color-amberx-500)' }}
                 >
                   {count}
                 </span>
@@ -152,15 +152,15 @@ export function Sidebar({
       </nav>
 
       {/* Roster Governance Footer */}
-      <div className="p-4 border-t border-cyan-400/15">
-        <div className="rounded-2xl bg-[#0C1224]/90 border border-violet-400/25 p-3.5 space-y-1">
+      <div className="p-4 border-t border-ink-700/60">
+        <div className="rounded-2xl bg-ink-850/90 border border-ink-600 p-3.5 space-y-1">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[#A6B7D9] font-medium">Roster Oficial</span>
-            <span className="font-mono font-bold text-[#00F0FF] tabular-nums">
+            <span className="text-paper-300 font-medium">Roster Oficial</span>
+            <span className="font-mono font-bold text-signal-400 tabular-nums">
               {OFFICIAL_AGENTS.length} agentes
             </span>
           </div>
-          <div className="text-[11px] text-[#7C90B8] leading-snug">
+          <div className="text-[11px] text-paper-400 leading-snug">
             Slots 19 e 20 reservados (§4) · Parecer obrigatório: Agente 24 (§40)
           </div>
         </div>
@@ -175,7 +175,7 @@ export function Sidebar({
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
-            className="fixed inset-0 bg-[#04060D]/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-ink-950/80 backdrop-blur-sm"
             onClick={onCloseMobile}
             aria-hidden="true"
           />

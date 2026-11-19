@@ -12,11 +12,11 @@ function renderCharacterFeatures(agentId: string) {
       return (
         <>
           <path d="M14 5L20 2L26 5" stroke="#67F5FF" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-          <rect x="9" y="10" width="22" height="17" rx="6" fill="#060A16" stroke="#00F0FF" strokeWidth="1.5" />
-          <path d="M12 17H28" stroke="#00F0FF" strokeWidth="2.6" strokeLinecap="round" />
-          <circle cx="20" cy="17" r="2.4" fill="#FF2E97" />
+          <rect x="9" y="10" width="22" height="17" rx="6" fill="#060A16" stroke="#2563EB" strokeWidth="1.5" />
+          <path d="M12 17H28" stroke="#2563EB" strokeWidth="2.6" strokeLinecap="round" />
+          <circle cx="20" cy="17" r="2.4" fill="#DB2777" />
           <path d="M8 29C8 26 13 24 20 24C27 24 32 26 32 29V36H8V29Z" fill="#0C1936" />
-          <path d="M15 30L20 33L25 30" stroke="#00F0FF" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+          <path d="M15 30L20 33L25 30" stroke="#2563EB" strokeWidth="1.6" strokeLinecap="round" fill="none" />
         </>
       );
     case '01': // Valkiria — Arquiteta de Fundações: winged shield crest
@@ -52,10 +52,10 @@ function renderCharacterFeatures(agentId: string) {
       return (
         <>
           <path d="M13 7C16 4.5 24 4.5 27 7" stroke="#67FFDF" strokeWidth="1.6" strokeLinecap="round" fill="none" />
-          <rect x="10" y="10" width="20" height="16" rx="7" fill="#081224" stroke="#2EFFD5" strokeWidth="1.4" />
-          <circle cx="15.5" cy="17.5" r="2.7" stroke="#2EFFD5" strokeWidth="1.6" fill="#0F172A" />
+          <rect x="10" y="10" width="20" height="16" rx="7" fill="#081224" stroke="#2DD4BF" strokeWidth="1.4" />
+          <circle cx="15.5" cy="17.5" r="2.7" stroke="#2DD4BF" strokeWidth="1.6" fill="#0F172A" />
           <circle cx="15.5" cy="17.5" r="1" fill="#A7FFEC" />
-          <circle cx="24.5" cy="17.5" r="2.7" stroke="#2EFFD5" strokeWidth="1.6" fill="#0F172A" />
+          <circle cx="24.5" cy="17.5" r="2.7" stroke="#2DD4BF" strokeWidth="1.6" fill="#0F172A" />
           <circle cx="24.5" cy="17.5" r="1" fill="#A7FFEC" />
           <path d="M16.5 22.5H23.5" stroke="#5EEAD4" strokeWidth="1.4" strokeLinecap="round" />
           <path d="M10 28C12 26 28 26 30 28V36H10V28Z" fill="#0D4F4A" />
@@ -65,10 +65,10 @@ function renderCharacterFeatures(agentId: string) {
       return (
         <>
           <circle cx="14" cy="7" r="1.5" fill="#7DD3FC" />
-          <circle cx="26" cy="7" r="1.5" fill="#18D2FF" />
+          <circle cx="26" cy="7" r="1.5" fill="#38BDF8" />
           <path d="M15.5 7H24.5" stroke="#38BDF8" strokeWidth="1.4" strokeDasharray="2 2" />
-          <rect x="10" y="10" width="20" height="16" rx="5" fill="#081224" stroke="#18D2FF" strokeWidth="1.4" />
-          <path d="M13 19L17.5 15.5L22 19.5L27 15" stroke="#18D2FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <rect x="10" y="10" width="20" height="16" rx="5" fill="#081224" stroke="#38BDF8" strokeWidth="1.4" />
+          <path d="M13 19L17.5 15.5L22 19.5L27 15" stroke="#38BDF8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           <circle cx="27" cy="15" r="1.5" fill="#BAE6FD" />
           <path d="M10 28C12 26 28 26 30 28V36H10V28Z" fill="#0C4A6E" />
         </>
@@ -76,11 +76,11 @@ function renderCharacterFeatures(agentId: string) {
     case '02C': // Malha — Information Architecture: hierarchical tree nodes & geometric helm
       return (
         <>
-          <rect x="17.5" y="4.5" width="5" height="3.5" rx="1" fill="#D8B4FE" />
+          <rect x="17.5" y="4.5" width="5" height="3.5" rx="1" fill="#7C3AED" />
           <path d="M20 8V10" stroke="#C084FC" strokeWidth="1.4" />
-          <rect x="9.5" y="10" width="21" height="16" rx="4" fill="#0A0E22" stroke="#A855FF" strokeWidth="1.4" />
+          <rect x="9.5" y="10" width="21" height="16" rx="4" fill="#0A0E22" stroke="#9333EA" strokeWidth="1.4" />
           <circle cx="20" cy="14.5" r="1.6" fill="#E9D5FF" />
-          <path d="M20 16V18.5M14.5 18.5H25.5M14.5 18.5V20.5M20 18.5V20.5M25.5 18.5V20.5" stroke="#A855FF" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M20 16V18.5M14.5 18.5H25.5M14.5 18.5V20.5M20 18.5V20.5M25.5 18.5V20.5" stroke="#9333EA" strokeWidth="1.5" strokeLinecap="round" />
           <circle cx="14.5" cy="21.5" r="1.3" fill="#C084FC" />
           <circle cx="20" cy="21.5" r="1.3" fill="#C084FC" />
           <circle cx="25.5" cy="21.5" r="1.3" fill="#C084FC" />
@@ -91,8 +91,8 @@ function renderCharacterFeatures(agentId: string) {
       return (
         <>
           <path d="M20 4L23.5 8H16.5L20 4Z" fill="#FF85C8" />
-          <rect x="10" y="10" width="20" height="16" rx="6" fill="#0B0C20" stroke="#FF3CAC" strokeWidth="1.4" />
-          <path d="M13.5 14.5H26.5L22 19.5V22.5L18 21V19.5L13.5 14.5Z" fill="#FF3CAC" />
+          <rect x="10" y="10" width="20" height="16" rx="6" fill="#0B0C20" stroke="#EC4899" strokeWidth="1.4" />
+          <path d="M13.5 14.5H26.5L22 19.5V22.5L18 21V19.5L13.5 14.5Z" fill="#EC4899" />
           <path d="M10 28C12 26 28 26 30 28V36H10V28Z" fill="#831843" />
         </>
       );
@@ -261,7 +261,7 @@ function renderCharacterFeatures(agentId: string) {
     case '17': // Cadência — Maestro Receita: equalizer bars visor
       return (
         <>
-          <rect x="10" y="10" width="20" height="16" rx="5" fill="#0F172A" stroke="#D8B4FE" strokeWidth="1.4" />
+          <rect x="10" y="10" width="20" height="16" rx="5" fill="#0F172A" stroke="#7C3AED" strokeWidth="1.4" />
           <line x1="14" y1="19" x2="14" y2="15" stroke="#E879F9" strokeWidth="2" strokeLinecap="round" />
           <line x1="18" y1="21" x2="18" y2="14" stroke="#C084FC" strokeWidth="2" strokeLinecap="round" />
           <line x1="22" y1="19" x2="22" y2="15" stroke="#E879F9" strokeWidth="2" strokeLinecap="round" />

@@ -330,11 +330,11 @@ export function AgentBotsWorkspace({
       <section className="neon-card p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="min-w-0 space-y-2.5">
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-paper-100">
               Esquadrão em Operação — {activeWave ? activeWave.name : activeRepo.fullName}
             </span>
             <span className="text-[#5C7099]" aria-hidden="true">·</span>
-            <span className="font-mono text-[#00F0FF] tabular-nums">
+            <span className="font-mono text-[#2563EB] tabular-nums">
               {OFFICIAL_AGENTS.length} agentes oficiais (AGENTS.md)
             </span>
           </div>
@@ -356,22 +356,22 @@ export function AgentBotsWorkspace({
                   style={
                     isSelected
                       ? {
-                          background: `linear-gradient(135deg, ${hex}2a 0%, rgba(11,17,34,0.95) 100%)`,
+                          background: `linear-gradient(135deg, ${hex}2a 0%, var(--color-ink-900) 100%)`,
                           border: `1.5px solid ${hex}`,
                           boxShadow: `0 0 22px -6px ${hex}aa`,
                         }
                       : {
-                          background: 'rgba(11, 17, 34, 0.85)',
+                          background: 'var(--color-ink-850)',
                           border: `1px solid ${hex}44`,
                         }
                   }
                 >
                   <AgentAvatar agent={agent} size="sm" />
                   <div className="leading-tight">
-                    <div className="text-xs font-semibold text-white">
+                    <div className="text-xs font-semibold text-paper-100">
                       {agent.id} · {agent.persona.codename}
                     </div>
-                    <div className="text-[11px]" style={{ color: isSelected ? hex : '#8FA3C8' }}>
+                    <div className="text-[11px]" style={{ color: isSelected ? hex : 'var(--color-paper-400)' }}>
                       {agent.persona.archetype}
                     </div>
                   </div>
@@ -387,8 +387,8 @@ export function AgentBotsWorkspace({
             onClick={() => setViewMode('desk')}
             className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
               viewMode === 'desk'
-                ? 'bg-gradient-to-r from-[#00F0FF]/25 to-[#BF5AF2]/25 text-white border border-[#00F0FF]/55 shadow-[0_0_16px_-6px_rgba(0,240,255,0.8)]'
-                : 'text-[#8FA3C8] hover:text-white border border-transparent'
+                ? 'bg-gradient-to-r from-[#2563EB]/25 to-[#7C3AED]/25 text-paper-100 border border-[#2563EB]/55 shadow-[0_0_16px_-6px_rgba(37,99,235,0.8)]'
+                : 'text-[#8FA3C8] hover:text-paper-100 border border-transparent'
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
@@ -399,8 +399,8 @@ export function AgentBotsWorkspace({
             onClick={() => setViewMode('gallery')}
             className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
               viewMode === 'gallery'
-                ? 'bg-gradient-to-r from-[#BF5AF2]/30 to-[#FF2E97]/25 text-white border border-[#FF2E97]/55 shadow-[0_0_16px_-6px_rgba(255,46,151,0.8)]'
-                : 'text-[#8FA3C8] hover:text-white border border-transparent'
+                ? 'bg-gradient-to-r from-[#7C3AED]/30 to-[#DB2777]/25 text-paper-100 border border-[#DB2777]/55 shadow-[0_0_16px_-6px_rgba(219,39,119,0.8)]'
+                : 'text-[#8FA3C8] hover:text-paper-100 border border-transparent'
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -413,7 +413,7 @@ export function AgentBotsWorkspace({
         <section className="space-y-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <h2 className="font-display text-xl font-bold text-white">
+              <h2 className="font-display text-xl font-bold text-paper-100">
                 Todos os Personagens Autônomos ({visibleRoster.length} de {OFFICIAL_AGENTS.length})
               </h2>
               <p className="text-xs text-[#A6B7D9] mt-1">
@@ -430,8 +430,8 @@ export function AgentBotsWorkspace({
                     onClick={() => setGalleryCategory(cat)}
                     className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
                       galleryCategory === cat
-                        ? 'bg-[#BF5AF2]/25 text-white border border-[#BF5AF2]/55'
-                        : 'text-[#8FA3C8] hover:text-white border border-transparent'
+                        ? 'bg-[#7C3AED]/25 text-paper-100 border border-[#7C3AED]/55'
+                        : 'text-[#8FA3C8] hover:text-paper-100 border border-transparent'
                     }`}
                   >
                     {GALLERY_CATEGORY_LABELS[cat]}
@@ -460,7 +460,7 @@ export function AgentBotsWorkspace({
                   key={agent.id}
                   className="rounded-3xl overflow-hidden flex flex-col justify-between transition-transform duration-200 hover:-translate-y-0.5"
                   style={{
-                    background: `radial-gradient(circle at 92% 6%, ${hex}22 0%, rgba(12,18,37,0.95) 55%, rgba(7,11,22,0.98) 100%)`,
+                    background: `radial-gradient(circle at 92% 6%, ${hex}22 0%, var(--color-ink-900) 55%, var(--color-ink-950) 100%)`,
                     border: `1px solid ${hex}4d`,
                     boxShadow: `0 16px 36px -22px rgba(0,0,0,0.95), 0 0 26px -14px ${hex}66`,
                   }}
@@ -482,10 +482,10 @@ export function AgentBotsWorkspace({
                             Agente {agent.id}
                           </span>
                           {isWaveActive && (
-                            <span className="text-[#00FFA3] font-semibold whitespace-nowrap">● Ativo</span>
+                            <span className="text-[#047857] font-semibold whitespace-nowrap">● Ativo</span>
                           )}
                         </div>
-                        <h3 className="font-display text-base font-bold text-white truncate mt-0.5">
+                        <h3 className="font-display text-base font-bold text-paper-100 truncate mt-0.5">
                           {agent.persona.codename}
                         </h3>
                         <div className="text-xs text-[#A6B7D9] truncate">
@@ -516,9 +516,9 @@ export function AgentBotsWorkspace({
                         setViewMode('desk');
                         setErrorMsg(null);
                       }}
-                      className="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-semibold text-white rounded-2xl whitespace-nowrap shrink-0 transition-all"
+                      className="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-semibold text-paper-100 rounded-2xl whitespace-nowrap shrink-0 transition-all"
                       style={{
-                        background: `linear-gradient(135deg, ${hex}40 0%, rgba(12,18,37,0.95) 100%)`,
+                        background: `linear-gradient(135deg, ${hex}40 0%, var(--color-ink-900) 100%)`,
                         border: `1px solid ${hex}99`,
                         boxShadow: `0 0 18px -6px ${hex}aa`,
                       }}
@@ -538,10 +538,10 @@ export function AgentBotsWorkspace({
           <section className="xl:col-span-4 neon-card overflow-hidden">
             <div className="p-5 border-b border-cyan-400/15 space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="font-display text-sm font-bold text-white">
+                <h2 className="font-display text-sm font-bold text-paper-100">
                   Personagens Autônomos ({OFFICIAL_AGENTS.length})
                 </h2>
-                <span className="text-xs font-mono text-[#BF5AF2]">19/20 reserv.</span>
+                <span className="text-xs font-mono text-[#7C3AED]">19/20 reserv.</span>
               </div>
               <label htmlFor="bot-roster-search" className="sr-only">
                 Filtrar personagens
@@ -574,7 +574,7 @@ export function AgentBotsWorkspace({
                     style={
                       isSelected
                         ? {
-                            background: `linear-gradient(125deg, ${hex}26 0%, rgba(12,18,37,0.96) 90%)`,
+                            background: `linear-gradient(125deg, ${hex}26 0%, var(--color-ink-900) 90%)`,
                             border: `1px solid ${hex}99`,
                             boxShadow: `0 0 22px -10px ${hex}aa`,
                           }
@@ -587,12 +587,12 @@ export function AgentBotsWorkspace({
                     <AgentAvatar agent={agent} size="md" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-white truncate">
+                        <span className="text-xs font-bold text-paper-100 truncate">
                           {agent.id} · {agent.persona.codename}
                         </span>
                         <span
                           className="text-[11px] truncate font-medium"
-                          style={{ color: isSelected ? hex : '#7C90B8' }}
+                          style={{ color: isSelected ? hex : 'var(--color-paper-400)' }}
                         >
                           {agent.persona.archetype}
                         </span>
@@ -600,7 +600,7 @@ export function AgentBotsWorkspace({
                       <div className="text-xs text-[#C9D4E8] truncate mt-0.5">{agent.name}</div>
                       <div className="text-[11px] truncate mt-0.5 text-[#7C90B8]">
                         {isWaveActive ? (
-                          <span className="text-[#00FFA3] font-semibold">Ativo na onda · </span>
+                          <span className="text-[#047857] font-semibold">Ativo na onda · </span>
                         ) : null}
                         {msgCount > 0 ? `${msgCount} exec. · ` : ''}
                         {agent.persona.motto}
@@ -618,7 +618,7 @@ export function AgentBotsWorkspace({
             <div
               className="rounded-3xl overflow-hidden transition-all duration-300"
               style={{
-                background: `radial-gradient(circle at 90% 8%, ${accent}24 0%, rgba(13,20,40,0.94) 55%, rgba(7,11,22,0.98) 100%)`,
+                background: `radial-gradient(circle at 90% 8%, ${accent}24 0%, var(--color-ink-850) 55%, var(--color-ink-950) 100%)`,
                 border: `1.5px solid ${accent}77`,
                 boxShadow: `0 20px 48px -24px rgba(0,0,0,0.95), 0 0 38px -16px ${accent}88`,
               }}
@@ -626,7 +626,7 @@ export function AgentBotsWorkspace({
               <div
                 className="h-1.5 w-full"
                 style={{
-                  background: `linear-gradient(90deg, ${accent}, #BF5AF2, #FF2E97)`,
+                  background: `linear-gradient(90deg, ${accent}, #7C3AED, #DB2777)`,
                   boxShadow: `0 0 18px ${accent}`,
                 }}
                 aria-hidden="true"
@@ -640,7 +640,7 @@ export function AgentBotsWorkspace({
                         Agente {selectedAgent.id} · {selectedAgent.persona.archetype}
                         {selectedAgent.cannotEditCode ? ' · Somente Auditoria' : ''}
                       </div>
-                      <h2 className="font-display text-xl font-bold text-white mt-0.5">
+                      <h2 className="font-display text-xl font-bold text-paper-100 mt-0.5">
                         {selectedAgent.persona.codename} — {selectedAgent.name}
                       </h2>
                       <p className="text-xs text-[#C9D4E8] mt-1 italic">
@@ -672,12 +672,12 @@ export function AgentBotsWorkspace({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/10 text-xs">
                   <div className="space-y-2">
                     <div>
-                      <span className="font-semibold text-white">Personalidade &amp; Voz: </span>
+                      <span className="font-semibold text-paper-100">Personalidade &amp; Voz: </span>
                       <span className="text-[#C9D4E8]">{selectedAgent.persona.voiceStyle}</span>
                     </div>
                     {selectedAgent.exclusivePaths.length > 0 && (
                       <div>
-                        <span className="font-semibold text-white">Propriedade exclusiva: </span>
+                        <span className="font-semibold text-paper-100">Propriedade exclusiva: </span>
                         <span className="font-mono" style={{ color: accent }}>
                           {selectedAgent.exclusivePaths.join(', ')}
                         </span>
@@ -686,14 +686,14 @@ export function AgentBotsWorkspace({
                   </div>
                   <div className="space-y-2">
                     <div>
-                      <span className="font-semibold text-white">Ferramentas reais: </span>
-                      <span className="font-mono text-[#67F8FF]">
+                      <span className="font-semibold text-paper-100">Ferramentas reais: </span>
+                      <span className="font-mono text-[#2563EB]">
                         {selectedAgent.persona.signatureTools.join(', ')}
                       </span>
                     </div>
                     <div>
-                      <span className="font-semibold text-white">Pendências no domínio: </span>
-                      <span className="font-mono text-[#FFE066] tabular-nums">
+                      <span className="font-semibold text-paper-100">Pendências no domínio: </span>
+                      <span className="font-mono text-[#D97706] tabular-nums">
                         {ownedBlockers.length} bloqueador(es) · {incomingHandoffs.length} handoff(s)
                       </span>
                     </div>
@@ -708,9 +708,9 @@ export function AgentBotsWorkspace({
                       type="button"
                       disabled={running}
                       onClick={() => executeSingleBot(dir.prompt)}
-                      className="inline-flex items-center gap-2 h-9 px-3.5 text-xs font-semibold text-white rounded-2xl transition-all disabled:opacity-50"
+                      className="inline-flex items-center gap-2 h-9 px-3.5 text-xs font-semibold text-paper-100 rounded-2xl transition-all disabled:opacity-50"
                       style={{
-                        background: 'rgba(8, 12, 26, 0.85)',
+                        background: 'var(--color-ink-850)',
                         border: `1px solid ${accent}55`,
                       }}
                     >
@@ -724,10 +724,10 @@ export function AgentBotsWorkspace({
 
             {/* Live Real-Time Execution Activity Panel */}
             {liveState && (
-              <div className="rounded-3xl bg-[#070B18] text-white border border-[#00F0FF]/55 shadow-[0_0_30px_-10px_rgba(0,240,255,0.65)] p-5 space-y-3">
+              <div className="rounded-3xl bg-[#070B18] text-paper-100 border border-[#2563EB]/55 shadow-[0_0_30px_-10px_rgba(37,99,235,0.65)] p-5 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5 text-xs font-semibold">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#00F0FF] shrink-0" />
+                    <Loader2 className="w-4 h-4 animate-spin text-[#2563EB] shrink-0" />
                     <span>
                       {liveAgent
                         ? `${liveAgent.id} · ${liveAgent.persona.codename} em operação (passo ${liveState.currentStep})`
@@ -736,11 +736,11 @@ export function AgentBotsWorkspace({
                   </div>
                   <div className="flex items-center gap-2.5">
                     {liveState.activeToolName && (
-                      <span className="text-[11px] font-mono text-[#FFB800]">
+                      <span className="text-[11px] font-mono text-[#D97706]">
                         chamando {liveState.activeToolName}...
                       </span>
                     )}
-                    <span className="text-[11px] font-mono text-[#67F8FF] tabular-nums">
+                    <span className="text-[11px] font-mono text-[#2563EB] tabular-nums">
                       {elapsedSec}s
                     </span>
                   </div>
@@ -764,9 +764,9 @@ export function AgentBotsWorkspace({
                           <span
                             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-mono text-[11px] ${
                               isDone
-                                ? 'bg-[#00FFA3]/15 text-[#00FFA3] border border-[#00FFA3]/50'
+                                ? 'bg-[#047857]/15 text-[#047857] border border-[#047857]/50'
                                 : isCurrent
-                                  ? 'bg-[#00F0FF]/15 text-[#67F8FF] border border-[#00F0FF]/60'
+                                  ? 'bg-[#2563EB]/15 text-[#2563EB] border border-[#2563EB]/60'
                                   : 'bg-white/5 text-[#7C90B8] border border-white/10'
                             }`}
                           >
@@ -783,7 +783,7 @@ export function AgentBotsWorkspace({
                   <div className="space-y-1.5 pt-2 border-t border-white/10 text-[11px] font-mono">
                     {liveState.traces.map((tr) => (
                       <div key={tr.id} className="flex items-center justify-between gap-2 text-[#D6E0F5]">
-                        <span className="text-[#00F0FF] shrink-0">
+                        <span className="text-[#2563EB] shrink-0">
                           [{tr.agentId}] {tr.toolName}
                         </span>
                         <span className="truncate text-[#8FA3C8]">{tr.resultSummary}</span>
@@ -796,8 +796,8 @@ export function AgentBotsWorkspace({
 
             {/* Live Error Banner */}
             {errorMsg && (
-              <div className="p-4 bg-[#FF073A]/12 border border-[#FF073A]/50 rounded-2xl text-xs text-[#FF6B8B] flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#FF073A]" />
+              <div className="p-4 bg-[#DC2626]/12 border border-[#DC2626]/50 rounded-2xl text-xs text-[#E11D48] flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#DC2626]" />
                 <div>{errorMsg}</div>
               </div>
             )}
@@ -805,8 +805,8 @@ export function AgentBotsWorkspace({
             {/* Autonomous Execution Feed */}
             <div className="neon-card overflow-hidden">
               <div className="px-5 py-3.5 border-b border-cyan-400/15 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs font-semibold text-white">
-                  <Bot className="w-4 h-4 text-[#00F0FF]" />
+                <div className="flex items-center gap-2 text-xs font-semibold text-paper-100">
+                  <Bot className="w-4 h-4 text-[#2563EB]" />
                   <span>Linha de Execução Autônoma — {activeRepo.fullName}</span>
                 </div>
 
@@ -816,8 +816,8 @@ export function AgentBotsWorkspace({
                     onClick={() => setFeedScope('all')}
                     className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
                       feedScope === 'all'
-                        ? 'bg-[#00F0FF]/20 text-white border border-[#00F0FF]/45'
-                        : 'text-[#8FA3C8] hover:text-white border border-transparent'
+                        ? 'bg-[#2563EB]/20 text-paper-100 border border-[#2563EB]/45'
+                        : 'text-[#8FA3C8] hover:text-paper-100 border border-transparent'
                     }`}
                   >
                     Todos ({allRepoMessages.length})
@@ -827,8 +827,8 @@ export function AgentBotsWorkspace({
                     onClick={() => setFeedScope('selected')}
                     className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
                       feedScope === 'selected'
-                        ? 'bg-[#BF5AF2]/25 text-white border border-[#BF5AF2]/50'
-                        : 'text-[#8FA3C8] hover:text-white border border-transparent'
+                        ? 'bg-[#7C3AED]/25 text-paper-100 border border-[#7C3AED]/50'
+                        : 'text-[#8FA3C8] hover:text-paper-100 border border-transparent'
                     }`}
                   >
                     Só {selectedAgent.persona.codename}
@@ -847,19 +847,19 @@ export function AgentBotsWorkspace({
                 ) : (
                   repoMessages.map((msg: AgentBotMessage) => {
                     const msgAgent = getAgentById(msg.agentId);
-                    const msgHex = msgAgent?.persona.accentHex ?? '#00F0FF';
+                    const msgHex = msgAgent?.persona.accentHex ?? '#2563EB';
                     if (msg.role === 'user') {
                       return (
                         <div key={msg.id} className="flex justify-end">
                           <div
-                            className="max-w-[85%] text-white rounded-2xl px-4 py-3 text-xs space-y-1"
+                            className="max-w-[85%] text-paper-100 rounded-2xl px-4 py-3 text-xs space-y-1"
                             style={{
                               background:
-                                'linear-gradient(135deg, rgba(0,240,255,0.22), rgba(191,90,242,0.26))',
-                              border: '1px solid rgba(0,240,255,0.45)',
+                                'linear-gradient(135deg, rgba(37,99,235,0.22), rgba(124,58,237,0.26))',
+                              border: '1px solid rgba(37,99,235,0.45)',
                             }}
                           >
-                            <div className="text-[11px] text-[#67F8FF] font-mono">
+                            <div className="text-[11px] text-[#2563EB] font-mono">
                               Diretiva → {msgAgent ? `${msgAgent.id} ${msgAgent.persona.codename}` : msg.agentId}
                             </div>
                             <div className="whitespace-pre-wrap">{msg.content}</div>
@@ -881,7 +881,7 @@ export function AgentBotsWorkspace({
                           <div className="flex items-center gap-2.5">
                             {msgAgent && <AgentAvatar agent={msgAgent} size="sm" />}
                             <div>
-                              <div className="text-xs font-bold text-white">
+                              <div className="text-xs font-bold text-paper-100">
                                 {msgAgent
                                   ? `${msgAgent.id} · ${msgAgent.persona.codename} (${msgAgent.name})`
                                   : `Agente ${msg.agentId}`}
@@ -895,7 +895,7 @@ export function AgentBotsWorkspace({
                             <button
                               type="button"
                               onClick={() => onSelectAgent(msgAgent.id)}
-                              className="text-[11px] font-semibold text-white px-3 py-1.5 rounded-xl transition-all"
+                              className="text-[11px] font-semibold text-paper-100 px-3 py-1.5 rounded-xl transition-all"
                               style={{
                                 background: `${msgHex}1a`,
                                 border: `1px solid ${msgHex}66`,
@@ -908,7 +908,7 @@ export function AgentBotsWorkspace({
 
                         {msg.toolTraces && msg.toolTraces.length > 0 && (
                           <div className="bg-[#060914] border border-cyan-400/20 rounded-xl p-3 space-y-1.5">
-                            <div className="text-[11px] font-semibold text-[#67F8FF] flex items-center gap-1.5">
+                            <div className="text-[11px] font-semibold text-[#2563EB] flex items-center gap-1.5">
                               <Wrench className="w-3 h-3" />
                               <span>Ações executadas no workspace ({msg.toolTraces.length})</span>
                             </div>
@@ -917,7 +917,7 @@ export function AgentBotsWorkspace({
                                 key={tr.id}
                                 className="text-[11px] font-mono text-[#D6E0F5] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-t border-white/10 pt-1.5"
                               >
-                                <span className="font-semibold text-[#00FFA3]">{tr.toolName}</span>
+                                <span className="font-semibold text-[#047857]">{tr.toolName}</span>
                                 <span className="text-[#8FA3C8] truncate">{tr.resultSummary}</span>
                               </div>
                             ))}

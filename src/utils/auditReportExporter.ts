@@ -145,11 +145,11 @@ export function generateAuditReportPdfFromJson(jsonPayload: string): {
   // Header Banner
   doc.setFillColor(10, 14, 28);
   doc.roundedRect(margin, y - 14, contentWidth, 74, 12, 12, 'F');
-  doc.setDrawColor(0, 240, 255);
+  doc.setDrawColor(37, 99, 235);
   doc.setLineWidth(1.2);
   doc.roundedRect(margin, y - 14, contentWidth, 74, 12, 12, 'S');
 
-  doc.setTextColor(0, 240, 255);
+  doc.setTextColor(37, 99, 235);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.text('RELATORIO TECNICO DE AUDITORIA MULTIAGENTE (JSON -> PDF)', margin + 16, y + 6);

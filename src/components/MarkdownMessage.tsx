@@ -7,7 +7,7 @@ function renderInline(text: string): ReactNode[] {
       return (
         <code
           key={idx}
-          className="px-1.5 py-0.5 mx-0.5 rounded-lg bg-[#00F0FF]/12 border border-[#00F0FF]/30 text-[#67F8FF] font-mono text-[12px]"
+          className="px-1.5 py-0.5 mx-0.5 rounded-lg bg-[#2563EB]/12 border border-[#2563EB]/30 text-[#2563EB] font-mono text-[12px]"
         >
           {tok.slice(1, -1)}
         </code>
@@ -15,7 +15,7 @@ function renderInline(text: string): ReactNode[] {
     }
     if (tok.startsWith('**') && tok.endsWith('**') && tok.length >= 4) {
       return (
-        <strong key={idx} className="font-semibold text-white">
+        <strong key={idx} className="font-semibold text-paper-100">
           {tok.slice(2, -2)}
         </strong>
       );
@@ -50,7 +50,7 @@ export function MarkdownMessage({ content }: { content: string }) {
       blocks.push(
         <pre
           key={`code-${i}`}
-          className="p-3.5 bg-[#04060D] border border-[#00F0FF]/25 text-[#E8EEF8] rounded-2xl overflow-x-auto text-xs font-mono leading-relaxed"
+          className="p-3.5 bg-[#04060D] border border-[#2563EB]/25 text-[#E8EEF8] rounded-2xl overflow-x-auto text-xs font-mono leading-relaxed"
         >
           <code>{codeLines.join('\n')}</code>
         </pre>
@@ -76,10 +76,10 @@ export function MarkdownMessage({ content }: { content: string }) {
           key={`h-${i}`}
           className={
             level === 1
-              ? 'text-base font-bold text-white pt-1'
+              ? 'text-base font-bold text-paper-100 pt-1'
               : level === 2
-                ? 'text-sm font-bold text-[#67F8FF] pt-1'
-                : 'text-xs font-bold text-[#DF9EFF] pt-1'
+                ? 'text-sm font-bold text-[#2563EB] pt-1'
+                : 'text-xs font-bold text-[#7C3AED] pt-1'
           }
         >
           {renderInline(text)}
@@ -159,7 +159,7 @@ export function MarkdownMessage({ content }: { content: string }) {
       blocks.push(
         <div key={`tbl-${i}`} className="overflow-x-auto border border-cyan-400/25 rounded-2xl">
           <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-[#0B1224] border-b border-cyan-400/20 text-[#67F8FF] font-semibold">
+            <thead className="bg-[#0B1224] border-b border-cyan-400/20 text-[#2563EB] font-semibold">
               <tr>
                 {headers.map((h, idx) => (
                   <th key={idx} className="px-3.5 py-2.5 whitespace-nowrap">

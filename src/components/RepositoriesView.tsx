@@ -238,9 +238,9 @@ export function RepositoriesView({
         <div
           className="rounded-2xl p-3.5 text-sm border"
           style={{
-            background: 'rgba(255, 7, 58, 0.1)',
-            borderColor: 'rgba(255, 7, 58, 0.45)',
-            color: '#FF8FA3',
+            background: 'rgba(220, 38, 38, 0.1)',
+            borderColor: 'rgba(220, 38, 38, 0.45)',
+            color: '#DC2626',
           }}
         >
           {syncError}
@@ -269,7 +269,7 @@ export function RepositoriesView({
                 <tr key={repo.id} className={isActive ? 'bg-slate-50/80' : 'hover:bg-slate-50'}>
                   <td className="py-3.5 px-5">
                     <div className="flex items-center gap-2 font-medium text-slate-900">
-                      <FolderGit2 className="w-4 h-4 text-[#00F0FF] shrink-0" />
+                      <FolderGit2 className="w-4 h-4 text-[#2563EB] shrink-0" />
                       <span className="font-mono">{repo.fullName}</span>
                     </div>
                     <div className="text-xs text-slate-500 mt-0.5 font-mono">
@@ -299,18 +299,18 @@ export function RepositoriesView({
                         style={{
                           borderColor: hook.enabled
                             ? hook.provider === 'slack'
-                              ? 'rgba(0, 255, 163, 0.5)'
-                              : 'rgba(157, 78, 221, 0.6)'
+                              ? 'rgba(5, 150, 105, 0.5)'
+                              : 'rgba(124, 58, 237, 0.6)'
                             : 'rgba(148, 163, 184, 0.35)',
                           background: hook.enabled
                             ? hook.provider === 'slack'
-                              ? 'rgba(0, 255, 163, 0.12)'
-                              : 'rgba(157, 78, 221, 0.16)'
+                              ? 'rgba(5, 150, 105, 0.12)'
+                              : 'rgba(124, 58, 237, 0.16)'
                             : 'rgba(148, 163, 184, 0.08)',
                           color: hook.enabled
                             ? hook.provider === 'slack'
-                              ? '#00FFA3'
-                              : '#D8B4FE'
+                              ? '#047857'
+                              : '#7C3AED'
                             : '#94A3B8',
                         }}
                       >
@@ -324,7 +324,7 @@ export function RepositoriesView({
                       <button
                         type="button"
                         onClick={() => setConfigRepoId(repo.id)}
-                        className="text-xs text-paper-400 hover:text-[#00F0FF] underline underline-offset-4"
+                        className="text-xs text-paper-400 hover:text-[#2563EB] underline underline-offset-4"
                       >
                         Configurar
                       </button>
@@ -339,7 +339,7 @@ export function RepositoriesView({
                   <td className="py-3.5 px-5 text-right">
                     <div className="inline-flex items-center gap-2">
                       {isActive ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#00FFA3] px-2.5 py-1">
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#047857] px-2.5 py-1">
                           <Check className="w-3.5 h-3.5" />
                           Ativo
                         </span>
@@ -391,8 +391,8 @@ export function RepositoriesView({
         <section
           className="panel !rounded-3xl p-6 space-y-5"
           style={{
-            borderColor: 'rgba(157, 78, 221, 0.42)',
-            boxShadow: '0 18px 42px -20px rgba(157, 78, 221, 0.35)',
+            borderColor: 'rgba(124, 58, 237, 0.42)',
+            boxShadow: '0 18px 42px -20px rgba(124, 58, 237, 0.35)',
           }}
         >
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/10 pb-4">
@@ -400,9 +400,9 @@ export function RepositoriesView({
               <div
                 className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(157, 78, 221, 0.25))',
-                  border: '1px solid rgba(0, 240, 255, 0.45)',
-                  color: '#00F0FF',
+                  background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(124, 58, 237, 0.25))',
+                  border: '1px solid rgba(37, 99, 235, 0.45)',
+                  color: 'var(--color-signal-400)',
                 }}
               >
                 <Bell className="w-5 h-5" />
@@ -428,7 +428,7 @@ export function RepositoriesView({
                 id="webhook-repo-select"
                 value={targetRepo.id}
                 onChange={(e) => setConfigRepoId(e.target.value)}
-                className="w-full h-10 px-3 text-xs font-mono rounded-2xl bg-[#070B18] border border-white/15 text-paper-100 focus:outline-none focus:border-[#00F0FF]"
+                className="w-full h-10 px-3 text-xs font-mono rounded-2xl bg-[#070B18] border border-white/15 text-paper-100 focus:outline-none focus:border-[#2563EB]"
               >
                 {repositories.map((repo) => (
                   <option key={repo.id} value={repo.id}>
@@ -445,13 +445,13 @@ export function RepositoriesView({
               style={{
                 background:
                   webhookFeedback.kind === 'success'
-                    ? 'rgba(0, 255, 163, 0.08)'
-                    : 'rgba(255, 7, 58, 0.1)',
+                    ? 'rgba(5, 150, 105, 0.08)'
+                    : 'rgba(220, 38, 38, 0.1)',
                 borderColor:
                   webhookFeedback.kind === 'success'
-                    ? 'rgba(0, 255, 163, 0.4)'
-                    : 'rgba(255, 7, 58, 0.45)',
-                color: webhookFeedback.kind === 'success' ? '#7FFFD4' : '#FF8FA3',
+                    ? 'rgba(5, 150, 105, 0.4)'
+                    : 'rgba(220, 38, 38, 0.45)',
+                color: webhookFeedback.kind === 'success' ? 'var(--color-ok-400)' : '#DC2626',
               }}
             >
               {webhookFeedback.kind === 'success' ? (
@@ -474,14 +474,14 @@ export function RepositoriesView({
                   className="p-3.5 rounded-2xl border text-left transition-all"
                   style={{
                     borderColor:
-                      provider === 'slack' ? '#00FFA3' : 'rgba(148, 163, 184, 0.18)',
+                      provider === 'slack' ? '#047857' : 'rgba(148, 163, 184, 0.18)',
                     background:
                       provider === 'slack'
-                        ? 'rgba(0, 255, 163, 0.12)'
-                        : 'rgba(8, 12, 26, 0.72)',
+                        ? 'rgba(5, 150, 105, 0.12)'
+                        : 'var(--color-ink-850)',
                     boxShadow:
                       provider === 'slack'
-                        ? '0 0 20px -8px rgba(0, 255, 163, 0.7)'
+                        ? '0 0 20px -8px rgba(5, 150, 105, 0.7)'
                         : 'none',
                   }}
                 >
@@ -497,14 +497,14 @@ export function RepositoriesView({
                   className="p-3.5 rounded-2xl border text-left transition-all"
                   style={{
                     borderColor:
-                      provider === 'discord' ? '#9D4EDD' : 'rgba(148, 163, 184, 0.18)',
+                      provider === 'discord' ? '#7C3AED' : 'rgba(148, 163, 184, 0.18)',
                     background:
                       provider === 'discord'
-                        ? 'rgba(157, 78, 221, 0.16)'
-                        : 'rgba(8, 12, 26, 0.72)',
+                        ? 'rgba(124, 58, 237, 0.16)'
+                        : 'var(--color-ink-850)',
                     boxShadow:
                       provider === 'discord'
-                        ? '0 0 20px -8px rgba(157, 78, 221, 0.8)'
+                        ? '0 0 20px -8px rgba(124, 58, 237, 0.8)'
                         : 'none',
                   }}
                 >
@@ -517,7 +517,7 @@ export function RepositoriesView({
 
               <div className="rounded-2xl p-3.5 bg-[#070B18] border border-white/10 text-[11px] text-paper-400 space-y-1">
                 <div className="flex items-center gap-1.5 text-paper-200 font-semibold">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#00F0FF]" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#2563EB]" />
                   <span>Proteção Anti-SSRF (§24)</span>
                 </div>
                 <p>
@@ -546,7 +546,7 @@ export function RepositoriesView({
                         ? 'https://hooks.slack.com/services/T000/B000/XXXX'
                         : 'https://discord.com/api/webhooks/1234567890/token'
                     }
-                    className="w-full h-10 px-3.5 text-xs font-mono rounded-2xl bg-[#070B18] border border-white/15 text-paper-100 focus:outline-none focus:border-[#00F0FF]"
+                    className="w-full h-10 px-3.5 text-xs font-mono rounded-2xl bg-[#070B18] border border-white/15 text-paper-100 focus:outline-none focus:border-[#2563EB]"
                   />
                 </div>
 
@@ -563,13 +563,13 @@ export function RepositoriesView({
                     value={channelLabel}
                     onChange={(e) => setChannelLabel(e.target.value)}
                     placeholder="#governanca-360"
-                    className="w-full h-10 px-3.5 text-xs font-mono rounded-2xl bg-[#070B18] border border-white/15 text-paper-100 focus:outline-none focus:border-[#00F0FF]"
+                    className="w-full h-10 px-3.5 text-xs font-mono rounded-2xl bg-[#070B18] border border-white/15 text-paper-100 focus:outline-none focus:border-[#2563EB]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-[#070B18] border border-white/10 cursor-pointer hover:border-[#00F0FF]/50">
+                <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-[#070B18] border border-white/10 cursor-pointer hover:border-[#2563EB]/50">
                   <input
                     type="checkbox"
                     checked={enabled}
@@ -584,7 +584,7 @@ export function RepositoriesView({
                   </div>
                 </label>
 
-                <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-[#070B18] border border-white/10 cursor-pointer hover:border-[#00FFA3]/50">
+                <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-[#070B18] border border-white/10 cursor-pointer hover:border-[#047857]/50">
                   <input
                     type="checkbox"
                     checked={notifyOnHandoff}
@@ -599,7 +599,7 @@ export function RepositoriesView({
                   </div>
                 </label>
 
-                <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-[#070B18] border border-white/10 cursor-pointer hover:border-[#FF073A]/50">
+                <label className="flex items-start gap-2.5 p-3 rounded-2xl bg-[#070B18] border border-white/10 cursor-pointer hover:border-[#DC2626]/50">
                   <input
                     type="checkbox"
                     checked={notifyOnAuditFailure}
@@ -623,8 +623,8 @@ export function RepositoriesView({
                       <strong
                         className={
                           targetRepo.webhook.lastTestStatus === 'ok'
-                            ? 'text-[#00FFA3]'
-                            : 'text-[#FF3E78]'
+                            ? 'text-[#047857]'
+                            : 'text-[#DB2777]'
                         }
                       >
                         {targetRepo.webhook.lastTestStatus === 'ok' ? 'ENTREGUE' : 'FALHA'}
@@ -641,7 +641,7 @@ export function RepositoriesView({
                     <button
                       type="button"
                       onClick={handleDisconnectWebhook}
-                      className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#FF073A]/45 text-[#FF8FA3] hover:bg-[#FF073A]/10"
+                      className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#DC2626]/45 text-[#DC2626] hover:bg-[#DC2626]/10"
                     >
                       <Unlink className="w-3.5 h-3.5" />
                       <span>Remover Webhook</span>
@@ -652,7 +652,7 @@ export function RepositoriesView({
                     type="button"
                     onClick={handleTestWebhook}
                     disabled={testingWebhook}
-                    className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#00F0FF]/50 text-[#00F0FF] hover:bg-[#00F0FF]/10"
+                    className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#2563EB]/50 text-[#2563EB] hover:bg-[#2563EB]/10"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>{testingWebhook ? 'Enviando teste...' : 'Testar Envio'}</span>

@@ -17,6 +17,16 @@ import { notificationsConfigured } from './centralNotify';
 import { runCoordinator } from './coordinator';
 import { buildWaveReportHtml } from './centralReport';
 import { handoffTemplate, onboardWave, type OnboardWaveInput } from './waveOnboarding';
+import {
+  claimLock,
+  releaseLock,
+  renewLock,
+  getLock,
+  listLocks,
+} from './phase1/locks';
+import { appendEvent } from './phase1/executions';
+import { registerWorktree, findOrphanedWorktrees, listWorktrees } from './phase1/worktree';
+import { getAdapter, type AdapterKind } from './phase1/adapters';
 import './centralNotify';
 
 function currentStatusOf(relPath: string): string {
@@ -182,7 +192,7 @@ export function createCentralRouter(): Router {
       worktree, branch, repoPath,
     });
     if (!result.ok) {
-      res.status(400).json(result);
+      res.status(result.conflict ? 409 : 400).json(result);
       return;
     }
 
@@ -228,6 +238,189 @@ export function createCentralRouter(): Router {
       worktree, branch,
     });
     res.type('text/plain; charset=utf-8').send(prompt);
+  });
+
+
+  // ── Fase 1: locks/lease ────────────────────────────────────────────
+  router.get('/locks', (_req, res) => {
+    res.json({ locks: listLocks() });
+  });
+
+  router.post('/locks/claim', (req, res) => {
+    const { handoff, owner, executionId, ttlMs, worktree } = req.body as {
+      handoff?: string; owner?: string; executionId?: string; ttlMs?: number; worktree?: string;
+    };
+    if (!handoff || !owner) {
+      res.status(400).json({ error: 'Informe handoff e owner.' });
+      return;
+    }
+    const result = claimLock({ handoffRelPath: handoff, owner, executionId, ttlMs, worktree });
+    if (!result.ok) {
+      res.status(409).json({ error: 'Lock em conflito.', conflict: result.conflict });
+      return;
+    }
+    appendEvent({
+      executionId: result.lock.executionId,
+      handoff: handoff.replace(/\\/g, '/'),
+      type: 'LOCK_CLAIMED',
+      actor: owner,
+      detail: `Lock adquirido por '${owner}' até ${result.lock.expiresAt}`,
+      meta: { stolen: result.stolen || false, worktree },
+    });
+    emitCentralEvent('lock_claimed', { handoff, owner, executionId: result.lock.executionId });
+    res.json({ ok: true, lock: result.lock, stolen: result.stolen || false });
+  });
+
+  router.post('/locks/release', (req, res) => {
+    const { handoff, owner, executionId } = req.body as {
+      handoff?: string; owner?: string; executionId?: string;
+    };
+    if (!handoff) {
+      res.status(400).json({ error: 'Informe handoff.' });
+      return;
+    }
+    const existing = getLock(handoff);
+    const result = releaseLock({ handoffRelPath: handoff, owner, executionId });
+    if (!result.ok) {
+      res.status(409).json(result);
+      return;
+    }
+    if (existing) {
+      appendEvent({
+        executionId: existing.executionId,
+        handoff: handoff.replace(/\\/g, '/'),
+        type: 'LOCK_RELEASED',
+        actor: owner || existing.owner,
+        detail: 'Lock liberado',
+      });
+      emitCentralEvent('lock_released', { handoff, owner: owner || existing.owner });
+    }
+    res.json(result);
+  });
+
+  router.post('/locks/renew', (req, res) => {
+    const { handoff, executionId, ttlMs } = req.body as {
+      handoff?: string; executionId?: string; ttlMs?: number;
+    };
+    if (!handoff || !executionId) {
+      res.status(400).json({ error: 'Informe handoff e executionId.' });
+      return;
+    }
+    const result = renewLock({ handoffRelPath: handoff, executionId, ttlMs });
+    if (!result.ok) {
+      res.status(409).json(result);
+      return;
+    }
+    res.json(result);
+  });
+
+  router.get('/worktrees', (_req, res) => {
+    res.json({ worktrees: listWorktrees(), orphaned: findOrphanedWorktrees() });
+  });
+
+  // ── Fase 1: dispatch/execute com adapter real ─────────────────────
+  router.post('/dispatch/execute', async (req, res) => {
+    const {
+      handoff, agentId, provider, worktree, branch, repoPath,
+      command, timeoutMs, prompt: promptOverride,
+    } = req.body as {
+      handoff?: string; agentId?: string; provider?: string; worktree?: string;
+      branch?: string; repoPath?: string; command?: string; timeoutMs?: number;
+      prompt?: string;
+    };
+    if (!handoff) {
+      res.status(400).json({ error: 'Informe handoff (caminho relativo na central).' });
+      return;
+    }
+    const abs = path.resolve(CENTRAL_DIR, handoff);
+    if (!abs.startsWith(CENTRAL_DIR) || !fs.existsSync(abs)) {
+      res.status(404).json({ error: 'Handoff não encontrado.' });
+      return;
+    }
+
+    const owner = agentId || provider || 'executor';
+    const claim = claimLock({ handoffRelPath: handoff, owner, worktree });
+    if (!claim.ok) {
+      res.status(409).json({
+        error: `Handoff já em execução por '${claim.conflict.owner}' até ${claim.conflict.expiresAt}.`,
+        conflict: claim.conflict,
+      });
+      return;
+    }
+    const { executionId } = claim.lock;
+    const relHandoff = handoff.replace(/\\/g, '/');
+    appendEvent({
+      executionId, handoff: relHandoff, type: 'CREATED', actor: owner,
+      detail: 'Execução criada via /dispatch/execute',
+      meta: { provider, agentId, worktree, branch },
+    });
+
+    const prompt = promptOverride || buildDispatchPrompt({
+      handoffAbsPath: abs,
+      agentName: owner,
+      worktree, branch, repoPath,
+    });
+
+    const kind = (provider || 'cli') as AdapterKind;
+    const adapter = getAdapter(kind);
+    appendEvent({
+      executionId, handoff: relHandoff, type: 'ADAPTER_STARTED', actor: owner,
+      detail: `Adapter '${kind}' iniciado`,
+    });
+    emitCentralEvent('exec_started', { handoff, execId: executionId, agent: owner });
+
+    if (worktree) {
+      registerWorktree({
+        path: worktree, branch, repoPath,
+        executionId, handoff: relHandoff, owner,
+      });
+    }
+
+    try {
+      if (kind === 'cli' && command) {
+        process.env.CENTRAL_CLI_COMMAND = command;
+      }
+      const result = await adapter.execute({
+        executionId,
+        handoffRelPath: handoff,
+        prompt,
+        worktree, branch, repoPath,
+        agentId,
+        timeoutMs,
+      });
+      const done = result.status === 'SUCCEEDED';
+      appendEvent({
+        executionId, handoff: relHandoff,
+        type: done ? 'ADAPTER_COMPLETED' : 'ADAPTER_FAILED',
+        actor: owner,
+        detail: `Adapter '${kind}' finalizou: ${result.status} (exit ${result.exitCode ?? 'n/a'})`,
+        meta: { exitCode: result.exitCode, sessionId: result.sessionId, durationMs: result.durationMs },
+      });
+      appendExecution({
+        handoff, agent: owner, provider: kind, action: done ? 'complete' : 'fail',
+        exitCode: result.exitCode ?? null, durationMs: result.durationMs,
+        branch: branch || null, worktree: worktree || null,
+        notes: `dispatch/execute ${result.status}`,
+      });
+      emitCentralEvent('exec_done', {
+        handoff, execId: executionId, status: result.status,
+      });
+      if (done || result.status === 'FAILED') {
+        releaseLock({ handoffRelPath: handoff, executionId });
+      }
+      res.json({ ok: done, executionId, result });
+    } catch (e) {
+      appendEvent({
+        executionId, handoff: relHandoff, type: 'ADAPTER_FAILED',
+        actor: owner, detail: (e as Error).message,
+      });
+      appendExecution({
+        handoff, agent: owner, provider: kind, action: 'fail',
+        notes: (e as Error).message,
+      });
+      releaseLock({ handoffRelPath: handoff, executionId });
+      res.status(500).json({ ok: false, executionId, error: (e as Error).message });
+    }
   });
 
   return router;

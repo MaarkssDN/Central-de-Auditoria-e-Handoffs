@@ -67,7 +67,7 @@ export function buildWebhookPayload(input: WebhookDispatchInput): Record<string,
 
   if (provider === 'slack') {
     const color =
-      severity === 'critical' ? '#FF073A' : severity === 'warning' ? '#FFB800' : '#00F0FF';
+      severity === 'critical' ? '#DC2626' : severity === 'warning' ? '#D97706' : '#2563EB';
     return {
       text: `[${eventTag}] ${repoFullName} — ${title}`,
       attachments: [

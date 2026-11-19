@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import { canTransition, normalizeStatus } from './phase1/stateMachine';
-import { claimLock, getLock, releaseLock, newExecutionId } from './phase1/locks';
+import { claimLock, getLock, releaseLock, newExecutionId, type LockConflict } from './phase1/locks';
 import { appendEvent, logStatusTransition } from './phase1/executions';
 import { atomicWriteFile } from './persistence';
 
@@ -258,7 +258,7 @@ ${handoffText}
 
 export function queueDispatch(opts: {
   handoffRelPath: string; agentId: string; worktree?: string; branch?: string; repoPath?: string;
-}): { ok: boolean; promptFile?: string; error?: string } {
+}): { ok: boolean; promptFile?: string; error?: string; conflict?: LockConflict } {
   const abs = path.resolve(CENTRAL_DIR, opts.handoffRelPath);
   if (!abs.startsWith(CENTRAL_DIR) || !fs.existsSync(abs)) {
     return { ok: false, error: 'Handoff não encontrado.' };
@@ -278,7 +278,7 @@ export function queueDispatch(opts: {
     worktree: opts.worktree,
   });
   if (!claim.ok) {
-    return { ok: false, error: `Handoff já está em execução por '${claim.conflict.owner}' até ${claim.conflict.expiresAt} (executionId ${claim.conflict.executionId}).` };
+    return { ok: false, error: `Handoff já está em execução por '${claim.conflict.owner}' até ${claim.conflict.expiresAt} (executionId ${claim.conflict.executionId}).`, conflict: claim.conflict };
   }
   appendEvent({
     executionId: claim.lock.executionId,

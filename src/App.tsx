@@ -506,13 +506,13 @@ export default function App() {
               style={{
                 background:
                   webhookNotice.kind === 'ok'
-                    ? 'rgba(0, 255, 163, 0.08)'
-                    : 'rgba(255, 7, 58, 0.1)',
+                    ? 'rgba(5, 150, 105, 0.08)'
+                    : 'rgba(220, 38, 38, 0.1)',
                 borderColor:
                   webhookNotice.kind === 'ok'
-                    ? 'rgba(0, 255, 163, 0.42)'
-                    : 'rgba(255, 7, 58, 0.45)',
-                color: webhookNotice.kind === 'ok' ? '#7FFFD4' : '#FF8FA3',
+                    ? 'rgba(5, 150, 105, 0.42)'
+                    : 'rgba(220, 38, 38, 0.45)',
+                color: webhookNotice.kind === 'ok' ? 'var(--color-ok-400)' : '#DC2626',
               }}
             >
               <span>{webhookNotice.text}</span>

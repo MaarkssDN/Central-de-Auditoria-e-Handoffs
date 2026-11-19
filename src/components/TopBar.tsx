@@ -50,7 +50,7 @@ export function TopBar({
             type="button"
             onClick={onOpenMobileMenu}
             aria-label="Abrir menu"
-            className="lg:hidden p-2 -ml-2 text-[#A6B7D9] hover:text-white rounded-xl"
+            className="lg:hidden p-2 -ml-2 text-[#A6B7D9] hover:text-paper-100 rounded-xl"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -58,7 +58,7 @@ export function TopBar({
           <div className="flex items-center gap-2 min-w-0 text-sm">
             {activeRepo && (
               <>
-                <span className="hidden sm:inline font-mono text-xs text-[#00F0FF] truncate max-w-[200px]">
+                <span className="hidden sm:inline font-mono text-xs text-[#2563EB] truncate max-w-[200px]">
                   {activeRepo.fullName}
                 </span>
                 <span className="hidden sm:inline text-[#5C7099]" aria-hidden="true">
@@ -66,7 +66,7 @@ export function TopBar({
                 </span>
               </>
             )}
-            <h1 className="font-display text-lg font-bold tracking-tight text-white truncate">
+            <h1 className="font-display text-lg font-bold tracking-tight text-paper-100 truncate">
               {SECTION_TITLES[activeSection]}
             </h1>
           </div>
@@ -79,14 +79,14 @@ export function TopBar({
             onClick={onLogout}
             aria-label="Sair"
             title="Sair"
-            className="p-2 rounded-xl text-[#A6B7D9] hover:text-white hover:bg-white/[0.06] transition-colors"
+            className="p-2 rounded-xl text-[#A6B7D9] hover:text-paper-100 hover:bg-white/[0.06] transition-colors"
           >
             <LogOut className="w-5 h-5" />
           </button>
 
           <div className="hidden md:flex items-center gap-3">
             {openBlockers > 0 && (
-              <span className="text-xs font-mono text-[#FFB800] tabular-nums whitespace-nowrap">
+              <span className="text-xs font-mono text-[#D97706] tabular-nums whitespace-nowrap">
                 {openBlockers} bloqueio{openBlockers > 1 ? 's' : ''} aberto{openBlockers > 1 ? 's' : ''}
               </span>
             )}

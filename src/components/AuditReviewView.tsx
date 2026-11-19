@@ -263,7 +263,7 @@ export function AuditReviewView({
               setExportPreviewTab('resumo');
               setShowExportModal(true);
             }}
-            className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#00F0FF]/50 text-[#00F0FF] hover:bg-[#00F0FF]/10 whitespace-nowrap"
+            className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#2563EB]/50 text-[#2563EB] hover:bg-[#2563EB]/10 whitespace-nowrap"
           >
             <FileText className="w-4 h-4" />
             <span>Prévia Relatório</span>
@@ -272,7 +272,7 @@ export function AuditReviewView({
           <button
             type="button"
             onClick={handleExportJson}
-            className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#9D4EDD]/60 text-[#D8B4FE] hover:bg-[#9D4EDD]/15 whitespace-nowrap"
+            className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#7C3AED]/60 text-[#7C3AED] hover:bg-[#7C3AED]/15 whitespace-nowrap"
           >
             <FileCode2 className="w-4 h-4" />
             <span>Exportar JSON</span>
@@ -281,11 +281,7 @@ export function AuditReviewView({
           <button
             type="button"
             onClick={handleExportPdf}
-            className="btn !rounded-2xl !px-4 !py-2 text-xs font-bold text-[#04060D] whitespace-nowrap"
-            style={{
-              background: 'linear-gradient(135deg, #00F0FF 0%, #39FF14 100%)',
-              boxShadow: '0 0 22px -6px rgba(0, 240, 255, 0.75)',
-            }}
+            className="btn btn-primary !rounded-2xl !px-4 !py-2 text-xs font-bold whitespace-nowrap"
           >
             <FileDown className="w-4 h-4" />
             <span>Gerar PDF (JSON → PDF)</span>
@@ -295,7 +291,7 @@ export function AuditReviewView({
             <button
               type="button"
               onClick={() => onActivateBot('24')}
-              className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#FF073A]/45 text-[#FF8FA3] hover:bg-[#FF073A]/10 whitespace-nowrap"
+              className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#DC2626]/45 text-[#DC2626] hover:bg-[#DC2626]/10 whitespace-nowrap"
             >
               <Bot className="w-4 h-4" />
               <span>Auditar com Veredito (24)</span>
@@ -326,13 +322,13 @@ export function AuditReviewView({
           style={{
             background:
               exportNotice.kind === 'success'
-                ? 'rgba(0, 255, 163, 0.08)'
-                : 'rgba(255, 7, 58, 0.1)',
+                ? 'rgba(5, 150, 105, 0.08)'
+                : 'rgba(220, 38, 38, 0.1)',
             borderColor:
               exportNotice.kind === 'success'
-                ? 'rgba(0, 255, 163, 0.4)'
-                : 'rgba(255, 7, 58, 0.45)',
-            color: exportNotice.kind === 'success' ? '#7FFFD4' : '#FF8FA3',
+                ? 'rgba(5, 150, 105, 0.4)'
+                : 'rgba(220, 38, 38, 0.45)',
+            color: exportNotice.kind === 'success' ? 'var(--color-ok-400)' : '#DC2626',
           }}
         >
           <div className="flex items-center gap-2 min-w-0">
@@ -358,37 +354,37 @@ export function AuditReviewView({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div
           className="panel !rounded-3xl p-5"
-          style={{ borderColor: 'rgba(0, 255, 163, 0.28)' }}
+          style={{ borderColor: 'rgba(5, 150, 105, 0.28)' }}
         >
           <div className="text-xs text-paper-400">Pareceres APROVADOS</div>
-          <div className="text-2xl font-bold font-mono tabular-nums mt-1.5" style={{ color: '#00FFA3' }}>
+          <div className="text-2xl font-bold font-mono tabular-nums mt-1.5" style={{ color: '#047857' }}>
             {approvedCount}
           </div>
         </div>
         <div
           className="panel !rounded-3xl p-5"
-          style={{ borderColor: 'rgba(255, 7, 58, 0.3)' }}
+          style={{ borderColor: 'rgba(220, 38, 38, 0.3)' }}
         >
           <div className="text-xs text-paper-400">Reprovados / Bloqueados</div>
-          <div className="text-2xl font-bold font-mono tabular-nums mt-1.5" style={{ color: '#FF3E78' }}>
+          <div className="text-2xl font-bold font-mono tabular-nums mt-1.5" style={{ color: '#DB2777' }}>
             {rejectedCount}
           </div>
         </div>
         <div
           className="panel !rounded-3xl p-5"
-          style={{ borderColor: 'rgba(255, 184, 0, 0.3)' }}
+          style={{ borderColor: 'rgba(217, 119, 6, 0.3)' }}
         >
           <div className="text-xs text-paper-400">Blockers Resolvidos / Abertos</div>
-          <div className="text-2xl font-bold font-mono tabular-nums mt-1.5" style={{ color: '#FFB800' }}>
+          <div className="text-2xl font-bold font-mono tabular-nums mt-1.5" style={{ color: '#D97706' }}>
             {resolvedBlockersCount} <span className="text-sm text-paper-400">/ {openBlockersCount} abertos</span>
           </div>
         </div>
         <div
           className="panel !rounded-3xl p-5"
-          style={{ borderColor: 'rgba(0, 240, 255, 0.3)' }}
+          style={{ borderColor: 'rgba(37, 99, 235, 0.3)' }}
         >
           <div className="text-xs text-paper-400">Gates Executados Verdes</div>
-          <div className="text-2xl font-bold font-mono tabular-nums mt-1.5" style={{ color: '#00F0FF' }}>
+          <div className="text-2xl font-bold font-mono tabular-nums mt-1.5" style={{ color: 'var(--color-signal-400)' }}>
             {activeWave
               ? `${activeWave.gates.filter((g) => g.status === 'EXECUTADO_VERDE').length}/${activeWave.gates.length}`
               : '0/0'}
@@ -938,8 +934,8 @@ export function AuditReviewView({
           <div
             className="w-full max-w-3xl panel !rounded-3xl overflow-hidden my-6"
             style={{
-              borderColor: 'rgba(0, 240, 255, 0.45)',
-              boxShadow: '0 24px 64px -18px rgba(0, 240, 255, 0.35)',
+              borderColor: 'rgba(37, 99, 235, 0.45)',
+              boxShadow: '0 24px 64px -18px rgba(37, 99, 235, 0.35)',
             }}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
@@ -947,9 +943,9 @@ export function AuditReviewView({
                 <div
                   className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
                   style={{
-                    background: 'rgba(0, 240, 255, 0.14)',
-                    border: '1px solid rgba(0, 240, 255, 0.45)',
-                    color: '#00F0FF',
+                    background: 'rgba(37, 99, 235, 0.14)',
+                    border: '1px solid rgba(37, 99, 235, 0.45)',
+                    color: 'var(--color-signal-400)',
                   }}
                 >
                   <FileDown className="w-5 h-5" />
@@ -980,27 +976,27 @@ export function AuditReviewView({
             <div className="p-6 space-y-5 max-h-[76vh] overflow-y-auto">
               {/* Report Metrics Strip */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="rounded-2xl p-3.5 bg-[#070B18] border border-[#00FFA3]/35">
+                <div className="rounded-2xl p-3.5 bg-[#070B18] border border-[#047857]/35">
                   <div className="text-[11px] text-paper-400">Gates Aprovados</div>
-                  <div className="text-xl font-bold font-mono mt-1" style={{ color: '#00FFA3' }}>
+                  <div className="text-xl font-bold font-mono mt-1" style={{ color: '#047857' }}>
                     {technicalReport.summary.approvedGatesCount}/{technicalReport.summary.totalGatesCount}
                   </div>
                 </div>
-                <div className="rounded-2xl p-3.5 bg-[#070B18] border border-[#00F0FF]/35">
+                <div className="rounded-2xl p-3.5 bg-[#070B18] border border-[#2563EB]/35">
                   <div className="text-[11px] text-paper-400">Blockers Resolvidos</div>
-                  <div className="text-xl font-bold font-mono mt-1" style={{ color: '#00F0FF' }}>
+                  <div className="text-xl font-bold font-mono mt-1" style={{ color: 'var(--color-signal-400)' }}>
                     {technicalReport.summary.resolvedBlockersCount}/{technicalReport.summary.totalBlockersCount}
                   </div>
                 </div>
-                <div className="rounded-2xl p-3.5 bg-[#070B18] border border-[#9D4EDD]/45">
+                <div className="rounded-2xl p-3.5 bg-[#070B18] border border-[#7C3AED]/45">
                   <div className="text-[11px] text-paper-400">Pareceres Aprovados</div>
-                  <div className="text-xl font-bold font-mono mt-1" style={{ color: '#D8B4FE' }}>
+                  <div className="text-xl font-bold font-mono mt-1" style={{ color: '#7C3AED' }}>
                     {technicalReport.summary.approvedVerdictsCount}
                   </div>
                 </div>
-                <div className="rounded-2xl p-3.5 bg-[#070B18] border border-[#FF073A]/40">
+                <div className="rounded-2xl p-3.5 bg-[#070B18] border border-[#DC2626]/40">
                   <div className="text-[11px] text-paper-400">Reprov. / Bloqueados</div>
-                  <div className="text-xl font-bold font-mono mt-1" style={{ color: '#FF3E78' }}>
+                  <div className="text-xl font-bold font-mono mt-1" style={{ color: '#DB2777' }}>
                     {technicalReport.summary.rejectedOrBlockedVerdictsCount}
                   </div>
                 </div>
@@ -1014,7 +1010,7 @@ export function AuditReviewView({
                     onClick={() => setExportPreviewTab('resumo')}
                     className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-colors ${
                       exportPreviewTab === 'resumo'
-                        ? 'bg-[#00F0FF]/20 text-[#00F0FF]'
+                        ? 'bg-[#2563EB]/20 text-[#2563EB]'
                         : 'text-paper-400 hover:text-paper-100'
                     }`}
                   >
@@ -1025,7 +1021,7 @@ export function AuditReviewView({
                     onClick={() => setExportPreviewTab('json')}
                     className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-colors ${
                       exportPreviewTab === 'json'
-                        ? 'bg-[#9D4EDD]/25 text-[#D8B4FE]'
+                        ? 'bg-[#7C3AED]/25 text-[#7C3AED]'
                         : 'text-paper-400 hover:text-paper-100'
                     }`}
                   >
@@ -1037,11 +1033,11 @@ export function AuditReviewView({
                   <button
                     type="button"
                     onClick={handleCopyReportJson}
-                    className="btn !rounded-2xl !px-3 !py-1.5 text-xs border border-white/15 text-paper-200 hover:border-[#00F0FF]"
+                    className="btn !rounded-2xl !px-3 !py-1.5 text-xs border border-white/15 text-paper-200 hover:border-[#2563EB]"
                   >
                     {copiedJson ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-[#00FFA3]" />
+                        <Check className="w-3.5 h-3.5 text-[#047857]" />
                         <span>JSON Copiado</span>
                       </>
                     ) : (
@@ -1059,7 +1055,7 @@ export function AuditReviewView({
                   {/* Approved Gates */}
                   <div className="rounded-2xl p-4 bg-[#070B18] border border-white/10 space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#00FFA3]">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#047857]">
                         1. Histórico de Gates Aprovados ({technicalReport.approvedGates.length})
                       </h3>
                     </div>
@@ -1072,10 +1068,10 @@ export function AuditReviewView({
                         {technicalReport.approvedGates.map((gate) => (
                           <div
                             key={gate.id}
-                            className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-[#00FFA3]/20 text-xs"
+                            className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-[#047857]/20 text-xs"
                           >
                             <span className="font-mono text-paper-100">{gate.command}</span>
-                            <span className="font-mono text-[11px] text-[#00FFA3]">
+                            <span className="font-mono text-[11px] text-[#047857]">
                               {gate.status} · {gate.tier}
                             </span>
                           </div>
@@ -1086,7 +1082,7 @@ export function AuditReviewView({
 
                   {/* Resolved Blockers */}
                   <div className="rounded-2xl p-4 bg-[#070B18] border border-white/10 space-y-2.5">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#00F0FF]">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#2563EB]">
                       2. Blockers Resolvidos / Mitigados ({technicalReport.resolvedBlockers.length})
                     </h3>
                     {technicalReport.resolvedBlockers.length === 0 ? (
@@ -1098,13 +1094,13 @@ export function AuditReviewView({
                         {technicalReport.resolvedBlockers.map((blocker) => (
                           <div
                             key={blocker.code}
-                            className="px-3 py-2 rounded-xl bg-white/[0.03] border border-[#00F0FF]/20 text-xs"
+                            className="px-3 py-2 rounded-xl bg-white/[0.03] border border-[#2563EB]/20 text-xs"
                           >
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-semibold text-paper-100">
                                 {blocker.code} — {blocker.title}
                               </span>
-                              <span className="font-mono text-[11px] text-[#00F0FF] uppercase">
+                              <span className="font-mono text-[11px] text-[#2563EB] uppercase">
                                 {blocker.status} · Ag.{blocker.ownerAgentId}
                               </span>
                             </div>
@@ -1121,7 +1117,7 @@ export function AuditReviewView({
 
                   {/* Audit Verdicts */}
                   <div className="rounded-2xl p-4 bg-[#070B18] border border-white/10 space-y-2.5">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#D8B4FE]">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#7C3AED]">
                       3. Vereditos de Auditoria — Agente 24 ({technicalReport.auditVerdicts.length})
                     </h3>
                     {technicalReport.auditVerdicts.length === 0 ? (
@@ -1140,7 +1136,7 @@ export function AuditReviewView({
                               <span
                                 className="font-mono font-bold text-[11px]"
                                 style={{
-                                  color: v.verdict === 'APROVADO' ? '#00FFA3' : '#FF3E78',
+                                  color: v.verdict === 'APROVADO' ? '#047857' : '#DB2777',
                                 }}
                               >
                                 {v.verdict}
@@ -1157,7 +1153,7 @@ export function AuditReviewView({
                   </div>
                 </div>
               ) : (
-                <pre className="rounded-2xl p-4 bg-[#04060D] border border-[#9D4EDD]/35 text-[11px] font-mono text-[#D8B4FE] overflow-x-auto max-h-80 leading-relaxed">
+                <pre className="rounded-2xl p-4 bg-[#04060D] border border-[#7C3AED]/35 text-[11px] font-mono text-[#7C3AED] overflow-x-auto max-h-80 leading-relaxed">
                   {reportJsonString}
                 </pre>
               )}
@@ -1171,7 +1167,7 @@ export function AuditReviewView({
                 <button
                   type="button"
                   onClick={handleExportJson}
-                  className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#9D4EDD]/60 text-[#D8B4FE] hover:bg-[#9D4EDD]/15"
+                  className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#7C3AED]/60 text-[#7C3AED] hover:bg-[#7C3AED]/15"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Baixar JSON</span>
@@ -1179,11 +1175,7 @@ export function AuditReviewView({
                 <button
                   type="button"
                   onClick={handleExportPdf}
-                  className="btn !rounded-2xl !px-4 !py-2 text-xs font-bold text-[#04060D]"
-                  style={{
-                    background: 'linear-gradient(135deg, #00F0FF 0%, #39FF14 100%)',
-                    boxShadow: '0 0 22px -6px rgba(0, 240, 255, 0.75)',
-                  }}
+                  className="btn btn-primary !rounded-2xl !px-4 !py-2 text-xs font-bold"
                 >
                   <FileDown className="w-3.5 h-3.5" />
                   <span>Baixar PDF (JSON → PDF)</span>
