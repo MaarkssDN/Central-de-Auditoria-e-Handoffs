@@ -1,7 +1,7 @@
 {
   "central": "Central-Auditoria-BirthHub",
   "repo": "C:\\Github\\Birthub-360",
-  "updatedAt": "2026-11-19T16:56:31.573Z",
+  "updatedAt": "2026-11-19T16:58:20.714Z",
   "coordinator": "agente-00-sessao-externa",
   "activeWave": "release-readiness-2026-11-18",
   "waveStatus": "MARCO1_CONCLUIDO — aguardando Etapa 0 (reconciliacao PRs x achados) + decisoes humanas",
@@ -33,17 +33,15 @@
     }
   },
   "pendingHumanDecisions": [
-    "D-01 envs EC2",
-    "D-04 janelas retencao LGPD",
-    "D-05 consentimento IA (recomendacao: persistir no banco)",
-    "D-07 stash review — aguardando confirmacao salvage"
+    "D-01 verificar envs no host EC2 (default: tratar como ausentes)",
+    "D-04 ratificar defaults de retencao propostos"
   ],
   "activeBatch": null,
   "lastCompletedBatch": "auditoria forense completa (11 dominios + transversal) + revisao 24 do consolidado",
   "blockers": [
-    "Aguardando confirmacao: salvage parcial do stash@{0} (AGENTS.md 02A-02D + manifest + LITELLM_MASTER_KEY); resto descartado",
-    "D-01/D-04/D-05 pendentes — bloqueiam DEBT-0003/0006/0007 severidade, DEBT-0021 retencao, DEBT-0013 consentimento",
-    "Revisao humana da reconciliacao Etapa 0 — merge order proposto: #401/#413 -> #415 -> saneamento -> antigos -> docs"
+    "Merge order Etapa 0 aguarda revisao humana: #401/#413 -> #415 -> saneamento AUD-1/ONDAS -> antigos -> docs",
+    "Branch chore/salvage-stash-00 (Birthub) pronta p/ PR — aguardando push/autorizacao",
+    "D-01/D-04: defaults conservadores adotados; confirmacao formal pendente"
   ],
   "concurrencyRules": {
     "maxParallel": 4,
