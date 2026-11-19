@@ -1,9 +1,340 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import {
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+} from 'framer-motion';
 import { AlertCircle, ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { OFFICIAL_AGENTS } from '../data/agentsRoster';
+import {
+  GRID_CELL_SIZE_PX,
+  NEON_ACCENT_HEX,
+  computeCursorInfluence,
+  generateDotGridLattice,
+  generateGridBeams,
+  type GridLatticeDot,
+} from '../utils/gridParticles';
 
 interface LoginModalProps {
   onSuccess: () => void;
+}
+
+interface ViewportSize {
+  width: number;
+  height: number;
+}
+
+interface CursorPoint {
+  x: number;
+  y: number;
+}
+
+const SPOTLIGHT_SIZE_PX = 460;
+
+export function AnimatedGridParticles() {
+  const prefersReducedMotion = useReducedMotion();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const [viewport, setViewport] = useState<ViewportSize>({ width: 1440, height: 900 });
+  const [dots, setDots] = useState<GridLatticeDot[]>(() => generateDotGridLattice(8, 5));
+  const [cursor, setCursor] = useState<CursorPoint | null>(null);
+
+  const beams = useMemo(() => generateGridBeams(), []);
+
+  // Framer Motion spring-smoothed cursor coordinates driving pure GPU transform translation
+  const rawMouseX = useMotionValue(-SPOTLIGHT_SIZE_PX);
+  const rawMouseY = useMotionValue(-SPOTLIGHT_SIZE_PX);
+  const smoothMouseX = useSpring(rawMouseX, { stiffness: 150, damping: 26, mass: 0.35 });
+  const smoothMouseY = useSpring(rawMouseY, { stiffness: 150, damping: 26, mass: 0.35 });
+
+  useEffect(() => {
+    const syncGridToViewport = () => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      const width = rect?.width || window.innerWidth || 1440;
+      const height = rect?.height || window.innerHeight || 900;
+      setViewport({ width, height });
+
+      const cols = width < 640 ? 5 : width < 1024 ? 7 : 8;
+      const rows = width < 640 ? 6 : 5;
+      setDots(generateDotGridLattice(cols, rows));
+    };
+
+    syncGridToViewport();
+    window.addEventListener('resize', syncGridToViewport);
+
+    if (prefersReducedMotion) {
+      return () => {
+        window.removeEventListener('resize', syncGridToViewport);
+      };
+    }
+
+    let rafId: number | null = null;
+    let pendingPoint: CursorPoint | null = null;
+    let lastCommitted: CursorPoint | null = null;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      const x = rect ? event.clientX - rect.left : event.clientX;
+      const y = rect ? event.clientY - rect.top : event.clientY;
+
+      rawMouseX.set(x - SPOTLIGHT_SIZE_PX / 2);
+      rawMouseY.set(y - SPOTLIGHT_SIZE_PX / 2);
+      pendingPoint = { x, y };
+
+      if (rafId === null) {
+        rafId = window.requestAnimationFrame(() => {
+          rafId = null;
+          if (!pendingPoint) return;
+          if (
+            !lastCommitted ||
+            Math.abs(pendingPoint.x - lastCommitted.x) >= 6 ||
+            Math.abs(pendingPoint.y - lastCommitted.y) >= 6
+          ) {
+            lastCommitted = pendingPoint;
+            setCursor(pendingPoint);
+          }
+        });
+      }
+    };
+
+    const handlePointerLeave = () => {
+      pendingPoint = null;
+      lastCommitted = null;
+      setCursor(null);
+      rawMouseX.set(-SPOTLIGHT_SIZE_PX);
+      rawMouseY.set(-SPOTLIGHT_SIZE_PX);
+    };
+
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    document.addEventListener('mouseleave', handlePointerLeave);
+    window.addEventListener('blur', handlePointerLeave);
+
+    return () => {
+      window.removeEventListener('resize', syncGridToViewport);
+      window.removeEventListener('pointermove', handlePointerMove);
+      document.removeEventListener('mouseleave', handlePointerLeave);
+      window.removeEventListener('blur', handlePointerLeave);
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
+    };
+  }, [prefersReducedMotion, rawMouseX, rawMouseY]);
+
+  return (
+    <div
+      ref={containerRef}
+      aria-hidden="true"
+      data-testid="animated-grid-particles"
+      data-cursor-tracking={cursor ? 'active' : 'idle'}
+      className="pointer-events-none absolute inset-0 overflow-hidden"
+    >
+      {/* Ambient obsidian-to-neon atmospheric depth fields */}
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(640px 480px at 18% 20%, rgba(0, 240, 255, 0.11), transparent 68%),
+            radial-gradient(680px 520px at 84% 84%, rgba(191, 90, 242, 0.10), transparent 68%),
+            radial-gradient(460px 360px at 56% 12%, rgba(46, 123, 255, 0.06), transparent 64%)
+          `,
+        }}
+        animate={prefersReducedMotion ? undefined : { opacity: [0.82, 1, 0.86, 0.82] }}
+        transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      {/* Precision 72px architectural hairline grid */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: `${GRID_CELL_SIZE_PX}px ${GRID_CELL_SIZE_PX}px`,
+          maskImage:
+            'radial-gradient(ellipse 92% 90% at 50% 50%, black 52%, transparent 100%)',
+          WebkitMaskImage:
+            'radial-gradient(ellipse 92% 90% at 50% 50%, black 52%, transparent 100%)',
+        }}
+      />
+
+      {/* Responsive GPU-composited Framer Motion cursor illumination halo */}
+      {!prefersReducedMotion && (
+        <motion.div
+          data-testid="cursor-glow-field"
+          className="absolute top-0 left-0 rounded-full will-change-transform transition-opacity duration-300"
+          style={{
+            width: SPOTLIGHT_SIZE_PX,
+            height: SPOTLIGHT_SIZE_PX,
+            x: smoothMouseX,
+            y: smoothMouseY,
+            background:
+              'radial-gradient(circle, rgba(0, 240, 255, 0.16) 0%, rgba(191, 90, 242, 0.07) 44%, transparent 72%)',
+            opacity: cursor ? 1 : 0,
+          }}
+        />
+      )}
+
+      {/* Grid-aligned luminous 1px energy beams */}
+      {!prefersReducedMotion &&
+        beams.map((beam) => {
+          const hex = NEON_ACCENT_HEX[beam.accent];
+          const offsetPx = beam.trackIndex * GRID_CELL_SIZE_PX;
+
+          if (beam.orientation === 'horizontal') {
+            return (
+              <motion.div
+                key={beam.id}
+                data-testid="grid-energy-beam"
+                className="absolute left-0 h-px"
+                style={{
+                  top: `${offsetPx}px`,
+                  width: `${beam.lengthPx}px`,
+                  background: beam.reverse
+                    ? `linear-gradient(270deg, transparent 0%, ${hex} 72%, rgba(255,255,255,0.88) 100%)`
+                    : `linear-gradient(90deg, transparent 0%, ${hex} 72%, rgba(255,255,255,0.88) 100%)`,
+                }}
+                initial={{
+                  x: beam.reverse ? '108vw' : `-${beam.lengthPx + 40}px`,
+                  opacity: 0,
+                }}
+                animate={{
+                  x: beam.reverse ? `-${beam.lengthPx + 40}px` : '108vw',
+                  opacity: [0, 0.65, 0.65, 0],
+                }}
+                transition={{
+                  duration: beam.durationSec,
+                  delay: beam.delaySec,
+                  repeat: Infinity,
+                  repeatDelay: 2.6,
+                  ease: 'linear',
+                }}
+              />
+            );
+          }
+
+          return (
+            <motion.div
+              key={beam.id}
+              data-testid="grid-energy-beam"
+              className="absolute top-0 w-px"
+              style={{
+                left: `${offsetPx}px`,
+                height: `${beam.lengthPx}px`,
+                background: beam.reverse
+                  ? `linear-gradient(0deg, transparent 0%, ${hex} 72%, rgba(255,255,255,0.88) 100%)`
+                  : `linear-gradient(180deg, transparent 0%, ${hex} 72%, rgba(255,255,255,0.88) 100%)`,
+              }}
+              initial={{
+                y: beam.reverse ? '108vh' : `-${beam.lengthPx + 40}px`,
+                opacity: 0,
+              }}
+              animate={{
+                y: beam.reverse ? `-${beam.lengthPx + 40}px` : '108vh',
+                opacity: [0, 0.58, 0.58, 0],
+              }}
+              transition={{
+                duration: beam.durationSec,
+                delay: beam.delaySec,
+                repeat: Infinity,
+                repeatDelay: 3,
+                ease: 'linear',
+              }}
+            />
+          );
+        })}
+
+      {/* Cursor-responsive moving futuristic dot grid lattice */}
+      {dots.map((dot) => {
+        const hex = NEON_ACCENT_HEX[dot.accent];
+        const dotX = (dot.xPct / 100) * viewport.width;
+        const dotY = (dot.yPct / 100) * viewport.height;
+        const influence = prefersReducedMotion
+          ? { proximity: 0, offsetX: 0, offsetY: 0, scale: 1, opacityBoost: 0 }
+          : computeCursorInfluence(dotX, dotY, cursor, 240, 14);
+        const isCursorActive = influence.proximity > 0.05;
+
+        return (
+          <motion.div
+            key={dot.id}
+            data-testid="grid-lattice-dot"
+            data-cursor-active={isCursorActive ? 'true' : 'false'}
+            className="absolute flex items-center justify-center will-change-transform"
+            style={{
+              left: `${dot.xPct}%`,
+              top: `${dot.yPct}%`,
+              width: dot.isAnchorCrosshair ? 14 : 6,
+              height: dot.isAnchorCrosshair ? 14 : 6,
+              marginLeft: dot.isAnchorCrosshair ? -7 : -3,
+              marginTop: dot.isAnchorCrosshair ? -7 : -3,
+            }}
+            animate={
+              prefersReducedMotion
+                ? { opacity: dot.baseOpacity, scale: 1, x: 0, y: 0 }
+                : isCursorActive
+                  ? {
+                      x: influence.offsetX,
+                      y: influence.offsetY,
+                      scale: influence.scale,
+                      opacity: Math.min(1, dot.baseOpacity + influence.opacityBoost),
+                    }
+                  : {
+                      x: [0, dot.ambientDriftPx * 0.5, 0],
+                      y: [0, -dot.ambientDriftPx, 0],
+                      scale: [0.92, 1.12, 0.92],
+                      opacity: [dot.baseOpacity * 0.65, dot.baseOpacity + 0.18, dot.baseOpacity * 0.65],
+                    }
+            }
+            transition={
+              isCursorActive
+                ? { type: 'spring', stiffness: 260, damping: 22, mass: 0.45 }
+                : {
+                    duration: 5.4 + (dot.col % 3) * 1.1,
+                    delay: dot.phaseDelaySec,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }
+            }
+          >
+            {dot.isAnchorCrosshair ? (
+              <div className="relative flex items-center justify-center w-full h-full">
+                <span
+                  className="absolute h-px w-3.5"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${hex}aa, transparent)`,
+                  }}
+                />
+                <span
+                  className="absolute w-px h-3.5"
+                  style={{
+                    background: `linear-gradient(180deg, transparent, ${hex}aa, transparent)`,
+                  }}
+                />
+                <span
+                  className="h-[3.5px] w-[3.5px] rounded-full"
+                  style={{
+                    backgroundColor: isCursorActive ? '#FFFFFF' : hex,
+                    boxShadow: isCursorActive ? `0 0 12px ${hex}` : undefined,
+                  }}
+                />
+              </div>
+            ) : (
+              <span
+                className="block rounded-full"
+                style={{
+                  width: isCursorActive ? '4px' : '2.5px',
+                  height: isCursorActive ? '4px' : '2.5px',
+                  backgroundColor: isCursorActive ? '#F4F7FF' : hex,
+                  boxShadow: isCursorActive ? `0 0 10px ${hex}` : undefined,
+                }}
+              />
+            )}
+          </motion.div>
+        );
+      })}
+    </div>
+  );
 }
 
 export function LoginModal({ onSuccess }: LoginModalProps) {
@@ -44,22 +375,8 @@ export function LoginModal({ onSuccess }: LoginModalProps) {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#03050B] text-[#F4F7FF] selection:bg-[#00E5FF]/25 selection:text-white">
-      {/* Subtle Architectural Light Field & Hairline Perspective Grid */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage: `
-            radial-gradient(720px 520px at 22% 24%, rgba(0, 229, 255, 0.085), transparent 65%),
-            radial-gradient(640px 520px at 78% 82%, rgba(129, 140, 248, 0.09), transparent 65%),
-            radial-gradient(480px 380px at 56% 14%, rgba(192, 132, 252, 0.05), transparent 62%),
-            linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px)
-          `,
-          backgroundSize: '100% 100%, 100% 100%, 100% 100%, 72px 72px, 72px 72px',
-          maskImage: 'radial-gradient(ellipse 90% 90% at 50% 50%, black 55%, transparent 100%)',
-        }}
-      />
+      {/* Futuristic Framer Motion Animated Grid Particles Background */}
+      <AnimatedGridParticles />
 
       <div className="relative z-10 min-h-screen grid grid-cols-1 lg:grid-cols-12">
         {/* Left Architectural Showcase (Desktop) */}
@@ -252,30 +569,53 @@ export function LoginModal({ onSuccess }: LoginModalProps) {
             </span>
           </div>
 
-          {/* Centered Refined Glass Authentication Card */}
-          <div className="my-auto py-8 w-full max-w-[410px] mx-auto rise-in">
+          {/* Centered Refined Glassmorphism Authentication Card */}
+          <div className="my-auto py-8 w-full max-w-[416px] mx-auto rise-in">
             <div
-              className="relative rounded-[28px] p-8 sm:p-10 border border-white/[0.09] backdrop-blur-2xl"
+              data-testid="login-glass-container"
+              className="relative overflow-hidden rounded-[28px] p-8 sm:p-10 border border-white/[0.16] backdrop-blur-[12px]"
               style={{
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
                 background:
-                  'linear-gradient(165deg, rgba(13, 19, 36, 0.82) 0%, rgba(6, 9, 20, 0.92) 100%)',
+                  'linear-gradient(155deg, rgba(15, 23, 46, 0.56) 0%, rgba(7, 11, 24, 0.72) 100%)',
                 boxShadow:
-                  '0 32px 80px -28px rgba(0, 0, 0, 0.95), 0 0 48px -28px rgba(0, 229, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                  '0 32px 84px -26px rgba(0, 0, 0, 0.92), 0 0 56px -28px rgba(0, 240, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -1px 0 rgba(0, 240, 255, 0.10)',
               }}
               role="region"
               aria-labelledby="login-heading"
             >
-              {/* Razor-thin top specular accent line */}
+              {/* Soft internal glass sheen across top-left facet */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    'radial-gradient(320px 180px at 18% 0%, rgba(255, 255, 255, 0.065), transparent 72%)',
+                }}
+              />
+
+              {/* Razor-thin top translucent specular accent line */}
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-x-10 top-0 h-px"
                 style={{
                   background:
-                    'linear-gradient(90deg, transparent 0%, rgba(0, 229, 255, 0.65) 45%, rgba(129, 140, 248, 0.55) 70%, transparent 100%)',
+                    'linear-gradient(90deg, transparent 0%, rgba(0, 240, 255, 0.75) 45%, rgba(191, 90, 242, 0.55) 75%, transparent 100%)',
                 }}
               />
 
-              <div className="space-y-2 mb-8">
+              {/* Subtle bottom frosted refraction edge */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-14 bottom-0 h-px"
+                style={{
+                  background:
+                    'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.18) 50%, transparent 100%)',
+                }}
+              />
+
+              <div className="relative z-10 space-y-2 mb-8">
                 <p className="text-xs font-medium text-[#67E8F9] tracking-wide">
                   Acesso autenticado
                 </p>
@@ -285,12 +625,12 @@ export function LoginModal({ onSuccess }: LoginModalProps) {
                 >
                   Entrar no console
                 </h2>
-                <p className="text-sm text-[#8C9BB8] leading-relaxed">
+                <p className="text-sm text-[#9BAAC4] leading-relaxed">
                   Informe suas credenciais de operador para iniciar a sessão.
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              <form onSubmit={handleSubmit} className="relative z-10 space-y-5" noValidate>
                 <div className="space-y-2">
                   <label
                     htmlFor="login-email"
@@ -300,7 +640,7 @@ export function LoginModal({ onSuccess }: LoginModalProps) {
                   </label>
                   <div className="relative">
                     <Mail
-                      className="pointer-events-none w-4 h-4 text-[#64748B] absolute left-4 top-1/2 -translate-y-1/2"
+                      className="pointer-events-none w-4 h-4 text-[#7D8CA8] absolute left-4 top-1/2 -translate-y-1/2"
                       strokeWidth={1.75}
                       aria-hidden="true"
                     />
@@ -310,7 +650,7 @@ export function LoginModal({ onSuccess }: LoginModalProps) {
                       required
                       autoComplete="username"
                       placeholder="operador@empresa.com"
-                      className="w-full h-12 pl-11 pr-4 rounded-2xl bg-[#040712]/90 border border-white/[0.11] text-sm text-white placeholder:text-[#4E5E7A] transition-colors duration-150 focus:outline-none focus:border-[#00E5FF]/80 focus:ring-2 focus:ring-[#00E5FF]/20"
+                      className="w-full h-12 pl-11 pr-4 rounded-2xl bg-[#040712]/65 border border-white/[0.15] hover:border-white/[0.24] text-sm text-white placeholder:text-[#5C6D8A] transition-colors duration-150 focus:outline-none focus:border-[#00E5FF]/80 focus:ring-2 focus:ring-[#00E5FF]/20"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
@@ -326,7 +666,7 @@ export function LoginModal({ onSuccess }: LoginModalProps) {
                   </label>
                   <div className="relative">
                     <Lock
-                      className="pointer-events-none w-4 h-4 text-[#64748B] absolute left-4 top-1/2 -translate-y-1/2"
+                      className="pointer-events-none w-4 h-4 text-[#7D8CA8] absolute left-4 top-1/2 -translate-y-1/2"
                       strokeWidth={1.75}
                       aria-hidden="true"
                     />
@@ -336,7 +676,7 @@ export function LoginModal({ onSuccess }: LoginModalProps) {
                       required
                       autoComplete="current-password"
                       placeholder="Digite sua senha"
-                      className="w-full h-12 pl-11 pr-12 rounded-2xl bg-[#040712]/90 border border-white/[0.11] text-sm text-white placeholder:text-[#4E5E7A] transition-colors duration-150 focus:outline-none focus:border-[#00E5FF]/80 focus:ring-2 focus:ring-[#00E5FF]/20"
+                      className="w-full h-12 pl-11 pr-12 rounded-2xl bg-[#040712]/65 border border-white/[0.15] hover:border-white/[0.24] text-sm text-white placeholder:text-[#5C6D8A] transition-colors duration-150 focus:outline-none focus:border-[#00E5FF]/80 focus:ring-2 focus:ring-[#00E5FF]/20"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
@@ -344,7 +684,7 @@ export function LoginModal({ onSuccess }: LoginModalProps) {
                       type="button"
                       onClick={() => setShowPassword((prev) => !prev)}
                       aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl flex items-center justify-center text-[#7D8CA8] hover:text-white hover:bg-white/[0.06] transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl flex items-center justify-center text-[#8C9BB8] hover:text-white hover:bg-white/[0.08] transition-colors"
                     >
                       {showPassword ? (
                         <EyeOff className="w-4 h-4" strokeWidth={1.75} />
@@ -386,8 +726,8 @@ export function LoginModal({ onSuccess }: LoginModalProps) {
                 </button>
               </form>
 
-              <div className="mt-7 pt-5 border-t border-white/[0.07] flex items-center justify-center gap-2 text-xs text-[#6E7E9C]">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#00FFA3]/80 shrink-0" aria-hidden="true" />
+              <div className="relative z-10 mt-7 pt-5 border-t border-white/[0.11] flex items-center justify-center gap-2 text-xs text-[#8091B0]">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#00FFA3]/85 shrink-0" aria-hidden="true" />
                 <span>Sessão local protegida por cookie HttpOnly</span>
               </div>
             </div>
