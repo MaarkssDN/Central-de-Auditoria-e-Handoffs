@@ -171,11 +171,12 @@ export function HandoffsCenterView({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">
-            Central de Handoffs Rastreáveis (§18)
+          <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal-400 mb-1">SEC-HND · Rastreabilidade</div>
+          <h2 className="font-display text-2xl font-bold tracking-tight text-paper-100">
+            Central de Handoffs
           </h2>
-          <p className="text-sm text-slate-600 mt-0.5">
-            Comunicação formal entre domínios em <span className="font-mono">.agents/handoffs/onda-&lt;n&gt;/</span>. O destinatário atualiza o status sem apagar o pedido original.
+          <p className="text-sm text-paper-400 mt-1 max-w-2xl">
+            Comunicação formal entre domínios em <span className="font-mono text-paper-300">.agents/handoffs/onda-&lt;n&gt;/</span>. O destinatário atualiza o status sem apagar o pedido original.
           </p>
         </div>
         <button
@@ -215,7 +216,7 @@ export function HandoffsCenterView({
             id="handoff-priority-filter"
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value as 'all' | HandoffPriority)}
-            className="h-9 px-3 text-xs font-medium bg-white border border-slate-200 rounded-md text-slate-700"
+            className="h-9 px-3 text-xs font-medium panel text-slate-700"
           >
             <option value="all">Todas as prioridades</option>
             <option value="bloqueador">Bloqueador</option>
@@ -235,13 +236,13 @@ export function HandoffsCenterView({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar slug, agente ou ref..."
-            className="h-9 pl-9 pr-3 text-sm bg-white border border-slate-200 rounded-md w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="h-9 pl-9 pr-3 text-sm panel w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-slate-900"
           />
         </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-lg p-10 text-center">
+        <div className="panel p-10 text-center">
           <p className="text-sm font-medium text-slate-900">Nenhum handoff encontrado para os filtros aplicados.</p>
           <p className="text-xs text-slate-500 mt-1">
             Crie um novo handoff sempre que um problema pertencer a outro domínio ou exigir alteração em arquivo exclusivo (§16).
@@ -257,7 +258,7 @@ export function HandoffsCenterView({
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
           {/* List */}
-          <div className="xl:col-span-5 bg-white border border-slate-200 rounded-lg divide-y divide-slate-200">
+          <div className="xl:col-span-5 panel divide-y divide-slate-200">
             {filtered.map((h) => {
               const isSelected = selectedHandoff?.id === h.id;
               const fromAgent = getAgentById(h.fromAgentId);
@@ -325,7 +326,7 @@ export function HandoffsCenterView({
 
           {/* Detail Inspector */}
           {selectedHandoff && (
-            <div className="xl:col-span-7 bg-white border border-slate-200 rounded-lg p-6 space-y-5">
+            <div className="xl:col-span-7 panel p-6 space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-4 border-b border-slate-200">
                 <div className="flex items-start gap-3 min-w-0">
                   {getAgentById(selectedHandoff.toAgentId) && (
@@ -570,7 +571,7 @@ export function HandoffsCenterView({
           aria-modal="true"
           aria-labelledby="create-handoff-title"
         >
-          <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-lg overflow-hidden my-8">
+          <div className="w-full max-w-2xl panel overflow-hidden my-8">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
               <h2 id="create-handoff-title" className="text-base font-semibold text-slate-900">
                 Abrir Novo Handoff (§18)

@@ -37,8 +37,9 @@ export function RepositoriesView({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">Repositórios sob Orquestração</h2>
-          <p className="text-sm text-slate-600 mt-0.5">
+          <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal-400 mb-1">SEC-REP · Contexto</div>
+          <h2 className="font-display text-2xl font-bold tracking-tight text-paper-100">Repositórios sob Orquestração</h2>
+          <p className="text-sm text-paper-400 mt-1 max-w-2xl">
             Alterne o contexto ativo ou conecte qualquer repositório GitHub/local para aplicar a matriz de propriedade, gates e handoffs.
           </p>
         </div>
@@ -57,7 +58,7 @@ export function RepositoriesView({
         </div>
       )}
 
-      <div className="bg-white border border-slate-200 rounded-lg overflow-x-auto">
+      <div className="panel overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[680px]">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-600">
@@ -147,7 +148,7 @@ export function RepositoriesView({
 
       {activeRepo && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white border border-slate-200 rounded-lg p-5">
+          <div className="panel p-5">
             <h3 className="text-sm font-semibold text-slate-900">
               Scripts Detectados em package.json
             </h3>
@@ -170,7 +171,7 @@ export function RepositoriesView({
             )}
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-lg p-5">
+          <div className="panel p-5">
             <h3 className="text-sm font-semibold text-slate-900">
               Árvore Mapeada e Propriedade Automática (§15)
             </h3>

@@ -8,6 +8,7 @@ import { createSeedWorkspace } from './src/data/seedWorkspace';
 import type { RepositoryTarget, Wave, WorkspaceState } from './src/types/governance';
 import { buildGatesForRepoScripts } from './src/utils/governanceEngine';
 import { runAgentBotTurn, runSwarmSequence } from './server/agentRuntime';
+import { createCentralRouter } from './server/centralApi';
 
 const PORT = 3000;
 const DATA_DIR = path.resolve(process.cwd(), 'data');
@@ -66,6 +67,8 @@ async function fetchGitHubJson(url: string) {
 async function startServer() {
   const app = express();
   app.use(express.json({ limit: '2mb' }));
+
+  app.use('/api/central', createCentralRouter());
 
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true });

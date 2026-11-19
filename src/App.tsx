@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AgentBotsWorkspace } from './components/AgentBotsWorkspace';
 import { AgentsRosterView } from './components/AgentsRosterView';
 import { AuditReviewView } from './components/AuditReviewView';
+import { CentralAuditView } from './components/CentralAuditView';
 import { ConnectRepoModal } from './components/ConnectRepoModal';
 import { HandoffsCenterView } from './components/HandoffsCenterView';
 import { RepositoriesView } from './components/RepositoriesView';
@@ -72,11 +73,17 @@ export default function App() {
 
   if (loading || !workspace) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white border border-slate-200 rounded-lg p-6 w-full max-w-md space-y-3">
-          <div className="h-5 w-48 bg-slate-200 rounded animate-pulse" />
-          <div className="h-4 w-full bg-slate-100 rounded animate-pulse" />
-          <div className="h-4 w-3/4 bg-slate-100 rounded animate-pulse" />
+      <div className="min-h-screen blueprint-grid flex items-center justify-center p-6 bg-ink-950">
+        <div className="panel panel-corner p-6 w-full max-w-md space-y-3">
+          <div className="flex items-center gap-2.5">
+            <span className="led led-warn animate-pulse" />
+            <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-paper-400">
+              Inicializando console…
+            </span>
+          </div>
+          <div className="h-5 w-48 bg-ink-800 rounded animate-pulse" />
+          <div className="h-4 w-full bg-ink-800/70 rounded animate-pulse" />
+          <div className="h-4 w-3/4 bg-ink-800/70 rounded animate-pulse" />
         </div>
       </div>
     );
@@ -303,7 +310,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900">
+    <div className="min-h-screen flex bg-ink-950 text-paper-100 blueprint-grid">
       <Sidebar
         activeSection={activeSection}
         onSelectSection={setActiveSection}
@@ -323,12 +330,14 @@ export default function App() {
           onOpenMobileMenu={() => setMobileMenuOpen(true)}
         />
 
-        <main className="flex-1 p-4 lg:p-8 max-w-[1440px] w-full mx-auto">
+        <main className="flex-1 p-4 lg:p-8 max-w-[1600px] w-full mx-auto">
           {loadError && (
             <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-800">
               {loadError} Operando com estado inicial local.
             </div>
           )}
+
+          {activeSection === 'central' && <CentralAuditView />}
 
           {activeSection === 'ondas' && (
             <WaveOrchestratorView

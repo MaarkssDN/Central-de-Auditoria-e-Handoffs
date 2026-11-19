@@ -83,7 +83,7 @@ export function WaveOrchestratorView({
 
   if (!activeRepo) {
     return (
-      <div className="bg-white border border-slate-200 rounded-lg p-10 text-center text-sm text-slate-500">
+      <div className="panel p-10 text-center text-sm text-slate-500">
         Conecte um repositório para orquestrar ondas e missões.
       </div>
     );
@@ -282,6 +282,11 @@ export function WaveOrchestratorView({
 
   return (
     <div className="space-y-6">
+      <div>
+        <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal-400 mb-1">SEC-OND · Ciclo de Vida</div>
+        <h2 className="font-display text-2xl font-bold tracking-tight text-paper-100">Ondas e Missões</h2>
+      </div>
+
       {/* Wave Selector Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 min-w-0">
         <div className="flex flex-wrap items-center gap-3 min-w-0 w-full md:w-auto">
@@ -296,7 +301,7 @@ export function WaveOrchestratorView({
               setSlotAlert(null);
               setTransitionAlert(null);
             }}
-            className="h-9 w-full sm:w-auto max-w-full px-3 text-sm font-medium bg-white border border-slate-200 rounded-md text-slate-900 truncate"
+            className="h-9 w-full sm:w-auto max-w-full px-3 text-sm font-medium panel text-slate-900 truncate"
           >
             {waves.map((w) => (
               <option key={w.id} value={w.id}>
@@ -352,7 +357,7 @@ export function WaveOrchestratorView({
       {activeWave && (
         <>
           {/* Lifecycle Stepper (§20) */}
-          <section className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+          <section className="panel p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h2 className="text-base font-semibold text-slate-900">
@@ -416,7 +421,7 @@ export function WaveOrchestratorView({
           </section>
 
           {/* Active Specialists & Exclusive Slot Guard (§13 & §14) */}
-          <section className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+          <section className="panel p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className="text-base font-semibold text-slate-900">
@@ -500,7 +505,7 @@ export function WaveOrchestratorView({
             </div>
 
             {waveMissions.length === 0 ? (
-              <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
+              <div className="panel p-8 text-center">
                 <p className="text-sm text-slate-700 font-medium">
                   Nenhuma missão cadastrada para a Onda {activeWave.number}.
                 </p>
@@ -522,7 +527,7 @@ export function WaveOrchestratorView({
                   return (
                     <article
                       key={mission.id}
-                      className="bg-white border border-slate-200 rounded-lg p-5 space-y-4 min-w-0"
+                      className="panel p-5 space-y-4 min-w-0"
                     >
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="flex items-start gap-3 min-w-0">
@@ -624,7 +629,7 @@ export function WaveOrchestratorView({
           aria-modal="true"
           aria-labelledby="mission-modal-title"
         >
-          <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-lg overflow-hidden my-8">
+          <div className="w-full max-w-2xl panel overflow-hidden my-8">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
               <h2 id="mission-modal-title" className="text-base font-semibold text-slate-900">
                 Nova Missão na Onda {activeWave.number} (§11)

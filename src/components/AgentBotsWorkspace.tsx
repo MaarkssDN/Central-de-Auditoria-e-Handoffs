@@ -279,7 +279,7 @@ export function AgentBotsWorkspace({
 
   if (!activeRepo) {
     return (
-      <div className="bg-white border border-slate-200 rounded-lg p-10 text-center text-sm text-slate-500">
+      <div className="panel p-10 text-center text-sm text-slate-500">
         Conecte um repositório para operar os bots autônomos.
       </div>
     );
@@ -315,10 +315,13 @@ export function AgentBotsWorkspace({
   return (
     <div className="space-y-5">
       {/* Top Active Squad Strip + View Mode Toggle */}
-      <section className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <section className="panel p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="min-w-0 space-y-2">
-          <div className="text-xs font-semibold text-slate-700">
-            Esquadrão em Operação — {activeWave ? activeWave.name : activeRepo.fullName}
+          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-signal-400">
+            SEC-BOT · Esquadrão em Operação
+          </div>
+          <div className="text-sm font-display font-semibold text-paper-100">
+            {activeWave ? activeWave.name : activeRepo.fullName}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {featuredAgents.map((agent) => {
@@ -394,7 +397,7 @@ export function AgentBotsWorkspace({
               onChange={(e) => setFilterQuery(e.target.value)}
               placeholder="Filtrar codinome, papel ou lema..."
               aria-label="Filtrar galeria de personagens"
-              className="h-9 px-3 text-xs bg-white border border-slate-200 rounded-md w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              className="h-9 px-3 text-xs panel w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-slate-900"
             />
           </div>
 
@@ -405,7 +408,7 @@ export function AgentBotsWorkspace({
               return (
                 <article
                   key={agent.id}
-                  className="bg-white border border-slate-200 rounded-lg overflow-hidden flex flex-col justify-between"
+                  className="panel overflow-hidden flex flex-col justify-between"
                 >
                   <div
                     className="h-1 w-full"
@@ -467,7 +470,7 @@ export function AgentBotsWorkspace({
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
           {/* Character Roster Selector */}
-          <section className="xl:col-span-4 bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <section className="xl:col-span-4 panel overflow-hidden">
             <div className="p-4 border-b border-slate-200 space-y-2.5">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-slate-900">
@@ -549,7 +552,7 @@ export function AgentBotsWorkspace({
           {/* Active Character Command Desk */}
           <section className="xl:col-span-8 space-y-5 min-w-0">
             {/* Character Dossier with Signature Accent Strip */}
-            <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+            <div className="panel overflow-hidden">
               <div
                 className="h-1.5 w-full"
                 style={{ backgroundColor: selectedAgent.persona.accentHex }}
@@ -725,7 +728,7 @@ export function AgentBotsWorkspace({
             )}
 
             {/* Execution Feed (Devin / Grok-Bot Timeline) */}
-            <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+            <div className="panel overflow-hidden">
               <div className="px-5 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-xs font-semibold text-slate-800">
                   <Bot className="w-4 h-4 text-slate-500" />
@@ -770,8 +773,8 @@ export function AgentBotsWorkspace({
                     if (msg.role === 'user') {
                       return (
                         <div key={msg.id} className="flex justify-end">
-                          <div className="max-w-[85%] bg-slate-900 text-white rounded-lg px-4 py-2.5 text-xs space-y-1">
-                            <div className="text-[11px] text-slate-300 font-mono">
+                          <div className="max-w-[85%] bg-signal-500/15 border border-signal-500/30 text-paper-100 rounded-lg px-4 py-2.5 text-xs space-y-1">
+                            <div className="text-[11px] text-signal-300 font-mono">
                               Diretiva → {msgAgent ? `${msgAgent.id} ${msgAgent.persona.codename}` : msg.agentId}
                             </div>
                             <div className="whitespace-pre-wrap">{msg.content}</div>
@@ -783,7 +786,7 @@ export function AgentBotsWorkspace({
                     return (
                       <div
                         key={msg.id}
-                        className="bg-white border border-slate-200 rounded-lg p-4 space-y-3"
+                        className="panel p-4 space-y-3"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2.5">
@@ -849,12 +852,12 @@ export function AgentBotsWorkspace({
                   onChange={(e) => setPromptInput(e.target.value)}
                   disabled={running}
                   placeholder={`Enviar comando para ${selectedAgent.persona.codename} (${selectedAgent.id})...`}
-                  className="flex-1 h-10 px-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  className="input flex-1 h-10 !text-sm"
                 />
                 <button
                   type="submit"
                   disabled={running || !promptInput.trim()}
-                  className="inline-flex items-center gap-1.5 h-10 px-4 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 rounded-md whitespace-nowrap shrink-0"
+                  className="btn btn-primary h-10 !px-4 whitespace-nowrap shrink-0"
                 >
                   {liveState?.mode === 'single' ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
