@@ -21,6 +21,22 @@ export const AGENT_SPECIFIC_DIRECTIVES: Record<string, AgentDirective[]> = {
     { label: 'Auditar completude de rotas', prompt: 'Cruze rotas declaradas na navegação com telas reais implementadas e liste rotas mortas.' },
     { label: 'Corrigir navegação quebrada', prompt: 'Encontre fluxos de UI que prometem ação sem implementação (ex.: criar lead) e proponha correção mínima.' },
   ],
+  '02A': [
+    { label: 'Auditoria heurística de usabilidade', prompt: 'Execute avaliação heurística nas telas críticas e liste os 5 maiores pontos de fricção com severidade e correção objetiva.' },
+    { label: 'Roteiro de teste com usuários', prompt: 'Monte um roteiro enxuto de teste de usabilidade com tarefas reais, métricas de conclusão e critérios de aprovação.' },
+  ],
+  '02B': [
+    { label: 'Mapear jornada ponta a ponta', prompt: 'Trace a jornada completa do usuário da entrada à ação principal e destaque becos sem saída, estados vazios e quedas.' },
+    { label: 'Corrigir estados de erro no fluxo', prompt: 'Audite transições e estados de erro/carregamento nos fluxos críticos garantindo recuperação clara sem perder contexto.' },
+  ],
+  '02C': [
+    { label: 'Auditar taxonomia e menus', prompt: 'Revise a estrutura de menus, rótulos e profundidade de navegação; elimine ambiguidades e categorias redundantes.' },
+    { label: 'Mapa de rotas e hierarquia', prompt: 'Organize a arquitetura de informação das telas principais com agrupamentos claros e critérios objetivos de localização.' },
+  ],
+  '02D': [
+    { label: 'Auditar dobra e conversão', prompt: 'Avalie proposta de valor above-the-fold, hierarquia de CTA, prova real e fricção de formulário na experiência de conversão.' },
+    { label: 'Otimizar funil de landing page', prompt: 'Identifique bloqueios de conversão na página de entrada e proponha melhorias cirúrgicas sem promessas ou dados fictícios.' },
+  ],
   '03': [
     { label: 'Escanear acessibilidade', prompt: 'Liste componentes interativos sem label, foco visível ou contraste AA no escopo atual.' },
     { label: 'Checklist WCAG do diff', prompt: 'Para as mudanças recentes, verifique teclado, aria e contraste; reporte violações com arquivo:linha.' },

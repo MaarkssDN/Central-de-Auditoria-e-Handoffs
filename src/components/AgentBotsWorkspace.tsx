@@ -46,7 +46,7 @@ interface LiveExecutionState {
 }
 
 const GALLERY_CATEGORY_LABELS: Record<'all' | AgentCategory, string> = {
-  all: 'Todos (26)',
+  all: `Todos (${OFFICIAL_AGENTS.length})`,
   coordenacao: 'Coordenação',
   produto_engenharia: 'Produto & Engenharia',
   governanca: 'Governança',

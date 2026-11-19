@@ -14,7 +14,7 @@ import type { Handoff, IndependentReview, Mission, Wave } from '../types/governa
 
 test('every official agent from AGENTS.md exists with unique persona, neon accent, and no Atlas name', () => {
   const expectedIds = [
-    '00', '01', '01A', '02', '03', '04', '05', '06', '06A', '07', '08', '08A',
+    '00', '01', '01A', '02', '02A', '02B', '02C', '02D', '03', '04', '05', '06', '06A', '07', '08', '08A',
     '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '21', '22', '23', '24',
   ];
   assert.deepEqual(
@@ -53,7 +53,7 @@ test('rejects reserved agent IDs 19 and 20', () => {
   assert.equal(res20.allowed, false);
 });
 
-test('enforces exclusive slot pairs 01<->01A, 06<->06A, 08<->08A', () => {
+test('enforces exclusive slot groups 01<->01A, 02<->02A/02B/02C/02D, 06<->06A, 08<->08A', () => {
   const conflict01 = checkSlotConflicts({
     activeAgentIds: ['00', '01'],
     candidateAgentId: '01A',
@@ -61,6 +61,30 @@ test('enforces exclusive slot pairs 01<->01A, 06<->06A, 08<->08A', () => {
   });
   assert.equal(conflict01.allowed, false);
   assert.match(conflict01.reasons[0], /Slot exclusivo violado/);
+
+  for (const subId of ['02A', '02B', '02C', '02D']) {
+    const conflict02 = checkSlotConflicts({
+      activeAgentIds: ['00', '02'],
+      candidateAgentId: subId,
+      matrixPublished: true,
+    });
+    assert.equal(conflict02.allowed, false, `Expected 02 <-> ${subId} conflict`);
+    assert.match(conflict02.reasons[0], /Slot exclusivo violado/);
+
+    const reverseConflict02 = checkSlotConflicts({
+      activeAgentIds: ['00', subId],
+      candidateAgentId: '02',
+      matrixPublished: true,
+    });
+    assert.equal(reverseConflict02.allowed, false, `Expected ${subId} <-> 02 conflict`);
+  }
+
+  const siblingConflict02 = checkSlotConflicts({
+    activeAgentIds: ['00', '02A'],
+    candidateAgentId: '02D',
+    matrixPublished: true,
+  });
+  assert.equal(siblingConflict02.allowed, false);
 
   const conflict06 = checkSlotConflicts({
     activeAgentIds: ['00', '06A'],

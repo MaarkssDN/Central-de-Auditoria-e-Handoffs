@@ -9,6 +9,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { OFFICIAL_AGENTS } from '../data/agentsRoster';
 
 export type NavSection =
   | 'central'
@@ -146,7 +147,9 @@ export function Sidebar({
         <div className="rounded-2xl bg-[#0C1224]/90 border border-violet-400/25 p-3.5 space-y-1">
           <div className="flex items-center justify-between text-xs">
             <span className="text-[#A6B7D9] font-medium">Roster Oficial</span>
-            <span className="font-mono font-bold text-[#00F0FF] tabular-nums">26 agentes</span>
+            <span className="font-mono font-bold text-[#00F0FF] tabular-nums">
+              {OFFICIAL_AGENTS.length} agentes
+            </span>
           </div>
           <div className="text-[11px] text-[#7C90B8] leading-snug">
             Slots 19 e 20 reservados (§4) · Parecer obrigatório: Agente 24 (§40)

@@ -428,7 +428,7 @@ export function WaveOrchestratorView({
                   Concorrência e Slots Exclusivos (§13 e §14)
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Ative ou desative especialistas na onda. Conflitos exclusivos (01↔01A, 06↔06A, 08↔08A, 16↔06/07 em fila) e limites são bloqueados automaticamente.
+                  Ative ou desative especialistas na onda. Conflitos exclusivos (01↔01A, 02↔02A/02B/02C/02D, 06↔06A, 08↔08A, 16↔06/07 em fila) e limites são bloqueados automaticamente.
                 </p>
               </div>
               <div className="text-xs font-mono text-slate-700 tabular-nums shrink-0">
