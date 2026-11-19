@@ -15,3 +15,11 @@ data/
 # artefatos de runtime do coordenador
 central/estado/coordinator-runs/
 central/estado/executions/
+
+# artefatos de configuração de ferramentas de agente (skills/prompts locais)
+.agent/
+.agents/
+.claude/
+.codex/
+.devin/
+.gemini/
