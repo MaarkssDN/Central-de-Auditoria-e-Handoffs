@@ -7,7 +7,6 @@ import { ConnectRepoModal } from './components/ConnectRepoModal';
 import { CoordinatorChatView } from './components/CoordinatorChatView';
 import { FilesView } from './components/FilesView';
 import { HandoffsCenterView } from './components/HandoffsCenterView';
-import { LandingPage } from './components/LandingPage';
 import { LoginModal } from './components/LoginModal';
 import { ProvidersView } from './components/ProvidersView';
 import { RepositoriesView } from './components/RepositoriesView';
@@ -33,9 +32,9 @@ import type { WebhookEventType } from './utils/webhookNotifier';
 const THEME_KEY = '@central-auditoria:theme';
 
 function getInitialTheme(): ThemeMode {
-  if (typeof window === 'undefined') return 'light';
+  if (typeof window === 'undefined') return 'dark';
   const saved = window.localStorage.getItem(THEME_KEY);
-  return saved === 'dark' || saved === 'light' ? saved : 'light';
+  return saved === 'dark' || saved === 'light' ? saved : 'dark';
 }
 
 export default function App() {
@@ -45,7 +44,6 @@ export default function App() {
   const [webhookNotice, setWebhookNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
-  const [gate, setGate] = useState<'landing' | 'login'>('landing');
   const [activeSection, setActiveSection] = useState<NavSection>('chat');
   const [selectedBotAgentId, setSelectedBotAgentId] = useState<string>('00');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -117,23 +115,18 @@ export default function App() {
 
   if (!authChecked) {
     return (
-      <div className="min-h-screen blueprint-grid flex items-center justify-center p-6 bg-ink-950">
-        <div className="panel panel-corner p-6 w-full max-w-md space-y-3">
-          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-paper-400">
-            Verificando sessão…
-          </span>
+      <div className="min-h-screen flex items-center justify-center p-6 bg-[#03050B] text-[#94A3B8]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 rounded-full border border-white/10 border-t-[#00E5FF] animate-spin" />
+          <span className="text-xs tracking-wide text-[#94A3B8]">Verificando sessão…</span>
         </div>
       </div>
     );
   }
 
   if (!authenticated) {
-    if (gate === 'landing') {
-      return <LandingPage onEnter={() => setGate('login')} />;
-    }
     return (
       <LoginModal
-        onBack={() => setGate('landing')}
         onSuccess={() => {
           setAuthenticated(true);
           setLoading(true);
@@ -144,17 +137,10 @@ export default function App() {
 
   if (loading || !workspace) {
     return (
-      <div className="min-h-screen blueprint-grid flex items-center justify-center p-6 bg-ink-950">
-        <div className="panel panel-corner p-6 w-full max-w-md space-y-3">
-          <div className="flex items-center gap-2.5">
-            <span className="led led-warn animate-pulse" />
-            <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-paper-400">
-              Inicializando console…
-            </span>
-          </div>
-          <div className="h-5 w-48 bg-ink-800 rounded animate-pulse" />
-          <div className="h-4 w-full bg-ink-800/70 rounded animate-pulse" />
-          <div className="h-4 w-3/4 bg-ink-800/70 rounded animate-pulse" />
+      <div className="min-h-screen flex items-center justify-center p-6 bg-[#03050B] text-[#94A3B8]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 rounded-full border border-white/10 border-t-[#00E5FF] animate-spin" />
+          <span className="text-xs tracking-wide text-[#94A3B8]">Inicializando console…</span>
         </div>
       </div>
     );
@@ -510,13 +496,13 @@ export default function App() {
               style={{
                 background:
                   webhookNotice.kind === 'ok'
-                    ? 'rgba(5, 150, 105, 0.08)'
-                    : 'rgba(220, 38, 38, 0.1)',
+                    ? 'rgba(0, 255, 163, 0.08)'
+                    : 'rgba(255, 7, 58, 0.1)',
                 borderColor:
                   webhookNotice.kind === 'ok'
-                    ? 'rgba(5, 150, 105, 0.42)'
-                    : 'rgba(220, 38, 38, 0.45)',
-                color: webhookNotice.kind === 'ok' ? 'var(--color-ok-400)' : '#DC2626',
+                    ? 'rgba(0, 255, 163, 0.42)'
+                    : 'rgba(255, 7, 58, 0.45)',
+                color: webhookNotice.kind === 'ok' ? '#7FFFD4' : '#FF8FA3',
               }}
             >
               <span>{webhookNotice.text}</span>
