@@ -7,6 +7,7 @@ import { ConnectRepoModal } from './components/ConnectRepoModal';
 import { CoordinatorChatView } from './components/CoordinatorChatView';
 import { FilesView } from './components/FilesView';
 import { HandoffsCenterView } from './components/HandoffsCenterView';
+import { LandingPage } from './components/LandingPage';
 import { LoginModal } from './components/LoginModal';
 import { ProvidersView } from './components/ProvidersView';
 import { RepositoriesView } from './components/RepositoriesView';
@@ -44,6 +45,7 @@ export default function App() {
   const [webhookNotice, setWebhookNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const [gate, setGate] = useState<'landing' | 'login'>('landing');
   const [activeSection, setActiveSection] = useState<NavSection>('chat');
   const [selectedBotAgentId, setSelectedBotAgentId] = useState<string>('00');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -126,15 +128,17 @@ export default function App() {
   }
 
   if (!authenticated) {
+    if (gate === 'landing') {
+      return <LandingPage onEnter={() => setGate('login')} />;
+    }
     return (
-      <div className="min-h-screen blueprint-grid bg-ink-950">
-        <LoginModal
-          onSuccess={() => {
-            setAuthenticated(true);
-            setLoading(true);
-          }}
-        />
-      </div>
+      <LoginModal
+        onBack={() => setGate('landing')}
+        onSuccess={() => {
+          setAuthenticated(true);
+          setLoading(true);
+        }}
+      />
     );
   }
 

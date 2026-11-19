@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./film.css";
 
 @theme {
   --font-display: "Outfit", "Plus Jakarta Sans", system-ui, sans-serif;
