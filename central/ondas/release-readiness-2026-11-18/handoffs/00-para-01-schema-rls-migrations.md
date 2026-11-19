@@ -1,6 +1,6 @@
 - De: 00
 - Para: 01 (Schema/Migrations/RLS)
-- Status: PENDENTE
+- Status: EM_EXECUÇÃO
 - Prioridade: P1
 
 ## Achados

@@ -16,7 +16,7 @@ interface TopBarProps {
 }
 
 const SECTION_TITLES: Record<NavSection, string> = {
-  chat: 'Chat Boot — Coordenador',
+  home: 'Sala de Comando',
   providers: 'Conexões de IA',
   arquivos: 'Arquivos Locais',
   central: 'Central Local',
@@ -26,6 +26,19 @@ const SECTION_TITLES: Record<NavSection, string> = {
   auditoria: 'Auditoria e Parecer 24',
   agentes: 'Agentes e Propriedade',
   repositorios: 'Repositórios e Integrações',
+};
+
+const SECTION_ACCENTS: Record<NavSection, string> = {
+  home: 'var(--color-accent-blue)',
+  providers: 'var(--color-accent-violet)',
+  arquivos: 'var(--color-accent-cyan)',
+  central: 'var(--color-accent-cyan)',
+  bots: 'var(--color-accent-blue)',
+  ondas: 'var(--color-accent-violet)',
+  handoffs: 'var(--color-accent-rose)',
+  auditoria: 'var(--color-alert-400)',
+  agentes: 'var(--color-accent-emerald)',
+  repositorios: 'var(--color-accent-amber)',
 };
 
 export function TopBar({
@@ -66,7 +79,10 @@ export function TopBar({
                 </span>
               </>
             )}
-            <h1 className="font-display text-lg font-bold tracking-tight text-paper-100 truncate">
+            <h1
+              className="font-display text-lg font-bold tracking-tight truncate"
+              style={{ color: SECTION_ACCENTS[activeSection] }}
+            >
               {SECTION_TITLES[activeSection]}
             </h1>
           </div>

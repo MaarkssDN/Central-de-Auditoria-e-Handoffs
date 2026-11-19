@@ -284,7 +284,7 @@ export function WaveOrchestratorView({
     <div className="space-y-6">
       <div>
         <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal-400 mb-1">SEC-OND · Ciclo de Vida</div>
-        <h2 className="font-display text-2xl font-bold tracking-tight text-paper-100">Ondas e Missões</h2>
+        <h2 className="font-display text-2xl font-bold tracking-tight text-accent-violet">Ondas e Missões</h2>
       </div>
 
       {/* Wave Selector Header */}

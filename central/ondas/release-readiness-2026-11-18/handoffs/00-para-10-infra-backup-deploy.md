@@ -1,6 +1,6 @@
 - De: 00 (Coordenador)
 - Para: 10 (Infra/SRE) + 08 (QA)
-- Status: PENDENTE
+- Status: EM_EXECUÇÃO
 - Prioridade: P0
 
 ## Achados

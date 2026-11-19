@@ -2,8 +2,8 @@
 @import "./film.css";
 
 @theme {
-  --font-display: "Outfit", "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: "Baloo 2", "Nunito", system-ui, sans-serif;
+  --font-sans: "Nunito", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
   /* ── Paleta escura (padrão) — superfícies slate profundas ── */
@@ -36,6 +36,14 @@
 
   --color-ok-400: #34d399;
   --color-violet-400: #a78bfa;
+
+  /* Acentos por seção (usados em títulos/subtítulos) */
+  --color-accent-cyan: #22d3ee;
+  --color-accent-violet: #a78bfa;
+  --color-accent-rose: #f472b6;
+  --color-accent-emerald: #34d399;
+  --color-accent-amber: #fbbf24;
+  --color-accent-blue: #60a5fa;
 
   /* Aliases legados (componentes antigos) — mesmos tons, sem neon */
   --color-neon-cyan: #3b82f6;
@@ -75,6 +83,13 @@
   --color-alert-400: #dc2626;
   --color-alert-500: #b91c1c;
   --color-ok-400: #059669;
+
+  --color-accent-cyan: #0891b2;
+  --color-accent-violet: #7c3aed;
+  --color-accent-rose: #db2777;
+  --color-accent-emerald: #059669;
+  --color-accent-amber: #b45309;
+  --color-accent-blue: #2563eb;
 }
 
 @layer base {
@@ -511,4 +526,37 @@ html:not([data-theme='light']) .hover\:text-slate-800:hover { color: var(--color
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+/* ── Dashboard "Sala de Comando" ───────────────────────────── */
+
+@keyframes dash-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.dash-radar-sweep {
+  transform-origin: center;
+  animation: dash-sweep 4.5s linear infinite;
+}
+
+@keyframes dash-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+.dash-blink { animation: dash-blink 1.8s ease-in-out infinite; }
+
+@keyframes dash-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.dash-rise { animation: dash-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.dash-rise-1 { animation-delay: 0.05s; }
+.dash-rise-2 { animation-delay: 0.12s; }
+.dash-rise-3 { animation-delay: 0.19s; }
+.dash-rise-4 { animation-delay: 0.26s; }
+.dash-rise-5 { animation-delay: 0.33s; }
+
+.dash-num { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-radar-sweep, .dash-blink, .dash-rise, .dash-rise-1, .dash-rise-2, .dash-rise-3, .dash-rise-4, .dash-rise-5 { animation: none !important; }
 }

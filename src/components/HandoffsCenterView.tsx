@@ -172,10 +172,10 @@ export function HandoffsCenterView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal-400 mb-1">SEC-HND · Rastreabilidade</div>
-          <h2 className="font-display text-2xl font-bold tracking-tight text-paper-100">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-accent-rose">
             Central de Handoffs
           </h2>
-          <p className="text-sm text-paper-400 mt-1 max-w-2xl">
+          <p className="text-sm text-accent-rose/70 mt-1 max-w-2xl">
             Comunicação formal entre domínios em <span className="font-mono text-paper-300">.agents/handoffs/onda-&lt;n&gt;/</span>. O destinatário atualiza o status sem apagar o pedido original.
           </p>
         </div>

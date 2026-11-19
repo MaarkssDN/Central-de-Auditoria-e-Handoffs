@@ -109,8 +109,8 @@ export function CoordinatorChatView() {
     <div className="flex flex-col h-[calc(100vh-10rem)] rise-in">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h2 className="font-display text-xl font-bold text-paper-100">Chat Boot — Coordenador</h2>
-          <p className="text-xs text-paper-400 mt-0.5">Alvo atual: {targetLabel}</p>
+          <h2 className="font-display text-xl font-bold text-accent-blue">Chat Boot — Coordenador</h2>
+          <p className="text-xs text-accent-blue/70 mt-0.5">Alvo atual: {targetLabel}</p>
         </div>
         <select className="input text-xs" value={target} onChange={(e) => setTarget(e.target.value)}>
           <option value="coordenador">{COORDINATOR.nome}</option>

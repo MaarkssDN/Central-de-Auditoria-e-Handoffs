@@ -1,6 +1,6 @@
 - De: 00
 - Para: 16 (Workers/Filas)
-- Status: PENDENTE
+- Status: EM_EXECUÇÃO
 - Prioridade: P0-condicional / P1
 
 ## Achados (relatório: auditoria/voz-telefonia-workers.md)

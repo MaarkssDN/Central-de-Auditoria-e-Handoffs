@@ -43,10 +43,10 @@ export function AgentsRosterView({ activeRepo, onActivateBot }: AgentsRosterView
       <section className="panel p-6">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
           <div className="max-w-xl">
-            <h2 className="font-display text-lg font-bold tracking-tight text-paper-100">
+            <h2 className="font-display text-lg font-bold tracking-tight text-accent-emerald">
               Verificador de Propriedade Exclusiva de Arquivos (§15)
             </h2>
-            <p className="text-sm text-paper-400 mt-1">
+            <p className="text-sm text-accent-emerald/70 mt-1">
               Informe qualquer caminho do repositório{activeRepo ? ` (${activeRepo.fullName})` : ''} para saber o proprietário exclusivo, regras de aprovação do Coordenador ou necessidade de handoff.
             </p>
           </div>

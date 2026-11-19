@@ -1,6 +1,6 @@
 - De: 00
 - Para: 00 (coordenação) / 09 (Mobile) / 11 (Marca)
-- Status: PENDENTE
+- Status: EM_EXECUÇÃO
 - Prioridade: P0-condicional / P1 / P2
 
 ## Achados

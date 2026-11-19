@@ -5,7 +5,7 @@ import {
   FolderGit2,
   FolderOpen,
   Landmark,
-  MessageSquare,
+  LayoutDashboard,
   PlugZap,
   Radar,
   ShieldCheck,
@@ -15,7 +15,7 @@ import {
 import { OFFICIAL_AGENTS } from '../data/agentsRoster';
 
 export type NavSection =
-  | 'chat'
+  | 'home'
   | 'providers'
   | 'arquivos'
   | 'central'
@@ -41,7 +41,7 @@ const NAV_ITEMS: Array<{
   icon: typeof Activity;
   neonHex: string;
 }> = [
-  { id: 'chat', label: 'Chat Boot', icon: MessageSquare, neonHex: '#2563EB' },
+  { id: 'home', label: 'Início', icon: LayoutDashboard, neonHex: '#38BDF8' },
   { id: 'providers', label: 'Conexões de IA', icon: PlugZap, neonHex: '#7C3AED' },
   { id: 'arquivos', label: 'Arquivos Locais', icon: FolderOpen, neonHex: '#22D3EE' },
   { id: 'bots', label: 'Personagens e Bots', icon: Bot, neonHex: '#2563EB' },
@@ -78,10 +78,11 @@ export function Sidebar({
             <Radar className="w-5 h-5 text-signal-400" strokeWidth={2} />
           </div>
           <div className="min-w-0">
-            <div className="font-display font-bold text-base leading-tight tracking-tight text-paper-100">
-              Governança <span className="neon-text-gradient">360</span>
+            <div className="font-display font-bold text-base leading-tight tracking-tight">
+              <span className="text-accent-amber">Governança</span>{' '}
+              <span className="text-accent-blue">360</span>
             </div>
-            <div className="text-[11px] text-paper-400 mt-0.5 truncate">
+            <div className="text-[11px] text-accent-violet mt-0.5 truncate font-medium">
               Orquestração Multiagente
             </div>
           </div>
@@ -120,7 +121,7 @@ export function Sidebar({
               className={`group relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-left transition-all duration-200 ${
                 isActive
                   ? 'text-paper-100'
-                  : 'text-paper-300 hover:bg-ink-800/60 hover:text-paper-100'
+                  : 'text-paper-400 hover:bg-ink-800/60'
               }`}
               style={
                 isActive
@@ -137,7 +138,12 @@ export function Sidebar({
                 style={{ color: isActive ? item.neonHex : 'var(--color-paper-400)' }}
                 strokeWidth={2}
               />
-              <span className="flex-1 text-[13px] font-medium truncate">{item.label}</span>
+              <span
+                className="flex-1 text-[13px] font-bold truncate transition-colors"
+                style={{ color: isActive ? item.neonHex : undefined }}
+              >
+                {item.label}
+              </span>
               {typeof count === 'number' && count > 0 && (
                 <span
                   className="font-mono text-[11px] font-semibold tabular-nums"
@@ -155,12 +161,12 @@ export function Sidebar({
       <div className="p-4 border-t border-ink-700/60">
         <div className="rounded-2xl bg-ink-850/90 border border-ink-600 p-3.5 space-y-1">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-paper-300 font-medium">Roster Oficial</span>
-            <span className="font-mono font-bold text-signal-400 tabular-nums">
+            <span className="text-accent-emerald font-bold">Roster Oficial</span>
+            <span className="font-mono font-bold text-accent-blue tabular-nums">
               {OFFICIAL_AGENTS.length} agentes
             </span>
           </div>
-          <div className="text-[11px] text-paper-400 leading-snug">
+          <div className="text-[11px] text-accent-violet leading-snug">
             Slots 19 e 20 reservados (§4) · Parecer obrigatório: Agente 24 (§40)
           </div>
         </div>

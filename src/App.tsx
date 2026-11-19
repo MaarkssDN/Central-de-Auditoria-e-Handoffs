@@ -3,8 +3,9 @@ import { AgentBotsWorkspace } from './components/AgentBotsWorkspace';
 import { AgentsRosterView } from './components/AgentsRosterView';
 import { AuditReviewView } from './components/AuditReviewView';
 import { CentralAuditView } from './components/CentralAuditView';
+import { ChatBootWidget } from './components/ChatBootWidget';
 import { ConnectRepoModal } from './components/ConnectRepoModal';
-import { CoordinatorChatView } from './components/CoordinatorChatView';
+import { DashboardView } from './components/DashboardView';
 import { FilesView } from './components/FilesView';
 import { HandoffsCenterView } from './components/HandoffsCenterView';
 import { LoginModal } from './components/LoginModal';
@@ -44,7 +45,8 @@ export default function App() {
   const [webhookNotice, setWebhookNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
-  const [activeSection, setActiveSection] = useState<NavSection>('chat');
+  const [activeSection, setActiveSection] = useState<NavSection>('home');
+  const [userName, setUserName] = useState('Operador');
   const [selectedBotAgentId, setSelectedBotAgentId] = useState<string>('00');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [connectModalOpen, setConnectModalOpen] = useState(false);
@@ -59,10 +61,27 @@ export default function App() {
 
   useEffect(() => {
     fetch('/api/auth/me')
-      .then((r) => setAuthenticated(r.ok))
+      .then(async (r) => {
+        setAuthenticated(r.ok);
+        if (r.ok) {
+          const data = (await r.json().catch(() => null)) as { user?: { name?: string } } | null;
+          if (data?.user?.name) setUserName(data.user.name);
+        }
+      })
       .catch(() => setAuthenticated(false))
       .finally(() => setAuthChecked(true));
   }, []);
+
+  useEffect(() => {
+    if (!authenticated) return;
+    fetch('/api/auth/me')
+      .then(async (r) => {
+        if (!r.ok) return;
+        const data = (await r.json().catch(() => null)) as { user?: { name?: string } } | null;
+        if (data?.user?.name) setUserName(data.user.name);
+      })
+      .catch(() => {});
+  }, [authenticated]);
 
   function handleLogout() {
     fetch('/api/auth/logout', { method: 'POST' }).finally(() => {
@@ -516,7 +535,15 @@ export default function App() {
             </div>
           )}
 
-          {activeSection === 'chat' && <CoordinatorChatView />}
+          {activeSection === 'home' && workspace && (
+            <DashboardView
+              workspace={workspace}
+              userName={userName}
+              theme={theme}
+              onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+              onNavigate={setActiveSection}
+            />
+          )}
 
           {activeSection === 'providers' && <ProvidersView />}
 
@@ -612,6 +639,7 @@ export default function App() {
         onClose={() => setConnectModalOpen(false)}
         onAddRepository={handleAddRepository}
       />
+      <ChatBootWidget />
     </div>
   );
 }

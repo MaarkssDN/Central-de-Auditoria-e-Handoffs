@@ -248,10 +248,10 @@ export function AuditReviewView({
     <div className="space-y-6">
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl font-bold tracking-tight text-paper-100">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-alert-400">
             Auditoria Independente e Gates
           </h2>
-          <p className="text-sm text-paper-400 mt-1 max-w-2xl">
+          <p className="text-sm text-alert-400/70 mt-1 max-w-2xl">
             Pareceres oficiais do Agente 24 em <span className="font-mono text-paper-300">.agents/reviews/</span>, matriz de gates reais, bloqueadores B-01..B-14 e exportação técnica JSON → PDF.
           </p>
         </div>

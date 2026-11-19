@@ -94,8 +94,8 @@ export function ProvidersView() {
     <div className="space-y-6 rise-in">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-xl font-bold text-paper-100">Conexões de IA</h2>
-          <p className="text-xs text-paper-400 mt-1">
+          <h2 className="font-display text-xl font-bold text-accent-violet">Conexões de IA</h2>
+          <p className="text-xs text-accent-violet/70 mt-1">
             Providers que a Central pode acionar. Sem credencial, cada um responde em modo mock.
           </p>
         </div>
@@ -113,11 +113,11 @@ export function ProvidersView() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-display font-semibold text-paper-100">{p.def.nome}</h3>
+                    <h3 className="font-display font-semibold text-accent-violet">{p.def.nome}</h3>
                     <span className="chip" data-tone={STATUS_TONE[p.status]}>{STATUS_LABEL[p.status]}</span>
                     <span className="chip">{p.def.kind}</span>
                   </div>
-                  <p className="text-xs text-paper-400 mt-1">{p.def.descricao}</p>
+                  <p className="text-xs text-accent-violet/70 mt-1">{p.def.descricao}</p>
                 </div>
                 <button
                   type="button"

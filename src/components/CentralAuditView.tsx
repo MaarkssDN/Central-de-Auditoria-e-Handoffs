@@ -218,7 +218,7 @@ export function CentralAuditView() {
             <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-signal-400 mb-1.5">
               Release Readiness · Onda release-readiness-2026-11-18
             </div>
-            <h2 className="font-display text-3xl font-bold tracking-tight text-paper-100">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-accent-cyan">
               Central de Auditoria
             </h2>
           </div>

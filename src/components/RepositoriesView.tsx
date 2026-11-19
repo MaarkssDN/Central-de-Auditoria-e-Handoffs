@@ -218,10 +218,10 @@ export function RepositoriesView({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl font-bold tracking-tight text-paper-100">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-accent-amber">
             Repositórios sob Orquestração
           </h2>
-          <p className="text-sm text-paper-400 mt-1 max-w-2xl">
+          <p className="text-sm text-accent-amber/70 mt-1 max-w-2xl">
             Alterne o contexto ativo, conecte qualquer repositório GitHub/local e configure Webhooks Slack ou Discord por repositório.
           </p>
         </div>
@@ -408,10 +408,10 @@ export function RepositoriesView({
                 <Bell className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-display text-lg font-bold text-paper-100">
+                <h3 className="font-display text-lg font-bold text-accent-amber">
                   Integrações de Webhook (Slack &amp; Discord)
                 </h3>
-                <p className="text-xs text-paper-400 mt-0.5 max-w-2xl">
+                <p className="text-xs text-accent-amber/70 mt-0.5 max-w-2xl">
                   Conecte um Webhook HTTPS dedicado por repositório para disparar alertas automáticos ao criar novos Handoffs (§18) ou registrar falhas de Auditoria / Gates (§40).
                 </p>
               </div>

@@ -413,10 +413,10 @@ export function AgentBotsWorkspace({
         <section className="space-y-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <h2 className="font-display text-xl font-bold text-paper-100">
+              <h2 className="font-display text-xl font-bold text-accent-blue">
                 Todos os Personagens Autônomos ({visibleRoster.length} de {OFFICIAL_AGENTS.length})
               </h2>
-              <p className="text-xs text-[#A6B7D9] mt-1">
+              <p className="text-xs text-accent-blue/70 mt-1">
                 Roster integral do AGENTS.md (slots 19 e 20 reservados). Cada agente tem assinatura neon, voz e diretivas próprias.
               </p>
             </div>
@@ -485,7 +485,7 @@ export function AgentBotsWorkspace({
                             <span className="text-[#047857] font-semibold whitespace-nowrap">● Ativo</span>
                           )}
                         </div>
-                        <h3 className="font-display text-base font-bold text-paper-100 truncate mt-0.5">
+                        <h3 className="font-display text-base font-bold text-accent-blue truncate mt-0.5">
                           {agent.persona.codename}
                         </h3>
                         <div className="text-xs text-[#A6B7D9] truncate">
@@ -538,7 +538,7 @@ export function AgentBotsWorkspace({
           <section className="xl:col-span-4 neon-card overflow-hidden">
             <div className="p-5 border-b border-cyan-400/15 space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="font-display text-sm font-bold text-paper-100">
+                <h2 className="font-display text-sm font-bold text-accent-blue">
                   Personagens Autônomos ({OFFICIAL_AGENTS.length})
                 </h2>
                 <span className="text-xs font-mono text-[#7C3AED]">19/20 reserv.</span>
@@ -640,10 +640,10 @@ export function AgentBotsWorkspace({
                         Agente {selectedAgent.id} · {selectedAgent.persona.archetype}
                         {selectedAgent.cannotEditCode ? ' · Somente Auditoria' : ''}
                       </div>
-                      <h2 className="font-display text-xl font-bold text-paper-100 mt-0.5">
+                      <h2 className="font-display text-xl font-bold text-accent-blue mt-0.5">
                         {selectedAgent.persona.codename} — {selectedAgent.name}
                       </h2>
-                      <p className="text-xs text-[#C9D4E8] mt-1 italic">
+                      <p className="text-xs text-accent-blue/70 mt-1 italic">
                         &ldquo;{selectedAgent.persona.motto}&rdquo;
                       </p>
                     </div>

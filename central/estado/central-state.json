@@ -1,7 +1,7 @@
 {
   "central": "Central-Auditoria-BirthHub",
   "repo": "C:\\Github\\Birthub-360",
-  "updatedAt": "2026-11-19T16:58:20.714Z",
+  "updatedAt": "2026-11-19T18:21:46.068Z",
   "coordinator": "agente-00-sessao-externa",
   "activeWave": "release-readiness-2026-11-18",
   "waveStatus": "MARCO1_CONCLUIDO — aguardando Etapa 0 (reconciliacao PRs x achados) + decisoes humanas",
@@ -38,11 +38,7 @@
   ],
   "activeBatch": null,
   "lastCompletedBatch": "auditoria forense completa (11 dominios + transversal) + revisao 24 do consolidado",
-  "blockers": [
-    "Merge order Etapa 0 aguarda revisao humana: #401/#413 -> #415 -> saneamento AUD-1/ONDAS -> antigos -> docs",
-    "Branch chore/salvage-stash-00 (Birthub) pronta p/ PR — aguardando push/autorizacao",
-    "D-01/D-04: defaults conservadores adotados; confirmacao formal pendente"
-  ],
+  "blockers": [],
   "concurrencyRules": {
     "maxParallel": 4,
     "exclusiveSlots": [
@@ -59,5 +55,5 @@
       ".agents/prompts/**"
     ]
   },
-  "nextStep": "Aguardar respostas D-01..D-07 + decisao de merge na ordem da reconciliacao; handoffs que nao dependem de D-xx podem ser despachados apos aprovacao"
+  "nextStep": "FREEZE LIFTED (Etapa 0 executada + ordem de merge aprovada 2026-11-19). Merge order: #401/#413 -> #415 -> saneamento -> antigos -> docs (merges aguardam parecer 24). PR #429 aberto. D-01/D-04 com defaults conservadores — nao bloqueiam despacho exceto handoffs que os referenciem explicitamente."
 }
