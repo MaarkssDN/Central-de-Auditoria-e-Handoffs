@@ -1,6 +1,9 @@
-import { execSync } from 'child_process';
+import { execSync, execFile } from 'child_process';
+import { promisify } from 'util';
 import { appendExecution, readExecutions } from './centralExecutions';
 import { emitCentralEvent } from './centralEvents';
+
+const execFileAsync = promisify(execFile);
 
 export interface PrResult {
   ok: boolean;
@@ -93,11 +96,17 @@ export async function createPullRequest(opts: {
       }
       // gh pode ter criado mesmo sem URL clara na saída
       if (/already exists|already a pull request/i.test(out)) {
-        return findExistingPr(repoPath, branch, slug);
+        const existing = await findExistingPr(repoPath, branch);
+        if (existing.ok && existing.prUrl) recordPr(handoff, branch, existing.prUrl, opts);
+        return existing;
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      if (/already exists/i.test(msg)) return findExistingPr(repoPath, branch, slug);
+      if (/already exists/i.test(msg)) {
+        const existing = await findExistingPr(repoPath, branch);
+        if (existing.ok && existing.prUrl) recordPr(handoff, branch, existing.prUrl, opts);
+        return existing;
+      }
       // cai para API se gh falhou por auth/rede
     }
   }
@@ -111,12 +120,10 @@ export async function createPullRequest(opts: {
   return { ok: false, error: 'Sem gh CLI autenticado e sem slug owner/repo detectável no remote.' };
 }
 
-function findExistingPr(repoPath: string, branch: string, slug: string | null): PrResult {
+async function findExistingPr(repoPath: string, branch: string): Promise<PrResult> {
   try {
-    const out = execSync(`gh pr list --head "${branch}" --state open --json url,number --limit 1`, {
-      cwd: repoPath, stdio: ['ignore', 'pipe', 'pipe'], timeout: 20000,
-    }).toString().trim();
-    const parsed = JSON.parse(out) as { url?: string; number?: number }[];
+    const { stdout } = await execFileAsync('gh', ['pr', 'list', '--head', branch, '--state', 'open', '--json', 'url,number', '--limit', '1'], { cwd: repoPath, timeout: 20000 });
+    const parsed = JSON.parse(stdout) as { url?: string; number?: number }[];
     if (parsed[0]?.url) return { ok: true, prUrl: parsed[0].url, prNumber: parsed[0].number, via: 'gh' };
   } catch { /* ignora */ }
   return { ok: false, error: `Branch ${branch} já possui PR ou gh indisponível.` };
