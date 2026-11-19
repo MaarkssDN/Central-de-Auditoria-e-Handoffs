@@ -18,14 +18,17 @@ import type {
   Mission,
   RepositoryTarget,
   Wave,
+  WebhookIntegration,
   WorkspaceState,
 } from './types/governance';
 import { buildGatesForRepoScripts } from './utils/governanceEngine';
+import type { WebhookEventType } from './utils/webhookNotifier';
 
 export default function App() {
   const [workspace, setWorkspace] = useState<WorkspaceState | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [webhookNotice, setWebhookNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [activeSection, setActiveSection] = useState<NavSection>('bots');
   const [selectedBotAgentId, setSelectedBotAgentId] = useState<string>('00');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -118,7 +121,9 @@ export default function App() {
           ...prev,
           activeRepoId: existing.id,
           repositories: prev.repositories.map((r) =>
-            r.id === existing.id ? { ...repo, id: existing.id, blockers: r.blockers } : r
+            r.id === existing.id
+              ? { ...repo, id: existing.id, blockers: r.blockers, webhook: r.webhook }
+              : r
           ),
         };
       }
@@ -129,6 +134,69 @@ export default function App() {
         waves: [...prev.waves, initialWave],
       };
     });
+  }
+
+  async function triggerRepoWebhook(
+    repo: RepositoryTarget | undefined,
+    params: {
+      eventType: WebhookEventType;
+      title: string;
+      details: string;
+      severity: 'info' | 'warning' | 'critical';
+    }
+  ) {
+    const hook = repo?.webhook;
+    if (!repo || !hook || !hook.enabled) return;
+    if (params.eventType === 'handoff_created' && !hook.notifyOnHandoff) return;
+    if (params.eventType === 'audit_failure' && !hook.notifyOnAuditFailure) return;
+
+    try {
+      const res = await fetch('/api/webhooks/dispatch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: hook.provider,
+          url: hook.url,
+          eventType: params.eventType,
+          repoFullName: repo.fullName,
+          title: params.title,
+          details: params.details,
+          severity: params.severity,
+          channelLabel: hook.channelLabel,
+        }),
+      });
+      const data = (await res.json()) as { ok?: boolean; message?: string; error?: string };
+      if (res.ok && data.ok) {
+        setWebhookNotice({
+          kind: 'ok',
+          text: `Webhook (${hook.provider === 'slack' ? 'Slack' : 'Discord'}) notificado para ${repo.fullName}: ${params.title}`,
+        });
+      } else {
+        setWebhookNotice({
+          kind: 'error',
+          text: `Falha ao disparar webhook de ${repo.fullName}: ${data.error || `HTTP ${res.status}`}`,
+        });
+      }
+    } catch {
+      setWebhookNotice({
+        kind: 'error',
+        text: `Erro de rede ao disparar webhook automático para ${repo.fullName}.`,
+      });
+    }
+  }
+
+  function handleUpdateRepoWebhook(repoId: string, webhook: WebhookIntegration | undefined) {
+    commitWorkspace((prev) => ({
+      ...prev,
+      repositories: prev.repositories.map((r) =>
+        r.id === repoId
+          ? {
+              ...r,
+              webhook,
+            }
+          : r
+      ),
+    }));
   }
 
   async function handleSyncGitHubRepo(repo: RepositoryTarget): Promise<string | null> {
@@ -154,6 +222,7 @@ export default function App() {
                 ...synced,
                 id: repo.id,
                 blockers: r.blockers,
+                webhook: r.webhook,
               }
             : r
         ),
@@ -230,6 +299,13 @@ export default function App() {
       ...prev,
       handoffs: [handoff, ...prev.handoffs],
     }));
+    const targetRepo = workspace?.repositories.find((r) => r.id === handoff.repoId);
+    void triggerRepoWebhook(targetRepo, {
+      eventType: 'handoff_created',
+      title: `Handoff ${handoff.fromAgentId} → ${handoff.toAgentId} (${handoff.priority.toUpperCase()})`,
+      details: `${handoff.problem} | Mudança solicitada: ${handoff.requiredChange}`,
+      severity: handoff.priority === 'bloqueador' ? 'critical' : 'warning',
+    });
   }
 
   function handleUpdateHandoff(updated: Handoff) {
@@ -252,6 +328,15 @@ export default function App() {
           : m
       ),
     }));
+    if (review.verdict === 'REPROVADO' || review.verdict === 'BLOQUEADO') {
+      const targetRepo = workspace?.repositories.find((r) => r.id === review.repoId);
+      void triggerRepoWebhook(targetRepo, {
+        eventType: 'audit_failure',
+        title: `Parecer 24 ${review.verdict}: ${review.missionTitle}`,
+        details: `Autor: Agente ${review.authorAgentId} · Hash: ${review.commitOrHashes} · Evidência: ${review.evidence}`,
+        severity: 'critical',
+      });
+    }
   }
 
   function handleUpdateGateStatus(
@@ -260,6 +345,8 @@ export default function App() {
     status: GateStatus,
     notes?: string
   ) {
+    const targetWave = workspace?.waves.find((w) => w.id === waveId);
+    const targetGate = targetWave?.gates.find((g) => g.id === gateId);
     commitWorkspace((prev) => ({
       ...prev,
       waves: prev.waves.map((w) =>
@@ -280,6 +367,15 @@ export default function App() {
           : w
       ),
     }));
+    if (status === 'FALHOU' && targetWave && targetGate) {
+      const targetRepo = workspace?.repositories.find((r) => r.id === targetWave.repoId);
+      void triggerRepoWebhook(targetRepo, {
+        eventType: 'audit_failure',
+        title: `Falha no Gate ${targetGate.command} (${targetWave.name})`,
+        details: notes || `O gate obrigatório ${targetGate.command} falhou e bloqueia a transição da onda.`,
+        severity: 'critical',
+      });
+    }
   }
 
   function handleUpdateBlockerStatus(
@@ -332,8 +428,34 @@ export default function App() {
 
         <main className="flex-1 p-4 lg:p-8 max-w-[1600px] w-full mx-auto">
           {loadError && (
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-800">
+            <div className="mb-6 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800">
               {loadError} Operando com estado inicial local.
+            </div>
+          )}
+
+          {webhookNotice && (
+            <div
+              className="mb-6 px-4 py-3 rounded-2xl text-xs font-medium flex items-center justify-between gap-3 border"
+              style={{
+                background:
+                  webhookNotice.kind === 'ok'
+                    ? 'rgba(0, 255, 163, 0.08)'
+                    : 'rgba(255, 7, 58, 0.1)',
+                borderColor:
+                  webhookNotice.kind === 'ok'
+                    ? 'rgba(0, 255, 163, 0.42)'
+                    : 'rgba(255, 7, 58, 0.45)',
+                color: webhookNotice.kind === 'ok' ? '#7FFFD4' : '#FF8FA3',
+              }}
+            >
+              <span>{webhookNotice.text}</span>
+              <button
+                type="button"
+                onClick={() => setWebhookNotice(null)}
+                className="text-xs underline underline-offset-4 shrink-0"
+              >
+                Fechar
+              </button>
             </div>
           )}
 
@@ -416,6 +538,7 @@ export default function App() {
               onOpenConnectModal={() => setConnectModalOpen(true)}
               onSyncGitHubRepo={handleSyncGitHubRepo}
               onRemoveRepo={handleRemoveRepo}
+              onUpdateRepoWebhook={handleUpdateRepoWebhook}
             />
           )}
         </main>

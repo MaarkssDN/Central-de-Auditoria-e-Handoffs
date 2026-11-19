@@ -8,15 +8,15 @@ interface AgentAvatarProps {
 function renderCharacterFeatures(agentId: string) {
   // Subtle lighter visor/highlight colors for contrast inside dark helm/faceplate
   switch (agentId) {
-    case '00': // Atlas — Comandante de Voo: orbital commander helm + gold compass visor
+    case '00': // Núcleo — Comandante de Orquestração: orbital core helm + electric cyan visor
       return (
         <>
-          <path d="M14 5L20 2L26 5" stroke="#F8FAFC" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-          <rect x="9" y="10" width="22" height="17" rx="5" fill="#0F172A" stroke="#94A3B8" strokeWidth="1.4" />
-          <path d="M12 17H28" stroke="#38BDF8" strokeWidth="2.6" strokeLinecap="round" />
-          <circle cx="20" cy="17" r="2.2" fill="#FBBF24" />
-          <path d="M8 29C8 26 13 24 20 24C27 24 32 26 32 29V36H8V29Z" fill="#1E293B" />
-          <path d="M15 30L20 33L25 30" stroke="#FBBF24" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+          <path d="M14 5L20 2L26 5" stroke="#67F5FF" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+          <rect x="9" y="10" width="22" height="17" rx="6" fill="#060A16" stroke="#00F0FF" strokeWidth="1.5" />
+          <path d="M12 17H28" stroke="#00F0FF" strokeWidth="2.6" strokeLinecap="round" />
+          <circle cx="20" cy="17" r="2.4" fill="#FF2E97" />
+          <path d="M8 29C8 26 13 24 20 24C27 24 32 26 32 29V36H8V29Z" fill="#0C1936" />
+          <path d="M15 30L20 33L25 30" stroke="#00F0FF" strokeWidth="1.6" strokeLinecap="round" fill="none" />
         </>
       );
     case '01': // Valkiria — Arquiteta de Fundações: winged shield crest
@@ -279,18 +279,22 @@ function renderCharacterFeatures(agentId: string) {
 export function AgentAvatar({ agent, size = 'md' }: AgentAvatarProps) {
   const dimensions =
     size === 'xl'
-      ? 'w-16 h-16 rounded-xl'
+      ? 'w-16 h-16 rounded-3xl'
       : size === 'lg'
-        ? 'w-12 h-12 rounded-lg'
+        ? 'w-12 h-12 rounded-2xl'
         : size === 'sm'
-          ? 'w-8 h-8 rounded-md'
-          : 'w-10 h-10 rounded-lg';
+          ? 'w-8 h-8 rounded-full'
+          : 'w-10 h-10 rounded-2xl';
+
+  const hex = agent.persona.accentHex;
 
   return (
     <div
-      className={`${dimensions} shrink-0 overflow-hidden border border-black/10 flex items-center justify-center`}
+      className={`${dimensions} shrink-0 overflow-hidden flex items-center justify-center`}
       style={{
-        background: `linear-gradient(135deg, ${agent.persona.accentHex} 0%, #0F172A 100%)`,
+        background: `radial-gradient(circle at 28% 22%, ${hex}55 0%, #091022 72%, #04060d 100%)`,
+        border: `1.5px solid ${hex}B8`,
+        boxShadow: `0 0 18px -4px ${hex}99, inset 0 0 12px -4px ${hex}55`,
       }}
       title={`${agent.id} · ${agent.persona.codename} — ${agent.persona.archetype}`}
       aria-hidden="true"

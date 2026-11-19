@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { OFFICIAL_AGENTS } from '../data/agentsRoster';
+import { DEFAULT_PRIORITY_BLOCKERS, OFFICIAL_AGENTS } from '../data/agentsRoster';
 import { AGENT_SPECIFIC_DIRECTIVES } from '../data/agentDirectives';
 import {
   buildGatesForRepoScripts,
@@ -12,13 +12,23 @@ import {
 } from './governanceEngine';
 import type { Handoff, IndependentReview, Mission, Wave } from '../types/governance';
 
-test('every official agent has a unique character persona, codename, and motto', () => {
-  assert.equal(OFFICIAL_AGENTS.length, 26);
+test('every official agent from AGENTS.md exists with unique persona, neon accent, and no Atlas name', () => {
+  const expectedIds = [
+    '00', '01', '01A', '02', '03', '04', '05', '06', '06A', '07', '08', '08A',
+    '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '21', '22', '23', '24',
+  ];
+  assert.deepEqual(
+    OFFICIAL_AGENTS.map((a) => a.id),
+    expectedIds
+  );
+  assert.equal(DEFAULT_PRIORITY_BLOCKERS.length, 14);
   const codenames = new Set(OFFICIAL_AGENTS.map((a) => a.persona.codename));
   const mottos = new Set(OFFICIAL_AGENTS.map((a) => a.persona.motto));
   assert.equal(codenames.size, OFFICIAL_AGENTS.length);
   assert.equal(mottos.size, OFFICIAL_AGENTS.length);
   for (const agent of OFFICIAL_AGENTS) {
+    assert.notEqual(agent.persona.codename.toLowerCase(), 'atlas');
+    assert.match(agent.persona.accentHex, /^#[0-9A-Fa-f]{6}$/);
     assert.ok(agent.persona.voiceStyle.length > 10);
     assert.ok(agent.persona.signatureTools.length >= 1);
     const dirs = AGENT_SPECIFIC_DIRECTIVES[agent.id];

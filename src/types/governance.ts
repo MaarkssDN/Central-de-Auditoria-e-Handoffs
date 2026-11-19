@@ -185,6 +185,20 @@ export interface BlockerRecord {
   linkedHandoffId?: string;
 }
 
+export type WebhookProvider = 'slack' | 'discord';
+
+export interface WebhookIntegration {
+  provider: WebhookProvider;
+  url: string;
+  enabled: boolean;
+  notifyOnHandoff: boolean;
+  notifyOnAuditFailure: boolean;
+  channelLabel?: string;
+  lastTestedAt?: string;
+  lastTestStatus?: 'ok' | 'error';
+  lastTestMessage?: string;
+}
+
 export interface RepositoryTarget {
   id: string;
   name: string;
@@ -201,6 +215,70 @@ export interface RepositoryTarget {
   existingReviewFiles: string[];
   lastSyncedAt: string;
   blockers: BlockerRecord[];
+  webhook?: WebhookIntegration;
+}
+
+export interface TechnicalAuditReport {
+  schemaVersion: string;
+  generatedAt: string;
+  repository: {
+    id: string;
+    fullName: string;
+    defaultBranch: string;
+    sourceType: 'github' | 'manual';
+    detectedAgentsMd: boolean;
+  };
+  wave: {
+    number: number;
+    name: string;
+    state: WaveState;
+    integrationBranch: string;
+    activeAgentIds: string[];
+  } | null;
+  summary: {
+    approvedGatesCount: number;
+    totalGatesCount: number;
+    resolvedBlockersCount: number;
+    openBlockersCount: number;
+    totalBlockersCount: number;
+    approvedVerdictsCount: number;
+    rejectedOrBlockedVerdictsCount: number;
+    totalVerdictsCount: number;
+  };
+  approvedGates: Array<{
+    id: string;
+    scriptKey: string;
+    command: string;
+    tier: GateCheck['tier'];
+    status: GateStatus;
+    lastRunAt?: string;
+    notes?: string;
+  }>;
+  resolvedBlockers: Array<{
+    code: string;
+    title: string;
+    ownerAgentId: string;
+    status: BlockerStatus;
+    evidenceNote?: string;
+  }>;
+  auditVerdicts: Array<{
+    id: string;
+    waveNumber: number;
+    missionTitle: string;
+    authorAgentId: string;
+    auditorAgentId: string;
+    commitOrHashes: string;
+    verdict: ReviewVerdict;
+    scopeSummary: string;
+    evidence: string;
+    p1ToP4Compliant: boolean;
+    tenancyLgpdChecked: boolean;
+    ownershipCompliant: boolean;
+    commandsExecuted: { command: string; result: string }[];
+    findings: string[];
+    pendingItems: string[];
+    createdAt: string;
+  }>;
 }
 
 export interface AgentToolTrace {

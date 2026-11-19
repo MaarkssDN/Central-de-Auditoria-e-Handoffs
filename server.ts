@@ -7,6 +7,11 @@ import { DEFAULT_PRIORITY_BLOCKERS } from './src/data/agentsRoster';
 import { createSeedWorkspace } from './src/data/seedWorkspace';
 import type { RepositoryTarget, Wave, WorkspaceState } from './src/types/governance';
 import { buildGatesForRepoScripts } from './src/utils/governanceEngine';
+import {
+  buildWebhookPayload,
+  validateWebhookConfig,
+  type WebhookEventType,
+} from './src/utils/webhookNotifier';
 import { runAgentBotTurn, runSwarmSequence } from './server/agentRuntime';
 import { createCentralRouter } from './server/centralApi';
 
@@ -93,6 +98,70 @@ async function startServer() {
     const seed = createSeedWorkspace();
     saveStore(seed);
     res.json(seed);
+  });
+
+  app.post('/api/webhooks/dispatch', async (req, res) => {
+    const { provider, url, eventType, repoFullName, title, details, severity, channelLabel } = req.body as {
+      provider?: 'slack' | 'discord';
+      url?: string;
+      eventType?: WebhookEventType;
+      repoFullName?: string;
+      title?: string;
+      details?: string;
+      severity?: 'info' | 'warning' | 'critical';
+      channelLabel?: string;
+    };
+
+    if (!provider || (provider !== 'slack' && provider !== 'discord')) {
+      res.status(400).json({ ok: false, error: 'Provedor inválido. Use slack ou discord.' });
+      return;
+    }
+
+    const check = validateWebhookConfig(provider, String(url || ''));
+    if (!check.valid || !check.normalizedUrl) {
+      res.status(400).json({ ok: false, error: check.error || 'URL de webhook inválida.' });
+      return;
+    }
+
+    const payload = buildWebhookPayload({
+      provider,
+      url: check.normalizedUrl,
+      eventType: eventType ?? 'test',
+      repoFullName: repoFullName || 'repositório',
+      title: title || 'Evento de Governança',
+      details: details || 'Notificação emitida pela Central de Auditoria e Handoffs.',
+      severity: severity ?? 'info',
+      channelLabel,
+    });
+
+    try {
+      const hookRes = await fetch(check.normalizedUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        redirect: 'manual',
+      });
+      if (!hookRes.ok) {
+        const errBody = await hookRes.text().catch(() => '');
+        res.status(502).json({
+          ok: false,
+          status: hookRes.status,
+          error: `Webhook retornou HTTP ${hookRes.status}${errBody ? `: ${errBody.slice(0, 140)}` : ''}`,
+        });
+        return;
+      }
+      res.json({
+        ok: true,
+        status: hookRes.status,
+        deliveredAt: new Date().toISOString(),
+        message: `Notificação entregue com sucesso ao ${provider === 'slack' ? 'Slack' : 'Discord'}.`,
+      });
+    } catch (err) {
+      res.status(502).json({
+        ok: false,
+        error: err instanceof Error ? `Falha de rede ao enviar webhook: ${err.message}` : 'Falha de rede ao enviar webhook.',
+      });
+    }
   });
 
   app.post('/api/github/inspect', async (req, res) => {

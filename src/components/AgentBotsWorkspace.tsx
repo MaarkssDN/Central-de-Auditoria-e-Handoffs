@@ -16,6 +16,7 @@ import { getDirectivesForAgent } from '../data/agentDirectives';
 import { OFFICIAL_AGENTS } from '../data/agentsRoster';
 import type {
   AgentBotMessage,
+  AgentCategory,
   AgentStreamEvent,
   AgentToolTrace,
   RepositoryTarget,
@@ -44,6 +45,13 @@ interface LiveExecutionState {
   traces: Array<AgentToolTrace & { agentId: string }>;
 }
 
+const GALLERY_CATEGORY_LABELS: Record<'all' | AgentCategory, string> = {
+  all: 'Todos (26)',
+  coordenacao: 'Coordenação',
+  produto_engenharia: 'Produto & Engenharia',
+  governanca: 'Governança',
+};
+
 export function AgentBotsWorkspace({
   activeRepo,
   activeWave,
@@ -57,6 +65,7 @@ export function AgentBotsWorkspace({
   const [liveState, setLiveState] = useState<LiveExecutionState | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [filterQuery, setFilterQuery] = useState('');
+  const [galleryCategory, setGalleryCategory] = useState<'all' | AgentCategory>('all');
   const [viewMode, setViewMode] = useState<'desk' | 'gallery'>('desk');
   const [feedScope, setFeedScope] = useState<'all' | 'selected'>('all');
   const [elapsedSec, setElapsedSec] = useState(0);
@@ -93,6 +102,9 @@ export function AgentBotsWorkspace({
   const waveActiveIds = activeWave?.activeAgentIds ?? ['00'];
 
   const visibleRoster = OFFICIAL_AGENTS.filter((a) => {
+    const matchesCategory =
+      viewMode === 'desk' || galleryCategory === 'all' || a.category === galleryCategory;
+    if (!matchesCategory) return false;
     const q = filterQuery.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -279,7 +291,7 @@ export function AgentBotsWorkspace({
 
   if (!activeRepo) {
     return (
-      <div className="panel p-10 text-center text-sm text-slate-500">
+      <div className="neon-card p-10 text-center text-sm text-[#A6B7D9]">
         Conecte um repositório para operar os bots autônomos.
       </div>
     );
@@ -304,28 +316,33 @@ export function AgentBotsWorkspace({
       h.status !== 'resolvido'
   );
 
-  // Featured squad bar: active wave agents + Veredito (24)
   const featuredIds = Array.from(new Set([...waveActiveIds, '24']));
   const featuredAgents = featuredIds
     .map((id) => getAgentById(id))
     .filter((a): a is NonNullable<typeof a> => Boolean(a));
 
   const liveAgent = liveState ? getAgentById(liveState.currentAgentId) : null;
+  const accent = selectedAgent.persona.accentHex;
 
   return (
-    <div className="space-y-5">
-      {/* Top Active Squad Strip + View Mode Toggle */}
-      <section className="panel p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="min-w-0 space-y-2">
-          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-signal-400">
-            SEC-BOT · Esquadrão em Operação
+    <div className="space-y-6">
+      {/* Top Active Squad Strip + View Mode Switch */}
+      <section className="neon-card p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="min-w-0 space-y-2.5">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="font-semibold text-white">
+              Esquadrão em Operação — {activeWave ? activeWave.name : activeRepo.fullName}
+            </span>
+            <span className="text-[#5C7099]" aria-hidden="true">·</span>
+            <span className="font-mono text-[#00F0FF] tabular-nums">
+              {OFFICIAL_AGENTS.length} agentes oficiais (AGENTS.md)
+            </span>
           </div>
-          <div className="text-sm font-display font-semibold text-paper-100">
-            {activeWave ? activeWave.name : activeRepo.fullName}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
+
+          <div className="flex flex-wrap items-center gap-2.5">
             {featuredAgents.map((agent) => {
               const isSelected = agent.id === selectedAgent.id && viewMode === 'desk';
+              const hex = agent.persona.accentHex;
               return (
                 <button
                   key={agent.id}
@@ -335,18 +352,26 @@ export function AgentBotsWorkspace({
                     setViewMode('desk');
                     setErrorMsg(null);
                   }}
-                  className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-md border text-left transition-colors ${
+                  className="inline-flex items-center gap-2.5 px-3 py-2 rounded-2xl text-left transition-all duration-200"
+                  style={
                     isSelected
-                      ? 'bg-slate-900 text-white border-slate-900'
-                      : 'bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100'
-                  }`}
+                      ? {
+                          background: `linear-gradient(135deg, ${hex}2a 0%, rgba(11,17,34,0.95) 100%)`,
+                          border: `1.5px solid ${hex}`,
+                          boxShadow: `0 0 22px -6px ${hex}aa`,
+                        }
+                      : {
+                          background: 'rgba(11, 17, 34, 0.85)',
+                          border: `1px solid ${hex}44`,
+                        }
+                  }
                 >
                   <AgentAvatar agent={agent} size="sm" />
                   <div className="leading-tight">
-                    <div className="text-xs font-semibold">
+                    <div className="text-xs font-semibold text-white">
                       {agent.id} · {agent.persona.codename}
                     </div>
-                    <div className={`text-[11px] ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
+                    <div className="text-[11px]" style={{ color: isSelected ? hex : '#8FA3C8' }}>
                       {agent.persona.archetype}
                     </div>
                   </div>
@@ -356,12 +381,14 @@ export function AgentBotsWorkspace({
           </div>
         </div>
 
-        <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-md self-start lg:self-center shrink-0">
+        <div className="flex items-center gap-1 p-1.5 bg-[#070B16] border border-cyan-400/20 rounded-2xl self-start lg:self-center shrink-0">
           <button
             type="button"
             onClick={() => setViewMode('desk')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap ${
-              viewMode === 'desk' ? 'bg-white text-slate-900' : 'text-slate-600 hover:text-slate-900'
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
+              viewMode === 'desk'
+                ? 'bg-gradient-to-r from-[#00F0FF]/25 to-[#BF5AF2]/25 text-white border border-[#00F0FF]/55 shadow-[0_0_16px_-6px_rgba(0,240,255,0.8)]'
+                : 'text-[#8FA3C8] hover:text-white border border-transparent'
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
@@ -370,8 +397,10 @@ export function AgentBotsWorkspace({
           <button
             type="button"
             onClick={() => setViewMode('gallery')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors whitespace-nowrap ${
-              viewMode === 'gallery' ? 'bg-white text-slate-900' : 'text-slate-600 hover:text-slate-900'
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
+              viewMode === 'gallery'
+                ? 'bg-gradient-to-r from-[#BF5AF2]/30 to-[#FF2E97]/25 text-white border border-[#FF2E97]/55 shadow-[0_0_16px_-6px_rgba(255,46,151,0.8)]'
+                : 'text-[#8FA3C8] hover:text-white border border-transparent'
             }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
@@ -381,70 +410,101 @@ export function AgentBotsWorkspace({
       </section>
 
       {viewMode === 'gallery' ? (
-        <section className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <section className="space-y-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <h2 className="text-base font-semibold text-slate-900">
+              <h2 className="font-display text-xl font-bold text-white">
                 Todos os Personagens Autônomos ({visibleRoster.length} de {OFFICIAL_AGENTS.length})
               </h2>
-              <p className="text-xs text-slate-500">
-                Cada agente possui identidade, voz, lema e diretivas próprias. Clique para operar o bot.
+              <p className="text-xs text-[#A6B7D9] mt-1">
+                Roster integral do AGENTS.md (slots 19 e 20 reservados). Cada agente tem assinatura neon, voz e diretivas próprias.
               </p>
             </div>
-            <input
-              type="text"
-              value={filterQuery}
-              onChange={(e) => setFilterQuery(e.target.value)}
-              placeholder="Filtrar codinome, papel ou lema..."
-              aria-label="Filtrar galeria de personagens"
-              className="h-9 px-3 text-xs panel w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-slate-900"
-            />
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-1 p-1 bg-[#070B16] border border-violet-400/20 rounded-2xl overflow-x-auto">
+                {(['all', 'coordenacao', 'produto_engenharia', 'governanca'] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setGalleryCategory(cat)}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
+                      galleryCategory === cat
+                        ? 'bg-[#BF5AF2]/25 text-white border border-[#BF5AF2]/55'
+                        : 'text-[#8FA3C8] hover:text-white border border-transparent'
+                    }`}
+                  >
+                    {GALLERY_CATEGORY_LABELS[cat]}
+                  </button>
+                ))}
+              </div>
+
+              <input
+                type="text"
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                placeholder="Filtrar codinome, papel ou ID..."
+                aria-label="Filtrar galeria de personagens"
+                className="input h-10 w-full sm:w-64 !rounded-2xl"
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {visibleRoster.map((agent) => {
               const isWaveActive = waveActiveIds.includes(agent.id);
               const msgCount = countAgentMessages(agent.id);
+              const hex = agent.persona.accentHex;
               return (
                 <article
                   key={agent.id}
-                  className="panel overflow-hidden flex flex-col justify-between"
+                  className="rounded-3xl overflow-hidden flex flex-col justify-between transition-transform duration-200 hover:-translate-y-0.5"
+                  style={{
+                    background: `radial-gradient(circle at 92% 6%, ${hex}22 0%, rgba(12,18,37,0.95) 55%, rgba(7,11,22,0.98) 100%)`,
+                    border: `1px solid ${hex}4d`,
+                    boxShadow: `0 16px 36px -22px rgba(0,0,0,0.95), 0 0 26px -14px ${hex}66`,
+                  }}
                 >
                   <div
-                    className="h-1 w-full"
-                    style={{ backgroundColor: agent.persona.accentHex }}
+                    className="h-1.5 w-full"
+                    style={{
+                      background: `linear-gradient(90deg, ${hex}, ${hex}33)`,
+                      boxShadow: `0 0 14px ${hex}`,
+                    }}
                     aria-hidden="true"
                   />
-                  <div className="p-4 space-y-2.5 flex-1">
-                    <div className="flex items-start gap-3">
+                  <div className="p-5 space-y-3 flex-1">
+                    <div className="flex items-start gap-3.5">
                       <AgentAvatar agent={agent} size="lg" />
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2 text-[11px] font-mono text-slate-500">
-                          <span>Agente {agent.id}</span>
+                        <div className="flex items-center justify-between gap-2 text-[11px] font-mono">
+                          <span style={{ color: hex }} className="font-semibold whitespace-nowrap">
+                            Agente {agent.id}
+                          </span>
                           {isWaveActive && (
-                            <span className="text-emerald-700 font-semibold">Ativo na onda</span>
+                            <span className="text-[#00FFA3] font-semibold whitespace-nowrap">● Ativo</span>
                           )}
                         </div>
-                        <h3 className="text-sm font-semibold text-slate-900 truncate">
+                        <h3 className="font-display text-base font-bold text-white truncate mt-0.5">
                           {agent.persona.codename}
                         </h3>
-                        <div className="text-xs text-slate-600 truncate">
+                        <div className="text-xs text-[#A6B7D9] truncate">
                           {agent.persona.archetype}
                         </div>
                       </div>
                     </div>
 
-                    <div className="text-xs font-medium text-slate-800">{agent.name}</div>
-                    <p className="text-xs text-slate-600 italic line-clamp-2">
+                    <div className="text-xs font-semibold text-[#E8EEF8]">{agent.name}</div>
+                    <p className="text-xs text-[#C9D4E8] italic line-clamp-2 leading-relaxed">
                       &ldquo;{agent.persona.motto}&rdquo;
                     </p>
-                    <div className="text-[11px] text-slate-500 line-clamp-2">
+                    <div className="text-[11px] text-[#8FA3C8] line-clamp-2 leading-relaxed">
                       {agent.persona.voiceStyle}
                     </div>
                   </div>
 
-                  <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-mono text-slate-500 truncate">
+                  <div className="px-5 py-3.5 border-t border-white/10 flex items-center justify-between gap-2 bg-[#060A15]/60">
+                    <span className="text-[11px] font-mono text-[#8FA3C8] truncate tabular-nums">
                       {msgCount > 0
                         ? `${msgCount} exec. · ${agent.persona.signatureTools.length} tools`
                         : `${agent.persona.signatureTools.length} ferramentas`}
@@ -456,9 +516,14 @@ export function AgentBotsWorkspace({
                         setViewMode('desk');
                         setErrorMsg(null);
                       }}
-                      className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-md whitespace-nowrap shrink-0"
+                      className="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-semibold text-white rounded-2xl whitespace-nowrap shrink-0 transition-all"
+                      style={{
+                        background: `linear-gradient(135deg, ${hex}40 0%, rgba(12,18,37,0.95) 100%)`,
+                        border: `1px solid ${hex}99`,
+                        boxShadow: `0 0 18px -6px ${hex}aa`,
+                      }}
                     >
-                      <Bot className="w-3.5 h-3.5" />
+                      <Bot className="w-3.5 h-3.5" style={{ color: hex }} />
                       <span>Operar Bot</span>
                     </button>
                   </div>
@@ -470,13 +535,13 @@ export function AgentBotsWorkspace({
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
           {/* Character Roster Selector */}
-          <section className="xl:col-span-4 panel overflow-hidden">
-            <div className="p-4 border-b border-slate-200 space-y-2.5">
+          <section className="xl:col-span-4 neon-card overflow-hidden">
+            <div className="p-5 border-b border-cyan-400/15 space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-slate-900">
+                <h2 className="font-display text-sm font-bold text-white">
                   Personagens Autônomos ({OFFICIAL_AGENTS.length})
                 </h2>
-                <span className="text-xs font-mono text-slate-500">19/20 reserv.</span>
+                <span className="text-xs font-mono text-[#BF5AF2]">19/20 reserv.</span>
               </div>
               <label htmlFor="bot-roster-search" className="sr-only">
                 Filtrar personagens
@@ -487,15 +552,16 @@ export function AgentBotsWorkspace({
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
                 placeholder="Buscar codinome, ID ou papel..."
-                className="w-full h-9 px-3 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="input w-full h-10 !rounded-2xl"
               />
             </div>
 
-            <div className="max-h-60 xl:max-h-[650px] overflow-y-auto divide-y divide-slate-100">
+            <div className="max-h-64 xl:max-h-[670px] overflow-y-auto p-2.5 space-y-1.5">
               {visibleRoster.map((agent) => {
                 const isSelected = agent.id === selectedAgent.id;
                 const isWaveActive = waveActiveIds.includes(agent.id);
                 const msgCount = countAgentMessages(agent.id);
+                const hex = agent.persona.accentHex;
                 return (
                   <button
                     key={agent.id}
@@ -504,41 +570,38 @@ export function AgentBotsWorkspace({
                       onSelectAgent(agent.id);
                       setErrorMsg(null);
                     }}
-                    className={`w-full text-left p-3.5 flex items-start gap-3 transition-colors ${
-                      isSelected ? 'bg-slate-900 text-white' : 'hover:bg-slate-50 text-slate-900'
-                    }`}
+                    className="w-full text-left p-3 rounded-2xl flex items-start gap-3 transition-all duration-150"
+                    style={
+                      isSelected
+                        ? {
+                            background: `linear-gradient(125deg, ${hex}26 0%, rgba(12,18,37,0.96) 90%)`,
+                            border: `1px solid ${hex}99`,
+                            boxShadow: `0 0 22px -10px ${hex}aa`,
+                          }
+                        : {
+                            background: 'transparent',
+                            border: '1px solid transparent',
+                          }
+                    }
                   >
                     <AgentAvatar agent={agent} size="md" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold truncate">
+                        <span className="text-xs font-bold text-white truncate">
                           {agent.id} · {agent.persona.codename}
                         </span>
                         <span
-                          className={`text-[11px] truncate ${
-                            isSelected ? 'text-slate-300' : 'text-slate-500'
-                          }`}
+                          className="text-[11px] truncate font-medium"
+                          style={{ color: isSelected ? hex : '#7C90B8' }}
                         >
                           {agent.persona.archetype}
                         </span>
                       </div>
-                      <div
-                        className={`text-xs truncate mt-0.5 ${
-                          isSelected ? 'text-slate-200' : 'text-slate-700'
-                        }`}
-                      >
-                        {agent.name}
-                      </div>
-                      <div
-                        className={`text-[11px] truncate mt-0.5 ${
-                          isSelected
-                            ? 'text-slate-400'
-                            : isWaveActive
-                              ? 'text-emerald-700 font-medium'
-                              : 'text-slate-400'
-                        }`}
-                      >
-                        {isWaveActive ? 'Ativo na onda · ' : ''}
+                      <div className="text-xs text-[#C9D4E8] truncate mt-0.5">{agent.name}</div>
+                      <div className="text-[11px] truncate mt-0.5 text-[#7C90B8]">
+                        {isWaveActive ? (
+                          <span className="text-[#00FFA3] font-semibold">Ativo na onda · </span>
+                        ) : null}
                         {msgCount > 0 ? `${msgCount} exec. · ` : ''}
                         {agent.persona.motto}
                       </div>
@@ -551,26 +614,36 @@ export function AgentBotsWorkspace({
 
           {/* Active Character Command Desk */}
           <section className="xl:col-span-8 space-y-5 min-w-0">
-            {/* Character Dossier with Signature Accent Strip */}
-            <div className="panel overflow-hidden">
+            {/* Character Dossier with Dynamic Signature Neon Aura */}
+            <div
+              className="rounded-3xl overflow-hidden transition-all duration-300"
+              style={{
+                background: `radial-gradient(circle at 90% 8%, ${accent}24 0%, rgba(13,20,40,0.94) 55%, rgba(7,11,22,0.98) 100%)`,
+                border: `1.5px solid ${accent}77`,
+                boxShadow: `0 20px 48px -24px rgba(0,0,0,0.95), 0 0 38px -16px ${accent}88`,
+              }}
+            >
               <div
                 className="h-1.5 w-full"
-                style={{ backgroundColor: selectedAgent.persona.accentHex }}
+                style={{
+                  background: `linear-gradient(90deg, ${accent}, #BF5AF2, #FF2E97)`,
+                  boxShadow: `0 0 18px ${accent}`,
+                }}
                 aria-hidden="true"
               />
-              <div className="p-5 space-y-4">
+              <div className="p-6 space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="flex items-start gap-4 min-w-0">
                     <AgentAvatar agent={selectedAgent} size="xl" />
                     <div className="min-w-0">
-                      <div className="text-xs font-mono text-slate-500">
+                      <div className="text-xs font-mono font-semibold" style={{ color: accent }}>
                         Agente {selectedAgent.id} · {selectedAgent.persona.archetype}
                         {selectedAgent.cannotEditCode ? ' · Somente Auditoria' : ''}
                       </div>
-                      <h2 className="text-lg font-semibold text-slate-900 mt-0.5">
+                      <h2 className="font-display text-xl font-bold text-white mt-0.5">
                         {selectedAgent.persona.codename} — {selectedAgent.name}
                       </h2>
-                      <p className="text-xs text-slate-600 mt-1 italic">
+                      <p className="text-xs text-[#C9D4E8] mt-1 italic">
                         &ldquo;{selectedAgent.persona.motto}&rdquo;
                       </p>
                     </div>
@@ -585,44 +658,42 @@ export function AgentBotsWorkspace({
                           `Auditar prioridades do repositório ${activeRepo.fullName} e verificar conformidade §40.`
                       )
                     }
-                    className="w-full sm:w-auto justify-center inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-60 rounded-md whitespace-nowrap shrink-0"
+                    className="btn btn-primary w-full sm:w-auto !rounded-2xl !h-10 !px-4 whitespace-nowrap shrink-0"
                   >
                     {liveState?.mode === 'swarm' ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <Play className="w-3.5 h-3.5" />
+                      <Play className="w-4 h-4" />
                     )}
-                    <span>
-                      Rodar Enxame (00 → {swarmSpecialistId} → 24)
-                    </span>
+                    <span>Rodar Enxame (00 → {swarmSpecialistId} → 24)</span>
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-100 text-xs">
-                  <div className="space-y-1.5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/10 text-xs">
+                  <div className="space-y-2">
                     <div>
-                      <span className="font-semibold text-slate-700">Personalidade &amp; Voz: </span>
-                      <span className="text-slate-600">{selectedAgent.persona.voiceStyle}</span>
+                      <span className="font-semibold text-white">Personalidade &amp; Voz: </span>
+                      <span className="text-[#C9D4E8]">{selectedAgent.persona.voiceStyle}</span>
                     </div>
                     {selectedAgent.exclusivePaths.length > 0 && (
                       <div>
-                        <span className="font-semibold text-slate-700">Propriedade exclusiva: </span>
-                        <span className="font-mono text-slate-600">
+                        <span className="font-semibold text-white">Propriedade exclusiva: </span>
+                        <span className="font-mono" style={{ color: accent }}>
                           {selectedAgent.exclusivePaths.join(', ')}
                         </span>
                       </div>
                     )}
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <div>
-                      <span className="font-semibold text-slate-700">Ferramentas reais: </span>
-                      <span className="font-mono text-slate-600">
+                      <span className="font-semibold text-white">Ferramentas reais: </span>
+                      <span className="font-mono text-[#67F8FF]">
                         {selectedAgent.persona.signatureTools.join(', ')}
                       </span>
                     </div>
                     <div>
-                      <span className="font-semibold text-slate-700">Pendências no domínio: </span>
-                      <span className="font-mono text-slate-600">
+                      <span className="font-semibold text-white">Pendências no domínio: </span>
+                      <span className="font-mono text-[#FFE066] tabular-nums">
                         {ownedBlockers.length} bloqueador(es) · {incomingHandoffs.length} handoff(s)
                       </span>
                     </div>
@@ -630,16 +701,20 @@ export function AgentBotsWorkspace({
                 </div>
 
                 {/* Quick Domain Directives */}
-                <div className="flex flex-wrap gap-2 pt-2">
+                <div className="flex flex-wrap gap-2.5 pt-1">
                   {directives.map((dir) => (
                     <button
                       key={dir.label}
                       type="button"
                       disabled={running}
                       onClick={() => executeSingleBot(dir.prompt)}
-                      className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 disabled:opacity-60 rounded-md transition-colors"
+                      className="inline-flex items-center gap-2 h-9 px-3.5 text-xs font-semibold text-white rounded-2xl transition-all disabled:opacity-50"
+                      style={{
+                        background: 'rgba(8, 12, 26, 0.85)',
+                        border: `1px solid ${accent}55`,
+                      }}
                     >
-                      <Terminal className="w-3.5 h-3.5 text-slate-500" />
+                      <Terminal className="w-3.5 h-3.5" style={{ color: accent }} />
                       <span>{dir.label}</span>
                     </button>
                   ))}
@@ -647,34 +722,34 @@ export function AgentBotsWorkspace({
               </div>
             </div>
 
-            {/* Live Devin/Swarm Real-Time Activity Panel while executing */}
+            {/* Live Real-Time Execution Activity Panel */}
             {liveState && (
-              <div className="bg-slate-900 text-slate-100 border border-slate-800 rounded-lg p-4 space-y-3">
+              <div className="rounded-3xl bg-[#070B18] text-white border border-[#00F0FF]/55 shadow-[0_0_30px_-10px_rgba(0,240,255,0.65)] p-5 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5 text-xs font-semibold">
-                    <Loader2 className="w-4 h-4 animate-spin text-sky-400 shrink-0" />
+                    <Loader2 className="w-4 h-4 animate-spin text-[#00F0FF] shrink-0" />
                     <span>
                       {liveAgent
                         ? `${liveAgent.id} · ${liveAgent.persona.codename} em operação (passo ${liveState.currentStep})`
                         : 'Executando agente...'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     {liveState.activeToolName && (
-                      <span className="text-[11px] font-mono text-amber-300">
+                      <span className="text-[11px] font-mono text-[#FFB800]">
                         chamando {liveState.activeToolName}...
                       </span>
                     )}
-                    <span className="text-[11px] font-mono text-slate-400">
+                    <span className="text-[11px] font-mono text-[#67F8FF] tabular-nums">
                       {elapsedSec}s
                     </span>
                   </div>
                 </div>
 
                 {liveState.mode === 'swarm' && (
-                  <div className="flex flex-wrap items-center gap-2 text-xs pt-1 border-t border-slate-800">
+                  <div className="flex flex-wrap items-center gap-2 text-xs pt-2 border-t border-white/10">
                     {[
-                      { id: '00', label: '00 Atlas (Planejamento)' },
+                      { id: '00', label: '00 Núcleo (Planejamento)' },
                       {
                         id: swarmSpecialistId,
                         label: `${swarmSpecialistId} ${swarmSpecialist?.persona.codename ?? 'Especialista'}`,
@@ -685,14 +760,14 @@ export function AgentBotsWorkspace({
                       const isCurrent = liveState.currentAgentId === stage.id && !isDone;
                       return (
                         <div key={stage.id} className="inline-flex items-center gap-1.5">
-                          {idx > 0 && <ArrowRight className="w-3 h-3 text-slate-600" />}
+                          {idx > 0 && <ArrowRight className="w-3 h-3 text-[#5C7099]" />}
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded font-mono text-[11px] ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-mono text-[11px] ${
                               isDone
-                                ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                                ? 'bg-[#00FFA3]/15 text-[#00FFA3] border border-[#00FFA3]/50'
                                 : isCurrent
-                                  ? 'bg-sky-950 text-sky-200 border border-sky-700'
-                                  : 'bg-slate-800 text-slate-400'
+                                  ? 'bg-[#00F0FF]/15 text-[#67F8FF] border border-[#00F0FF]/60'
+                                  : 'bg-white/5 text-[#7C90B8] border border-white/10'
                             }`}
                           >
                             {isDone && <CheckCircle2 className="w-3 h-3" />}
@@ -705,13 +780,13 @@ export function AgentBotsWorkspace({
                 )}
 
                 {liveState.traces.length > 0 && (
-                  <div className="space-y-1 pt-2 border-t border-slate-800 text-[11px] font-mono">
+                  <div className="space-y-1.5 pt-2 border-t border-white/10 text-[11px] font-mono">
                     {liveState.traces.map((tr) => (
-                      <div key={tr.id} className="flex items-center justify-between gap-2 text-slate-300">
-                        <span className="text-sky-300 shrink-0">
+                      <div key={tr.id} className="flex items-center justify-between gap-2 text-[#D6E0F5]">
+                        <span className="text-[#00F0FF] shrink-0">
                           [{tr.agentId}] {tr.toolName}
                         </span>
-                        <span className="truncate text-slate-400">{tr.resultSummary}</span>
+                        <span className="truncate text-[#8FA3C8]">{tr.resultSummary}</span>
                       </div>
                     ))}
                   </div>
@@ -719,62 +794,72 @@ export function AgentBotsWorkspace({
               </div>
             )}
 
-            {/* Live Error Banner (explicit, never mocked) */}
+            {/* Live Error Banner */}
             {errorMsg && (
-              <div className="p-3.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div className="p-4 bg-[#FF073A]/12 border border-[#FF073A]/50 rounded-2xl text-xs text-[#FF6B8B] flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#FF073A]" />
                 <div>{errorMsg}</div>
               </div>
             )}
 
-            {/* Execution Feed (Devin / Grok-Bot Timeline) */}
-            <div className="panel overflow-hidden">
-              <div className="px-5 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs font-semibold text-slate-800">
-                  <Bot className="w-4 h-4 text-slate-500" />
+            {/* Autonomous Execution Feed */}
+            <div className="neon-card overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-cyan-400/15 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-white">
+                  <Bot className="w-4 h-4 text-[#00F0FF]" />
                   <span>Linha de Execução Autônoma — {activeRepo.fullName}</span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="inline-flex p-0.5 bg-slate-100 rounded text-[11px]">
-                    <button
-                      type="button"
-                      onClick={() => setFeedScope('all')}
-                      className={`px-2 py-1 rounded font-medium ${
-                        feedScope === 'all' ? 'bg-white text-slate-900' : 'text-slate-600'
-                      }`}
-                    >
-                      Todos ({allRepoMessages.length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFeedScope('selected')}
-                      className={`px-2 py-1 rounded font-medium ${
-                        feedScope === 'selected' ? 'bg-white text-slate-900' : 'text-slate-600'
-                      }`}
-                    >
-                      Só {selectedAgent.persona.codename}
-                    </button>
-                  </div>
+                <div className="inline-flex p-1 bg-[#070B16] border border-cyan-400/20 rounded-xl text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setFeedScope('all')}
+                    className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                      feedScope === 'all'
+                        ? 'bg-[#00F0FF]/20 text-white border border-[#00F0FF]/45'
+                        : 'text-[#8FA3C8] hover:text-white border border-transparent'
+                    }`}
+                  >
+                    Todos ({allRepoMessages.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFeedScope('selected')}
+                    className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                      feedScope === 'selected'
+                        ? 'bg-[#BF5AF2]/25 text-white border border-[#BF5AF2]/50'
+                        : 'text-[#8FA3C8] hover:text-white border border-transparent'
+                    }`}
+                  >
+                    Só {selectedAgent.persona.codename}
+                  </button>
                 </div>
               </div>
 
               <div
                 ref={feedScrollRef}
-                className="p-5 space-y-4 max-h-[500px] overflow-y-auto bg-slate-50/50"
+                className="p-5 space-y-4 max-h-[500px] overflow-y-auto bg-[#060914]/70"
               >
                 {repoMessages.length === 0 ? (
-                  <div className="text-center py-8 text-xs text-slate-500">
+                  <div className="text-center py-10 text-xs text-[#8FA3C8]">
                     Nenhuma execução registrada para este filtro ainda. Escolha uma diretiva acima ou envie um comando abaixo.
                   </div>
                 ) : (
                   repoMessages.map((msg: AgentBotMessage) => {
                     const msgAgent = getAgentById(msg.agentId);
+                    const msgHex = msgAgent?.persona.accentHex ?? '#00F0FF';
                     if (msg.role === 'user') {
                       return (
                         <div key={msg.id} className="flex justify-end">
-                          <div className="max-w-[85%] bg-signal-500/15 border border-signal-500/30 text-paper-100 rounded-lg px-4 py-2.5 text-xs space-y-1">
-                            <div className="text-[11px] text-signal-300 font-mono">
+                          <div
+                            className="max-w-[85%] text-white rounded-2xl px-4 py-3 text-xs space-y-1"
+                            style={{
+                              background:
+                                'linear-gradient(135deg, rgba(0,240,255,0.22), rgba(191,90,242,0.26))',
+                              border: '1px solid rgba(0,240,255,0.45)',
+                            }}
+                          >
+                            <div className="text-[11px] text-[#67F8FF] font-mono">
                               Diretiva → {msgAgent ? `${msgAgent.id} ${msgAgent.persona.codename}` : msg.agentId}
                             </div>
                             <div className="whitespace-pre-wrap">{msg.content}</div>
@@ -786,18 +871,22 @@ export function AgentBotsWorkspace({
                     return (
                       <div
                         key={msg.id}
-                        className="panel p-4 space-y-3"
+                        className="rounded-2xl p-4 space-y-3 bg-[#0B1124]/95"
+                        style={{
+                          border: `1px solid ${msgHex}44`,
+                          boxShadow: `0 10px 28px -18px ${msgHex}66`,
+                        }}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2.5">
                             {msgAgent && <AgentAvatar agent={msgAgent} size="sm" />}
                             <div>
-                              <div className="text-xs font-semibold text-slate-900">
+                              <div className="text-xs font-bold text-white">
                                 {msgAgent
                                   ? `${msgAgent.id} · ${msgAgent.persona.codename} (${msgAgent.name})`
                                   : `Agente ${msg.agentId}`}
                               </div>
-                              <div className="text-[11px] text-slate-500 font-mono">
+                              <div className="text-[11px] text-[#7C90B8] font-mono tabular-nums">
                                 {new Date(msg.timestamp).toLocaleTimeString('pt-BR')}
                               </div>
                             </div>
@@ -806,7 +895,11 @@ export function AgentBotsWorkspace({
                             <button
                               type="button"
                               onClick={() => onSelectAgent(msgAgent.id)}
-                              className="text-[11px] font-medium text-slate-600 hover:text-slate-900 border border-slate-200 px-2 py-1 rounded"
+                              className="text-[11px] font-semibold text-white px-3 py-1.5 rounded-xl transition-all"
+                              style={{
+                                background: `${msgHex}1a`,
+                                border: `1px solid ${msgHex}66`,
+                              }}
                             >
                               Falar com {msgAgent.persona.codename}
                             </button>
@@ -814,18 +907,18 @@ export function AgentBotsWorkspace({
                         </div>
 
                         {msg.toolTraces && msg.toolTraces.length > 0 && (
-                          <div className="bg-slate-50 border border-slate-200 rounded-md p-2.5 space-y-1.5">
-                            <div className="text-[11px] font-semibold text-slate-600 flex items-center gap-1.5">
+                          <div className="bg-[#060914] border border-cyan-400/20 rounded-xl p-3 space-y-1.5">
+                            <div className="text-[11px] font-semibold text-[#67F8FF] flex items-center gap-1.5">
                               <Wrench className="w-3 h-3" />
                               <span>Ações executadas no workspace ({msg.toolTraces.length})</span>
                             </div>
                             {msg.toolTraces.map((tr) => (
                               <div
                                 key={tr.id}
-                                className="text-[11px] font-mono text-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-t border-slate-200/70 pt-1"
+                                className="text-[11px] font-mono text-[#D6E0F5] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-t border-white/10 pt-1.5"
                               >
-                                <span className="font-semibold text-slate-900">{tr.toolName}</span>
-                                <span className="text-slate-600 truncate">{tr.resultSummary}</span>
+                                <span className="font-semibold text-[#00FFA3]">{tr.toolName}</span>
+                                <span className="text-[#8FA3C8] truncate">{tr.resultSummary}</span>
                               </div>
                             ))}
                           </div>
@@ -840,7 +933,7 @@ export function AgentBotsWorkspace({
 
               <form
                 onSubmit={handleSubmit}
-                className="p-4 bg-white border-t border-slate-200 flex items-center gap-2.5"
+                className="p-4 bg-[#080C1A] border-t border-cyan-400/15 flex items-center gap-2.5"
               >
                 <label htmlFor="bot-command-input" className="sr-only">
                   Enviar comando ao bot selecionado
@@ -852,12 +945,12 @@ export function AgentBotsWorkspace({
                   onChange={(e) => setPromptInput(e.target.value)}
                   disabled={running}
                   placeholder={`Enviar comando para ${selectedAgent.persona.codename} (${selectedAgent.id})...`}
-                  className="input flex-1 h-10 !text-sm"
+                  className="input flex-1 h-11 !rounded-2xl"
                 />
                 <button
                   type="submit"
                   disabled={running || !promptInput.trim()}
-                  className="btn btn-primary h-10 !px-4 whitespace-nowrap shrink-0"
+                  className="btn btn-primary h-11 !px-5 !rounded-2xl whitespace-nowrap shrink-0"
                 >
                   {liveState?.mode === 'single' ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

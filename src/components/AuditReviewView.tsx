@@ -1,10 +1,14 @@
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import {
   AlertOctagon,
   Bot,
   Check,
   CheckCircle2,
   Copy,
+  Download,
+  FileCode2,
+  FileDown,
+  FileText,
   Plus,
   ShieldCheck,
   X,
@@ -23,6 +27,12 @@ import type {
   ReviewVerdict,
   Wave,
 } from '../types/governance';
+import {
+  buildTechnicalAuditReport,
+  downloadAuditReportJson,
+  exportAuditReportPdf,
+  serializeAuditReportJson,
+} from '../utils/auditReportExporter';
 import { formatReviewMarkdown, getAgentById } from '../utils/governanceEngine';
 
 interface AuditReviewViewProps {
@@ -48,7 +58,11 @@ export function AuditReviewView({
 }: AuditReviewViewProps) {
   const [subTab, setSubTab] = useState<'pareceres' | 'gates' | 'bloqueadores'>('pareceres');
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportPreviewTab, setExportPreviewTab] = useState<'resumo' | 'json'>('resumo');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedJson, setCopiedJson] = useState(false);
+  const [exportNotice, setExportNotice] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
 
   // Review modal state
   const [missionId, setMissionId] = useState(missions[0]?.id ?? '');
@@ -65,12 +79,69 @@ export function AuditReviewView({
   const [verdict, setVerdict] = useState<ReviewVerdict>('APROVADO');
   const [formError, setFormError] = useState<string | null>(null);
 
+  const technicalReport = useMemo(() => {
+    if (!activeRepo) return null;
+    return buildTechnicalAuditReport({
+      repo: activeRepo,
+      wave: activeWave,
+      reviews,
+    });
+  }, [activeRepo, activeWave, reviews]);
+
+  const reportJsonString = useMemo(() => {
+    if (!technicalReport) return '';
+    return serializeAuditReportJson(technicalReport);
+  }, [technicalReport]);
+
   if (!activeRepo) {
     return (
-      <div className="panel p-10 text-center text-sm text-slate-500">
+      <div className="panel p-10 text-center text-sm text-paper-400">
         Selecione ou conecte um repositório para iniciar a auditoria.
       </div>
     );
+  }
+
+  function handleExportJson() {
+    if (!technicalReport) return;
+    try {
+      const filename = downloadAuditReportJson(technicalReport);
+      setExportNotice({
+        kind: 'success',
+        text: `Relatório JSON exportado com sucesso: ${filename}`,
+      });
+    } catch (err) {
+      setExportNotice({
+        kind: 'error',
+        text: err instanceof Error ? `Falha ao exportar JSON: ${err.message}` : 'Falha ao exportar JSON.',
+      });
+    }
+  }
+
+  function handleExportPdf() {
+    if (!technicalReport) return;
+    try {
+      const filename = exportAuditReportPdf(technicalReport);
+      setExportNotice({
+        kind: 'success',
+        text: `Relatório técnico PDF (gerado a partir do JSON) exportado: ${filename}`,
+      });
+    } catch (err) {
+      setExportNotice({
+        kind: 'error',
+        text: err instanceof Error ? `Falha ao gerar PDF: ${err.message}` : 'Falha ao gerar PDF.',
+      });
+    }
+  }
+
+  async function handleCopyReportJson() {
+    if (!reportJsonString) return;
+    try {
+      await navigator.clipboard.writeText(reportJsonString);
+      setCopiedJson(true);
+      setTimeout(() => setCopiedJson(false), 2000);
+    } catch {
+      // Ignore clipboard failure
+    }
   }
 
   async function handleCopyReview(rev: IndependentReview) {
@@ -171,31 +242,66 @@ export function AuditReviewView({
   const approvedCount = reviews.filter((r) => r.verdict === 'APROVADO').length;
   const rejectedCount = reviews.filter((r) => r.verdict !== 'APROVADO').length;
   const openBlockersCount = activeRepo.blockers.filter((b) => b.status === 'aberto').length;
+  const resolvedBlockersCount = technicalReport?.summary.resolvedBlockersCount ?? 0;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal-400 mb-1">SEC-AUD · Revisão Independente</div>
           <h2 className="font-display text-2xl font-bold tracking-tight text-paper-100">
-            Auditoria e Gates
+            Auditoria Independente e Gates
           </h2>
           <p className="text-sm text-paper-400 mt-1 max-w-2xl">
-            Pareceres oficiais do Agente 24 em <span className="font-mono text-paper-300">.agents/reviews/</span>, matriz de gates reais e bloqueadores B-01..B-14.
+            Pareceres oficiais do Agente 24 em <span className="font-mono text-paper-300">.agents/reviews/</span>, matriz de gates reais, bloqueadores B-01..B-14 e exportação técnica JSON → PDF.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              setExportPreviewTab('resumo');
+              setShowExportModal(true);
+            }}
+            className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#00F0FF]/50 text-[#00F0FF] hover:bg-[#00F0FF]/10 whitespace-nowrap"
+          >
+            <FileText className="w-4 h-4" />
+            <span>Prévia Relatório</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportJson}
+            className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#9D4EDD]/60 text-[#D8B4FE] hover:bg-[#9D4EDD]/15 whitespace-nowrap"
+          >
+            <FileCode2 className="w-4 h-4" />
+            <span>Exportar JSON</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            className="btn !rounded-2xl !px-4 !py-2 text-xs font-bold text-[#04060D] whitespace-nowrap"
+            style={{
+              background: 'linear-gradient(135deg, #00F0FF 0%, #39FF14 100%)',
+              boxShadow: '0 0 22px -6px rgba(0, 240, 255, 0.75)',
+            }}
+          >
+            <FileDown className="w-4 h-4" />
+            <span>Gerar PDF (JSON → PDF)</span>
+          </button>
+
           {onActivateBot && (
             <button
               type="button"
               onClick={() => onActivateBot('24')}
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-md whitespace-nowrap"
+              className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#FF073A]/45 text-[#FF8FA3] hover:bg-[#FF073A]/10 whitespace-nowrap"
             >
               <Bot className="w-4 h-4" />
               <span>Auditar com Veredito (24)</span>
             </button>
           )}
+
           <button
             type="button"
             onClick={() => {
@@ -206,7 +312,7 @@ export function AuditReviewView({
               }
               setShowReviewModal(true);
             }}
-            className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-md whitespace-nowrap shrink-0"
+            className="btn btn-primary !rounded-2xl !px-4 !py-2 text-xs whitespace-nowrap shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>Emitir Parecer 24</span>
@@ -214,29 +320,75 @@ export function AuditReviewView({
         </div>
       </div>
 
+      {exportNotice && (
+        <div
+          className="rounded-2xl px-4 py-3 flex items-center justify-between gap-3 text-xs font-medium border"
+          style={{
+            background:
+              exportNotice.kind === 'success'
+                ? 'rgba(0, 255, 163, 0.08)'
+                : 'rgba(255, 7, 58, 0.1)',
+            borderColor:
+              exportNotice.kind === 'success'
+                ? 'rgba(0, 255, 163, 0.4)'
+                : 'rgba(255, 7, 58, 0.45)',
+            color: exportNotice.kind === 'success' ? '#7FFFD4' : '#FF8FA3',
+          }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            {exportNotice.kind === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            ) : (
+              <AlertOctagon className="w-4 h-4 shrink-0" />
+            )}
+            <span className="truncate">{exportNotice.text}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setExportNotice(null)}
+            aria-label="Fechar aviso de exportação"
+            className="p-1 rounded-full hover:bg-white/10 shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Summary Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="panel p-4">
-          <div className="text-xs text-slate-500">Pareceres APROVADOS</div>
-          <div className="text-2xl font-semibold text-emerald-700 font-mono tabular-nums mt-1">
+        <div
+          className="panel !rounded-3xl p-5"
+          style={{ borderColor: 'rgba(0, 255, 163, 0.28)' }}
+        >
+          <div className="text-xs text-paper-400">Pareceres APROVADOS</div>
+          <div className="text-2xl font-bold font-mono tabular-nums mt-1.5" style={{ color: '#00FFA3' }}>
             {approvedCount}
           </div>
         </div>
-        <div className="panel p-4">
-          <div className="text-xs text-slate-500">Reprovados / Bloqueados</div>
-          <div className="text-2xl font-semibold text-red-700 font-mono tabular-nums mt-1">
+        <div
+          className="panel !rounded-3xl p-5"
+          style={{ borderColor: 'rgba(255, 7, 58, 0.3)' }}
+        >
+          <div className="text-xs text-paper-400">Reprovados / Bloqueados</div>
+          <div className="text-2xl font-bold font-mono tabular-nums mt-1.5" style={{ color: '#FF3E78' }}>
             {rejectedCount}
           </div>
         </div>
-        <div className="panel p-4">
-          <div className="text-xs text-slate-500">Bloqueadores B-01..B-14 Abertos</div>
-          <div className="text-2xl font-semibold text-slate-900 font-mono tabular-nums mt-1">
-            {openBlockersCount}
+        <div
+          className="panel !rounded-3xl p-5"
+          style={{ borderColor: 'rgba(255, 184, 0, 0.3)' }}
+        >
+          <div className="text-xs text-paper-400">Blockers Resolvidos / Abertos</div>
+          <div className="text-2xl font-bold font-mono tabular-nums mt-1.5" style={{ color: '#FFB800' }}>
+            {resolvedBlockersCount} <span className="text-sm text-paper-400">/ {openBlockersCount} abertos</span>
           </div>
         </div>
-        <div className="panel p-4">
-          <div className="text-xs text-slate-500">Gates Executados Verdes</div>
-          <div className="text-2xl font-semibold text-slate-900 font-mono tabular-nums mt-1">
+        <div
+          className="panel !rounded-3xl p-5"
+          style={{ borderColor: 'rgba(0, 240, 255, 0.3)' }}
+        >
+          <div className="text-xs text-paper-400">Gates Executados Verdes</div>
+          <div className="text-2xl font-bold font-mono tabular-nums mt-1.5" style={{ color: '#00F0FF' }}>
             {activeWave
               ? `${activeWave.gates.filter((g) => g.status === 'EXECUTADO_VERDE').length}/${activeWave.gates.length}`
               : '0/0'}
@@ -759,13 +911,13 @@ export function AuditReviewView({
                 <button
                   type="button"
                   onClick={() => setShowReviewModal(false)}
-                  className="h-9 px-4 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md"
+                  className="h-9 px-4 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-2xl"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="h-9 px-4 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-md"
+                  className="btn btn-primary !rounded-2xl !px-4 !py-2 text-sm"
                 >
                   Publicar Parecer 24
                 </button>
@@ -774,6 +926,274 @@ export function AuditReviewView({
           </div>
         </div>
       )}
+
+      {/* Technical Audit Report Export Modal (JSON -> PDF) */}
+      {showExportModal && technicalReport && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#02040a]/80 backdrop-blur-md p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="export-report-modal-title"
+        >
+          <div
+            className="w-full max-w-3xl panel !rounded-3xl overflow-hidden my-6"
+            style={{
+              borderColor: 'rgba(0, 240, 255, 0.45)',
+              boxShadow: '0 24px 64px -18px rgba(0, 240, 255, 0.35)',
+            }}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                  style={{
+                    background: 'rgba(0, 240, 255, 0.14)',
+                    border: '1px solid rgba(0, 240, 255, 0.45)',
+                    color: '#00F0FF',
+                  }}
+                >
+                  <FileDown className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h2
+                    id="export-report-modal-title"
+                    className="font-display text-base font-bold text-paper-100 truncate"
+                  >
+                    Relatório Técnico de Auditoria (JSON → PDF)
+                  </h2>
+                  <p className="text-xs font-mono text-paper-400 truncate">
+                    {technicalReport.repository.fullName}
+                    {technicalReport.wave ? ` · ${technicalReport.wave.name} (${technicalReport.wave.state})` : ''}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowExportModal(false)}
+                aria-label="Fechar prévia do relatório técnico"
+                className="p-2 text-paper-400 hover:text-paper-100 rounded-full hover:bg-white/10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5 max-h-[76vh] overflow-y-auto">
+              {/* Report Metrics Strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="rounded-2xl p-3.5 bg-[#070B18] border border-[#00FFA3]/35">
+                  <div className="text-[11px] text-paper-400">Gates Aprovados</div>
+                  <div className="text-xl font-bold font-mono mt-1" style={{ color: '#00FFA3' }}>
+                    {technicalReport.summary.approvedGatesCount}/{technicalReport.summary.totalGatesCount}
+                  </div>
+                </div>
+                <div className="rounded-2xl p-3.5 bg-[#070B18] border border-[#00F0FF]/35">
+                  <div className="text-[11px] text-paper-400">Blockers Resolvidos</div>
+                  <div className="text-xl font-bold font-mono mt-1" style={{ color: '#00F0FF' }}>
+                    {technicalReport.summary.resolvedBlockersCount}/{technicalReport.summary.totalBlockersCount}
+                  </div>
+                </div>
+                <div className="rounded-2xl p-3.5 bg-[#070B18] border border-[#9D4EDD]/45">
+                  <div className="text-[11px] text-paper-400">Pareceres Aprovados</div>
+                  <div className="text-xl font-bold font-mono mt-1" style={{ color: '#D8B4FE' }}>
+                    {technicalReport.summary.approvedVerdictsCount}
+                  </div>
+                </div>
+                <div className="rounded-2xl p-3.5 bg-[#070B18] border border-[#FF073A]/40">
+                  <div className="text-[11px] text-paper-400">Reprov. / Bloqueados</div>
+                  <div className="text-xl font-bold font-mono mt-1" style={{ color: '#FF3E78' }}>
+                    {technicalReport.summary.rejectedOrBlockedVerdictsCount}
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview Switcher */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="inline-flex p-1 rounded-2xl bg-[#070B18] border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setExportPreviewTab('resumo')}
+                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-colors ${
+                      exportPreviewTab === 'resumo'
+                        ? 'bg-[#00F0FF]/20 text-[#00F0FF]'
+                        : 'text-paper-400 hover:text-paper-100'
+                    }`}
+                  >
+                    Resumo Estruturado
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExportPreviewTab('json')}
+                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-colors ${
+                      exportPreviewTab === 'json'
+                        ? 'bg-[#9D4EDD]/25 text-[#D8B4FE]'
+                        : 'text-paper-400 hover:text-paper-100'
+                    }`}
+                  >
+                    Payload JSON ({reportJsonString.length} bytes)
+                  </button>
+                </div>
+
+                {exportPreviewTab === 'json' && (
+                  <button
+                    type="button"
+                    onClick={handleCopyReportJson}
+                    className="btn !rounded-2xl !px-3 !py-1.5 text-xs border border-white/15 text-paper-200 hover:border-[#00F0FF]"
+                  >
+                    {copiedJson ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-[#00FFA3]" />
+                        <span>JSON Copiado</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copiar JSON</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {exportPreviewTab === 'resumo' ? (
+                <div className="space-y-4">
+                  {/* Approved Gates */}
+                  <div className="rounded-2xl p-4 bg-[#070B18] border border-white/10 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#00FFA3]">
+                        1. Histórico de Gates Aprovados ({technicalReport.approvedGates.length})
+                      </h3>
+                    </div>
+                    {technicalReport.approvedGates.length === 0 ? (
+                      <p className="text-xs text-paper-400">
+                        Nenhum gate com status EXECUTADO_VERDE registrado nesta onda.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {technicalReport.approvedGates.map((gate) => (
+                          <div
+                            key={gate.id}
+                            className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-[#00FFA3]/20 text-xs"
+                          >
+                            <span className="font-mono text-paper-100">{gate.command}</span>
+                            <span className="font-mono text-[11px] text-[#00FFA3]">
+                              {gate.status} · {gate.tier}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Resolved Blockers */}
+                  <div className="rounded-2xl p-4 bg-[#070B18] border border-white/10 space-y-2.5">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#00F0FF]">
+                      2. Blockers Resolvidos / Mitigados ({technicalReport.resolvedBlockers.length})
+                    </h3>
+                    {technicalReport.resolvedBlockers.length === 0 ? (
+                      <p className="text-xs text-paper-400">
+                        Nenhum bloqueador B-01..B-14 resolvido ou mitigado até o momento.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {technicalReport.resolvedBlockers.map((blocker) => (
+                          <div
+                            key={blocker.code}
+                            className="px-3 py-2 rounded-xl bg-white/[0.03] border border-[#00F0FF]/20 text-xs"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-semibold text-paper-100">
+                                {blocker.code} — {blocker.title}
+                              </span>
+                              <span className="font-mono text-[11px] text-[#00F0FF] uppercase">
+                                {blocker.status} · Ag.{blocker.ownerAgentId}
+                              </span>
+                            </div>
+                            {blocker.evidenceNote && (
+                              <p className="text-[11px] text-paper-400 mt-1 font-mono">
+                                {blocker.evidenceNote}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Audit Verdicts */}
+                  <div className="rounded-2xl p-4 bg-[#070B18] border border-white/10 space-y-2.5">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#D8B4FE]">
+                      3. Vereditos de Auditoria — Agente 24 ({technicalReport.auditVerdicts.length})
+                    </h3>
+                    {technicalReport.auditVerdicts.length === 0 ? (
+                      <p className="text-xs text-paper-400">
+                        Nenhum veredito emitido pelo Agente 24 neste repositório.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {technicalReport.auditVerdicts.map((v) => (
+                          <div
+                            key={v.id}
+                            className="px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs space-y-1"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-semibold text-paper-100">{v.missionTitle}</span>
+                              <span
+                                className="font-mono font-bold text-[11px]"
+                                style={{
+                                  color: v.verdict === 'APROVADO' ? '#00FFA3' : '#FF3E78',
+                                }}
+                              >
+                                {v.verdict}
+                              </span>
+                            </div>
+                            <div className="text-[11px] font-mono text-paper-400">
+                              Onda {v.waveNumber} · Autor Ag.{v.authorAgentId} · Hash {v.commitOrHashes}
+                            </div>
+                            <p className="text-[11px] text-paper-300">{v.evidence}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <pre className="rounded-2xl p-4 bg-[#04060D] border border-[#9D4EDD]/35 text-[11px] font-mono text-[#D8B4FE] overflow-x-auto max-h-80 leading-relaxed">
+                  {reportJsonString}
+                </pre>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t border-white/10 bg-[#050814]">
+              <span className="text-[11px] font-mono text-paper-400">
+                Pipeline: Estado Real → JSON v{technicalReport.schemaVersion} → PDF Técnico
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleExportJson}
+                  className="btn !rounded-2xl !px-3.5 !py-2 text-xs font-semibold border border-[#9D4EDD]/60 text-[#D8B4FE] hover:bg-[#9D4EDD]/15"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Baixar JSON</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportPdf}
+                  className="btn !rounded-2xl !px-4 !py-2 text-xs font-bold text-[#04060D]"
+                  style={{
+                    background: 'linear-gradient(135deg, #00F0FF 0%, #39FF14 100%)',
+                    boxShadow: '0 0 22px -6px rgba(0, 240, 255, 0.75)',
+                  }}
+                >
+                  <FileDown className="w-3.5 h-3.5" />
+                  <span>Baixar PDF (JSON → PDF)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

@@ -10,7 +10,14 @@ import {
   X,
 } from 'lucide-react';
 
-export type NavSection = 'central' | 'ondas' | 'bots' | 'handoffs' | 'auditoria' | 'agentes' | 'repositorios';
+export type NavSection =
+  | 'central'
+  | 'ondas'
+  | 'bots'
+  | 'handoffs'
+  | 'auditoria'
+  | 'agentes'
+  | 'repositorios';
 
 interface SidebarProps {
   activeSection: NavSection;
@@ -21,14 +28,19 @@ interface SidebarProps {
   onCloseMobile: () => void;
 }
 
-const NAV_ITEMS: Array<{ id: NavSection; label: string; icon: typeof Activity; code: string }> = [
-  { id: 'central', label: 'Central de Auditoria', icon: Landmark, code: 'CEN' },
-  { id: 'bots', label: 'Personagens e Bots', icon: Bot, code: 'BOT' },
-  { id: 'ondas', label: 'Ondas e Missões', icon: Activity, code: 'OND' },
-  { id: 'handoffs', label: 'Central de Handoffs', icon: ArrowLeftRight, code: 'HND' },
-  { id: 'auditoria', label: 'Auditoria e Parecer 24', icon: ShieldCheck, code: 'AUD' },
-  { id: 'agentes', label: 'Agentes e Propriedade', icon: Users, code: 'AGT' },
-  { id: 'repositorios', label: 'Repositórios', icon: FolderGit2, code: 'REP' },
+const NAV_ITEMS: Array<{
+  id: NavSection;
+  label: string;
+  icon: typeof Activity;
+  neonHex: string;
+}> = [
+  { id: 'bots', label: 'Personagens e Bots', icon: Bot, neonHex: '#00F0FF' },
+  { id: 'ondas', label: 'Ondas e Missões', icon: Activity, neonHex: '#BF5AF2' },
+  { id: 'handoffs', label: 'Central de Handoffs', icon: ArrowLeftRight, neonHex: '#FF2E97' },
+  { id: 'auditoria', label: 'Auditoria e Parecer 24', icon: ShieldCheck, neonHex: '#FF073A' },
+  { id: 'agentes', label: 'Agentes e Propriedade', icon: Users, neonHex: '#00FFA3' },
+  { id: 'repositorios', label: 'Repositórios', icon: FolderGit2, neonHex: '#FFB800' },
+  { id: 'central', label: 'Central Local', icon: Landmark, neonHex: '#38F9FF' },
 ];
 
 export function Sidebar({
@@ -40,44 +52,42 @@ export function Sidebar({
   onCloseMobile,
 }: SidebarProps) {
   const navContent = (
-    <div className="flex h-full flex-col bg-ink-900/90 backdrop-blur border-r border-ink-700">
-      {/* Brand block */}
-      <div className="px-5 pt-5 pb-4 border-b border-ink-700/70">
+    <div className="flex h-full flex-col bg-[#070B16]/95 backdrop-blur-xl border-r border-cyan-400/15">
+      {/* Brand header */}
+      <div className="px-5 py-5 border-b border-cyan-400/15">
         <div className="flex items-center gap-3">
-          <div className="relative w-10 h-10 rounded-lg border border-signal-500/50 bg-ink-800 grid place-items-center overflow-hidden">
-            <Radar className="w-5 h-5 text-signal-400" strokeWidth={1.8} />
-            <span className="absolute inset-0 blueprint-grid opacity-60" />
+          <div
+            className="w-10 h-10 rounded-2xl grid place-items-center shrink-0"
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(0,240,255,0.22), rgba(191,90,242,0.28), rgba(255,46,151,0.22))',
+              border: '1px solid rgba(0,240,255,0.55)',
+              boxShadow: '0 0 22px -6px rgba(0,240,255,0.75)',
+            }}
+          >
+            <Radar className="w-5 h-5 text-[#00F0FF]" strokeWidth={2} />
           </div>
           <div className="min-w-0">
-            <div className="font-display font-bold text-[15px] leading-tight tracking-tight text-paper-100">
-              Governança<span className="text-signal-400">360</span>
+            <div className="font-display font-bold text-base leading-tight tracking-tight text-white">
+              Governança <span className="neon-text-gradient">360</span>
             </div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-paper-500 mt-0.5">
-              War Room · v2.0
+            <div className="text-[11px] text-[#7C90B8] mt-0.5 truncate">
+              Orquestração Multiagente
             </div>
           </div>
           <button
             type="button"
             onClick={onCloseMobile}
             aria-label="Fechar menu lateral"
-            className="lg:hidden ml-auto p-2 text-paper-400 hover:text-paper-100 rounded-md"
+            className="lg:hidden ml-auto p-2 text-[#A6B7D9] hover:text-white rounded-xl"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="mt-3 flex items-center gap-2">
-          <span className="led led-ok" />
-          <span className="font-mono text-[10px] uppercase tracking-widest text-paper-400">
-            Sistemas nominais
-          </span>
-        </div>
       </div>
 
-      {/* Nav */}
-      <nav aria-label="Navegação principal" className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <div className="px-2 pb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-paper-500">
-          Console
-        </div>
+      {/* Navigation */}
+      <nav aria-label="Navegação principal" className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive = activeSection === item.id;
@@ -97,36 +107,31 @@ export function Sidebar({
                 onCloseMobile();
               }}
               aria-current={isActive ? 'page' : undefined}
-              className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150 ${
+              className={`group relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-left transition-all duration-200 ${
                 isActive
-                  ? 'bg-ink-800 text-paper-100'
-                  : 'text-paper-400 hover:bg-ink-800/60 hover:text-paper-200'
+                  ? 'text-white'
+                  : 'text-[#A6B7D9] hover:bg-white/[0.04] hover:text-white'
               }`}
+              style={
+                isActive
+                  ? {
+                      background: `linear-gradient(125deg, ${item.neonHex}22 0%, rgba(12,18,37,0.92) 85%)`,
+                      border: `1px solid ${item.neonHex}66`,
+                      boxShadow: `0 0 22px -10px ${item.neonHex}aa`,
+                    }
+                  : { border: '1px solid transparent' }
+              }
             >
-              {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r bg-signal-400 shadow-[0_0_10px_rgba(56,189,248,0.7)]" />
-              )}
               <Icon
-                className={`w-4 h-4 shrink-0 transition-colors ${
-                  isActive ? 'text-signal-400' : 'text-paper-500 group-hover:text-paper-300'
-                }`}
-                strokeWidth={1.8}
+                className="w-4 h-4 shrink-0 transition-colors"
+                style={{ color: isActive ? item.neonHex : '#7C90B8' }}
+                strokeWidth={2}
               />
               <span className="flex-1 text-[13px] font-medium truncate">{item.label}</span>
-              <span
-                className={`font-mono text-[9px] tracking-widest ${
-                  isActive ? 'text-signal-400/80' : 'text-paper-500/60'
-                }`}
-              >
-                {item.code}
-              </span>
               {typeof count === 'number' && count > 0 && (
                 <span
-                  className={`font-mono text-[10px] tabular-nums px-1.5 py-0.5 rounded border ${
-                    isActive
-                      ? 'text-signal-300 border-signal-500/40 bg-signal-500/10'
-                      : 'text-amberx-300 border-amberx-500/30 bg-amberx-500/10'
-                  }`}
+                  className="font-mono text-[11px] font-semibold tabular-nums"
+                  style={{ color: isActive ? item.neonHex : '#FFB800' }}
                 >
                   {count}
                 </span>
@@ -136,21 +141,16 @@ export function Sidebar({
         })}
       </nav>
 
-      {/* Footer status */}
-      <div className="px-5 py-4 border-t border-ink-700/70 space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="font-mono text-[10px] uppercase tracking-widest text-paper-500">
-            Roster ativo
-          </span>
-          <span className="font-mono text-[11px] font-semibold text-signal-300 tabular-nums">
-            26
-          </span>
-        </div>
-        <div className="text-[11px] text-paper-500 leading-snug">
-          Slots 19 e 20 reservados · Revisão obrigatória: Agente 24
-        </div>
-        <div className="pt-1 font-mono text-[9px] uppercase tracking-[0.18em] text-paper-500/70">
-          Central-Auditoria-BirthHub
+      {/* Roster Governance Footer */}
+      <div className="p-4 border-t border-cyan-400/15">
+        <div className="rounded-2xl bg-[#0C1224]/90 border border-violet-400/25 p-3.5 space-y-1">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-[#A6B7D9] font-medium">Roster Oficial</span>
+            <span className="font-mono font-bold text-[#00F0FF] tabular-nums">26 agentes</span>
+          </div>
+          <div className="text-[11px] text-[#7C90B8] leading-snug">
+            Slots 19 e 20 reservados (§4) · Parecer obrigatório: Agente 24 (§40)
+          </div>
         </div>
       </div>
     </div>
@@ -163,7 +163,7 @@ export function Sidebar({
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
-            className="fixed inset-0 bg-ink-950/70 backdrop-blur-sm"
+            className="fixed inset-0 bg-[#04060D]/80 backdrop-blur-sm"
             onClick={onCloseMobile}
             aria-hidden="true"
           />

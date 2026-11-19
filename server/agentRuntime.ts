@@ -567,7 +567,7 @@ async function executeToolCall(params: {
         outOfScope: ['Arquivos fora da propriedade definida na missão'],
         ownedFiles,
         dependencyFiles: [],
-        assumptions: ['Definido autonomamente pelo Coordenador Atlas (00)'],
+        assumptions: ['Definido autonomamente pelo Coordenador Núcleo (00)'],
         plan: [
           {
             description: String(args.objective || 'Executar missão'),
@@ -868,7 +868,7 @@ export async function runSwarmSequence(params: {
     throw new Error(`Especialista ${specialistAgentId} inválido.`);
   }
 
-  // Step 1: 00 Atlas coordinates and inspects repo
+  // Step 1: 00 Núcleo coordinates and inspects repo
   const step1 = await runAgentBotTurn({
     agentId: '00',
     prompt: `O usuário solicitou ao enxame: "${missionGoal}". Inspecione o repositório ativo usando inspect_repository_files e check_wave_readiness, verifique regras de propriedade/concorrência e dê uma diretiva objetiva ao Agente ${specialist.id} (${specialist.persona.codename}).`,
@@ -879,7 +879,7 @@ export async function runSwarmSequence(params: {
   // Step 2: Specialist executes inspection / ownership / handoffs
   const step2 = await runAgentBotTurn({
     agentId: specialist.id,
-    prompt: `Atlas (00) orientou: "${step1.replyMessage.content}". Considerando o objetivo "${missionGoal}", inspecione o repositório, verifique propriedade dos arquivos relevantes e, se encontrar qualquer risco/pendência em outro domínio, abra um handoff real com open_handoff ou atualize bloqueadores.`,
+    prompt: `Núcleo (00) orientou: "${step1.replyMessage.content}". Considerando o objetivo "${missionGoal}", inspecione o repositório, verifique propriedade dos arquivos relevantes e, se encontrar qualquer risco/pendência em outro domínio, abra um handoff real com open_handoff ou atualize bloqueadores.`,
     workspace: step1.updatedWorkspace,
     onEvent,
   });
