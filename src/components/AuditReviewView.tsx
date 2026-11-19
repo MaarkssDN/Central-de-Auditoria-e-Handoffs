@@ -67,7 +67,7 @@ export function AuditReviewView({
 
   if (!activeRepo) {
     return (
-      <div className="bg-white border border-slate-200 rounded-lg p-10 text-center text-sm text-slate-500">
+      <div className="panel p-10 text-center text-sm text-slate-500">
         Selecione ou conecte um repositório para iniciar a auditoria.
       </div>
     );
@@ -176,11 +176,12 @@ export function AuditReviewView({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">
-            Auditoria Independente e Gates (§22, §28, §40)
+          <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal-400 mb-1">SEC-AUD · Revisão Independente</div>
+          <h2 className="font-display text-2xl font-bold tracking-tight text-paper-100">
+            Auditoria e Gates
           </h2>
-          <p className="text-sm text-slate-600 mt-0.5">
-            Pareceres oficiais do Agente 24 em <span className="font-mono">.agents/reviews/</span>, matriz de gates reais e bloqueadores B-01..B-14.
+          <p className="text-sm text-paper-400 mt-1 max-w-2xl">
+            Pareceres oficiais do Agente 24 em <span className="font-mono text-paper-300">.agents/reviews/</span>, matriz de gates reais e bloqueadores B-01..B-14.
           </p>
         </div>
 
@@ -215,25 +216,25 @@ export function AuditReviewView({
 
       {/* Summary Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="panel p-4">
           <div className="text-xs text-slate-500">Pareceres APROVADOS</div>
           <div className="text-2xl font-semibold text-emerald-700 font-mono tabular-nums mt-1">
             {approvedCount}
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="panel p-4">
           <div className="text-xs text-slate-500">Reprovados / Bloqueados</div>
           <div className="text-2xl font-semibold text-red-700 font-mono tabular-nums mt-1">
             {rejectedCount}
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="panel p-4">
           <div className="text-xs text-slate-500">Bloqueadores B-01..B-14 Abertos</div>
           <div className="text-2xl font-semibold text-slate-900 font-mono tabular-nums mt-1">
             {openBlockersCount}
           </div>
         </div>
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="panel p-4">
           <div className="text-xs text-slate-500">Gates Executados Verdes</div>
           <div className="text-2xl font-semibold text-slate-900 font-mono tabular-nums mt-1">
             {activeWave
@@ -284,7 +285,7 @@ export function AuditReviewView({
       {subTab === 'pareceres' && (
         <div className="space-y-4">
           {reviews.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-lg p-10 text-center">
+            <div className="panel p-10 text-center">
               <p className="text-sm font-medium text-slate-900">
                 Nenhum parecer independente emitido para este repositório.
               </p>
@@ -297,7 +298,7 @@ export function AuditReviewView({
               const authorAgent = getAgentById(rev.authorAgentId);
               const auditorAgent = getAgentById(rev.auditorAgentId);
               return (
-              <article key={rev.id} className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+              <article key={rev.id} className="panel p-5 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0">
                     {auditorAgent && <AgentAvatar agent={auditorAgent} size="md" />}
@@ -403,7 +404,7 @@ export function AuditReviewView({
 
       {/* Tab 2: Gates Matrix */}
       {subTab === 'gates' && activeWave && (
-        <div className="bg-white border border-slate-200 rounded-lg overflow-x-auto">
+        <div className="panel overflow-x-auto">
           <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-4">
             <div>
               <h3 className="text-sm font-semibold text-slate-900">
@@ -479,7 +480,7 @@ export function AuditReviewView({
 
       {/* Tab 3: Priority Blockers B-01..B-14 */}
       {subTab === 'bloqueadores' && (
-        <div className="bg-white border border-slate-200 rounded-lg overflow-x-auto">
+        <div className="panel overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[680px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-600">
@@ -565,7 +566,7 @@ export function AuditReviewView({
           aria-modal="true"
           aria-labelledby="review-modal-title"
         >
-          <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-lg overflow-hidden my-8">
+          <div className="w-full max-w-2xl panel overflow-hidden my-8">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-slate-800" />

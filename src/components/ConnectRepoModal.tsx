@@ -133,7 +133,7 @@ export function ConnectRepoModal({
       aria-modal="true"
       aria-labelledby="connect-repo-title"
     >
-      <div className="w-full max-w-xl bg-white border border-slate-200 rounded-lg overflow-hidden">
+      <div className="w-full max-w-xl panel overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
           <div>
             <h2 id="connect-repo-title" className="text-base font-semibold text-slate-900">

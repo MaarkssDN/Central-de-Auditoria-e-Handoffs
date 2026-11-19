@@ -1,0 +1,38 @@
+{
+  "central": "Central-Auditoria-BirthHub",
+  "repo": "C:\\Github\\Birthub-360",
+  "updatedAt": "2026-11-18",
+  "coordinator": "agente-00-sessao-externa",
+  "activeWave": "release-readiness-2026-11-18",
+  "waveStatus": "MARCO1_CONCLUIDO — aguardando Etapa 0 (reconciliacao PRs x achados) + decisoes humanas",
+  "snapshot": {
+    "date": "2026-11-18",
+    "branch": "main",
+    "localHead": "b54060ad1",
+    "verdict": "NO-GO",
+    "note": "Repo mudou durante a auditoria: branch atual passou a ser agente/00-correcao-p0-auditoria @ d8317c9d1 com ~505 arquivos alterados (outra sessao ativa?). Artefatos da auditoria estavam em stash@{0} e foram recuperados para a central. Confirmar estado git antes de despachar (decisao D-07)."
+  },
+  "waves": {
+    "release-readiness-2026-11-18": {
+      "path": "ondas/release-readiness-2026-11-18",
+      "verdict": "NO-GO (parecer 24: APROVADO)",
+      "counts": { "P0": 4, "P1": 22, "P2": "~34+", "P3": "dezenas" },
+      "deliverables": ["inventario-mestre.md", "relatorio-executivo.md", "plano-saneamento.md", "24-revisao-release-readiness-audit-2026-11-18.md"],
+      "handoffsTotal": 18,
+      "nextStep": "Etapa 0: reconciliar PRs #381-#393 x achados (diff-a-diff); depois Trilha 1 (P0 deploy/backup/topologia/seguranca). NENHUM fix antes disso (Trava de Mutacao)."
+    }
+  },
+  "pendingHumanDecisions": ["D-01 envs EC2", "D-02 escopo mobile", "D-03 escopo voz/IA", "D-04 janelas retencao", "D-05 consentimento IA", "D-06 modulos gated", "D-07 estado git/PRs"],
+  "activeBatch": null,
+  "lastCompletedBatch": "auditoria forense completa (11 dominios + transversal) + revisao 24 do consolidado",
+  "blockers": [
+    "D-07: estado do repo mudou (branch agente/00-correcao-p0-auditoria, stash@{0} com artefatos, ~505 dirty files) — confirmar antes de qualquer despacho",
+    "D-01/D-02/D-03: severidade real de DEBT-0003/0004/0006/0007 depende de envs/escopo",
+    "Trava de Mutacao: Etapa 0 obrigatoria antes de fixes P0/P1"
+  ],
+  "concurrencyRules": {
+    "maxParallel": 4,
+    "exclusiveSlots": ["01/01A", "06/06A", "08/08A"],
+    "protectedFiles": ["server.ts", "package.json", "lockfiles", "prisma/schema.prisma (so agente 01)", "AGENTS.md", ".agents/prompts/**"]
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "geradoEm": "2026-11-18T16:23:27.555Z",
+  "agentes": [
+    {
+      "id": "devin",
+      "nome": "Devin (esta sessão / subagentes)",
+      "tipo": "subagente",
+      "detect": [
+        "devin"
+      ],
+      "dispatch": "run_subagent profile=subagent_general no repo/worktree; prompt gerado por agents/dispatch.mjs",
+      "disponivel": true,
+      "binarios": []
+    },
+    {
+      "id": "claude-code",
+      "nome": "Claude Code",
+      "tipo": "cli",
+      "detect": [
+        "claude"
+      ],
+      "dispatch": "claude -p \"<prompt>\" --dangerously-skip-permissions (ou modo interativo) no worktree",
+      "disponivel": false,
+      "binarios": []
+    },
+    {
+      "id": "codex-cli",
+      "nome": "OpenAI Codex CLI",
+      "tipo": "cli",
+      "detect": [
+        "codex"
+      ],
+      "dispatch": "codex exec \"<prompt>\" no worktree",
+      "disponivel": false,
+      "binarios": []
+    },
+    {
+      "id": "antigravity",
+      "nome": "Google Antigravity",
+      "tipo": "manual",
+      "detect": [],
+      "dispatch": "sem CLI headless conhecida — gerar prompt em estado/fila/ e o humano cola no Antigravity apontando o worktree",
+      "disponivel": true,
+      "binarios": []
+    },
+    {
+      "id": "github-copilot",
+      "nome": "GitHub Copilot (VS Code)",
+      "tipo": "manual",
+      "detect": [
+        "copilot"
+      ],
+      "dispatch": "shim interativo — gerar prompt em estado/fila/; execução manual no VS Code",
+      "disponivel": true,
+      "binarios": [
+        {
+          "cmd": "copilot",
+          "path": "C:\\Users\\Marcelo\\AppData\\Local\\Programs\\Microsoft VS Code\\bin\\copilot-shim\\copilot"
+        }
+      ]
+    },
+    {
+      "id": "generico",
+      "nome": "Agente genérico / outro",
+      "tipo": "manual",
+      "detect": [],
+      "dispatch": "sempre disponível: pacote de prompt completo em estado/fila/",
+      "disponivel": true,
+      "binarios": []
+    }
+  ]
+}

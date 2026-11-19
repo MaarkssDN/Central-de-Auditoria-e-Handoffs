@@ -40,13 +40,14 @@ export function AgentsRosterView({ activeRepo, onActivateBot }: AgentsRosterView
   return (
     <div className="space-y-8">
       {/* File Ownership Resolver */}
-      <section className="bg-white border border-slate-200 rounded-lg p-6">
+      <section className="panel p-6">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
           <div className="max-w-xl">
-            <h2 className="text-base font-semibold text-slate-900">
-              Verificador de Propriedade Exclusiva de Arquivos (§15)
+            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-signal-400 mb-1">SEC-AGT · Propriedade</div>
+            <h2 className="font-display text-lg font-bold tracking-tight text-paper-100">
+              Verificador de Propriedade Exclusiva de Arquivos
             </h2>
-            <p className="text-sm text-slate-600 mt-1">
+            <p className="text-sm text-paper-400 mt-1">
               Informe qualquer caminho do repositório{activeRepo ? ` (${activeRepo.fullName})` : ''} para saber o proprietário exclusivo, regras de aprovação do Coordenador ou necessidade de handoff.
             </p>
           </div>
@@ -138,13 +139,13 @@ export function AgentsRosterView({ activeRepo, onActivateBot }: AgentsRosterView
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Filtrar por ID, nome ou caminho..."
-                className="h-9 pl-9 pr-3 text-sm bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-900 w-64"
+                className="h-9 pl-9 pr-3 text-sm panel focus:outline-none focus:ring-2 focus:ring-slate-900 w-64"
               />
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-lg overflow-x-auto">
+        <div className="panel overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[780px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-600">
@@ -230,7 +231,7 @@ export function AgentsRosterView({ activeRepo, onActivateBot }: AgentsRosterView
       </section>
 
       {/* Consultation Matrix */}
-      <section className="bg-white border border-slate-200 rounded-lg p-6">
+      <section className="panel p-6">
         <h3 className="text-base font-semibold text-slate-900">
           Matriz de Consulta Obrigatória entre Agentes (§6.3)
         </h3>
