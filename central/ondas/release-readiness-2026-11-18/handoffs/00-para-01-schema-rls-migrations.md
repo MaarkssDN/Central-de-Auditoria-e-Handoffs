@@ -1,6 +1,6 @@
 - De: 00
 - Para: 01 (Schema/Migrations/RLS)
-- Status: EM_EXECUÇÃO
+- Status: AGUARDANDO_24
 - Prioridade: P1
 
 ## Achados
@@ -29,3 +29,22 @@
 
 ## Lembrete
 Não criar migrations em branches de integração — handoff formal para você. Slot exclusivo: não rodar 01A em paralelo no mesmo domínio.
+
+## Resolução
+
+**Branch:** `agente/01-schema-rls-migrations` | **Worktree:** `C:\Github\Birthub-360-wtg-01` | **Commit:** `150c1686c`
+
+### Entregue
+- **DEBT-0006**: `BITRIX24_WEBHOOK_URL` declarado em `env.ts` + nova `BITRIX24_WEBHOOK_URL_ORG_ALLOWLIST`. `resolveGlobalBitrixWebhookUrl(orgId)` em `settings.ts` retorna a env global **somente** para orgs listadas; allowlist vazia = fallback desligado (fail-closed). Aplicado nos 2 call sites: `getBitrixSettings` e `LeadUseCases` (import Bitrix). **Ação necessária em prod (D-01):** se o fallback global for intencional para alguma org, adicionar o orgId na allowlist; caso contrário remover a env.
+- **DEBT-0018**: `PrismaContactRepository.create/update` agora validam `company.organizationId === organizationId` antes de gravar (`assertCompanyBelongsToOrg`). FK composta `(companyId, organizationId)` **não aplicada**: Prisma não permite o mesmo scalar (`organizationId`) em duas relações do mesmo model — documentado como limitação; a validação em aplicação é o fechamento correto.
+- **DEBT-0056**: `AUDITABLE_MODELS` estendido com `Agent`, `AgentSession`, `CadenceSequence`, `CopilotoConversation`, `Workflow` — todos têm `deletedAt` no schema e código que o preenche, mas reads não filtravam (soft-deleted vazava). Derivado do schema: 14 models com deletedAt = 9 + 5.
+
+### Gates
+- `tsc --noEmit` no worktree: **limpo**.
+
+### Não executado (registrado para follow-up)
+- **DEBT-0020** (import Bitrix não atômico): requer coordenação com 06 — a transação `$transaction` por item fica em `bitrix/service/leads.ts`/`deals.ts` (dono 06). Sugiro handoff 01→06 com a especificação: `runInTransaction` por item + enrichment pós-commit.
+- **DEBT-0057** (gate RLS estático cego): não executado — requer inventário explícito de tabelas filhas vs `pg_policy`.
+- **DEBT-0058** (skips/gaps de schema): não executado.
+- **DEBT-DB-08** (FK/tenant P3): não executado.
+- **Teste de paridade AUDITABLE_MODELS×schema** (sugerido pelo próprio achado): não criado — recomendo script `scripts/governance/check-auditable-parity.mjs` em follow-up.

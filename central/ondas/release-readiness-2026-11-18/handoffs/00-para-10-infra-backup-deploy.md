@@ -1,6 +1,6 @@
 - De: 00 (Coordenador)
 - Para: 10 (Infra/SRE) + 08 (QA)
-- Status: EM_EXECUÇÃO
+- Status: AGUARDANDO_24
 - Prioridade: P0
 
 ## Achados
@@ -26,3 +26,26 @@ Remover e-mail real; placeholders `change-me`; deduplicar bloco.
 
 ## Observação
 Verificar `deploy-ec2.ps1`/`deploy-aws.ps1` (não auditados — podem divergir do .sh).
+
+## Resolução
+
+**Branch:** `agente/10-infra-backup-deploy` | **Worktree:** `C:\Github\Birthub-360-wt\ag-10` | **Commit:** `af70a8787`
+
+### Entregue
+- **DEBT-0001**: `deploy-ec2.sh` e `deploy-ec2.ps1` agora executam `docker exec birthhub-app npx prisma migrate deploy` antes do restart e healthcheck fail-closed em `/health/ready` (12 tentativas × 5s, endpoint confirmado em `src/bootstrap/healthchecks.ts:97`). SHA registrado em `deploy-history.log`. `set -euo pipefail` no .sh.
+- **DEBT-0002 (parcial)**: `backup-encrypted.sh` reescrito — `pg_dump --format=custom` real + AES-256-CBC/PBKDF2 + manifesto sha256 + retenção configurável; placeholder removido. `restore-test.sh` reescrito — decifra, `pg_restore` em `RESTORE_DATABASE_URL` temporário, sanity check `information_schema`, grava `BACKUP-RESTORE-DRILL-RESULT-<ts>.json` em `audit-evidence/`; **falha fechado (exit 1) sem envs — nunca mais sucesso falso**.
+- **DEBT-0037**: `docs/deploy/ROLLBACK-RUNBOOK.md` criado — caminho único de rollback via `dist-backup-*` + `deploy-history.log`.
+- **INF-08/09**: `.env.example` — e-mail pessoal substituído por `change-me@example.com`; bloco STORAGE duplicado removido (mantido comentário de fallback MINIO_*).
+
+### Gates executados (evidência real)
+- `bash -n` nos 3 scripts: OK
+- `backup-encrypted.sh --verify-crypto`: round-trip AES-256 PASS
+- `backup-encrypted.sh` sem envs: exit 1 "pg_dump não encontrado" (fail-closed) ✓
+- `restore-test.sh` sem arquivo: exit 1 ✓
+
+### Limitações (honestas)
+- **Restore real NÃO executado** — exige `BACKUP_ENCRYPTION_KEY` + `RESTORE_DATABASE_URL` de um Postgres temporário (host EC2, depende de D-01). O ensaio agendado (`BACKUP-RESTORE-DRILL-RESULT.json` datado) fica pendente da primeira execução no host.
+- `dr-simulation.sh`/`rollback-drill.sh` não foram reescritos (constantes hardcoded) — recomendo deprecar em favor de `restore-test.sh`.
+- **DEBT-0038** (Prometheus/Alertmanager/EXPOSE_METRICS em prod) depende de D-01 — documentado no runbook como pendente.
+- `deploy-aws.ps1` não auditado (pode divergir) — não verificado.
+- Suposição: container `birthhub-app` monta `/home/ubuntu/birthhub-360` (bind mount), caso contrário `docker exec ... prisma migrate deploy` usaria prisma/ antigo — validar no primeiro deploy real.
