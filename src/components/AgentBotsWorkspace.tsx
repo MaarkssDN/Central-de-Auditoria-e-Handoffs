@@ -4,12 +4,15 @@ import {
   ArrowRight,
   Bot,
   CheckCircle2,
+  Crown,
   LayoutGrid,
   Loader2,
   MessageSquare,
+  Moon,
   Play,
   Send,
   Terminal,
+  Users,
   Wrench,
 } from 'lucide-react';
 import { getDirectivesForAgent } from '../data/agentDirectives';
@@ -45,11 +48,20 @@ interface LiveExecutionState {
   traces: Array<AgentToolTrace & { agentId: string }>;
 }
 
+type MemberStatus = 'working' | 'active' | 'standing';
+type ViewMode = 'members' | 'board' | 'gallery';
+
 const GALLERY_CATEGORY_LABELS: Record<'all' | AgentCategory, string> = {
   all: `Todos (${OFFICIAL_AGENTS.length})`,
   coordenacao: 'Coordenação',
   produto_engenharia: 'Produto & Engenharia',
   governanca: 'Governança',
+};
+
+const STATUS_LABELS: Record<MemberStatus, string> = {
+  working: 'Working',
+  active: 'Na onda',
+  standing: 'Stand by',
 };
 
 export function AgentBotsWorkspace({
@@ -66,10 +78,19 @@ export function AgentBotsWorkspace({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [filterQuery, setFilterQuery] = useState('');
   const [galleryCategory, setGalleryCategory] = useState<'all' | AgentCategory>('all');
-  const [viewMode, setViewMode] = useState<'desk' | 'gallery'>('desk');
+  const [viewMode, setViewMode] = useState<ViewMode>('members');
   const [feedScope, setFeedScope] = useState<'all' | 'selected'>('all');
   const [elapsedSec, setElapsedSec] = useState(0);
+  const [boardSeenAt, setBoardSeenAt] = useState<string>(() => new Date().toISOString());
   const feedScrollRef = useRef<HTMLDivElement | null>(null);
+  const prevViewModeRef = useRef(viewMode);
+
+  useEffect(() => {
+    if (viewMode !== 'board' && prevViewModeRef.current === 'board') {
+      setBoardSeenAt(new Date().toISOString());
+    }
+    prevViewModeRef.current = viewMode;
+  });
 
   useEffect(() => {
     if (!running) {
@@ -103,7 +124,7 @@ export function AgentBotsWorkspace({
 
   const visibleRoster = OFFICIAL_AGENTS.filter((a) => {
     const matchesCategory =
-      viewMode === 'desk' || galleryCategory === 'all' || a.category === galleryCategory;
+      viewMode !== 'gallery' || galleryCategory === 'all' || a.category === galleryCategory;
     if (!matchesCategory) return false;
     const q = filterQuery.trim().toLowerCase();
     if (!q) return true;
@@ -316,83 +337,221 @@ export function AgentBotsWorkspace({
       h.status !== 'resolvido'
   );
 
-  const featuredIds = Array.from(new Set([...waveActiveIds, '24']));
-  const featuredAgents = featuredIds
-    .map((id) => getAgentById(id))
-    .filter((a): a is NonNullable<typeof a> => Boolean(a));
-
   const liveAgent = liveState ? getAgentById(liveState.currentAgentId) : null;
   const accent = selectedAgent.persona.accentHex;
 
+  // ---- Swarm suite: member statuses + board helpers ----
+  const coordinatorAgent = getAgentById('00');
+
+  const memberStatus = (agentId: string): MemberStatus => {
+    if (liveState?.currentAgentId === agentId) return 'working';
+    if (
+      waveActiveIds.includes(agentId) ||
+      (liveState?.completedAgents.includes(agentId) ?? false)
+    ) {
+      return 'active';
+    }
+    return 'standing';
+  };
+
+  const squadMembers = visibleRoster.filter((a) => a.id !== '00');
+  const activeMembers = squadMembers.filter((a) => memberStatus(a.id) !== 'standing');
+  const standingMembers = squadMembers.filter((a) => memberStatus(a.id) === 'standing');
+
+  const lastAgentMsgIndex = new Map<string, number>();
+  repoMessages.forEach((m, i) => {
+    if (m.role === 'agent') lastAgentMsgIndex.set(m.agentId, i);
+  });
+
+  const boardTargetLabel = (msg: AgentBotMessage, idx: number): string => {
+    if (msg.role === 'user') {
+      const target = getAgentById(msg.agentId);
+      return target
+        ? `@agente-${target.id} ${target.persona.codename}`
+        : `@agente-${msg.agentId}`;
+    }
+    for (let j = idx + 1; j < repoMessages.length; j++) {
+      const next = repoMessages[j];
+      if (next.role === 'user') break;
+      if (next.role === 'agent' && next.agentId !== msg.agentId) {
+        const nextAgent = getAgentById(next.agentId);
+        return nextAgent
+          ? `@agente-${nextAgent.id} ${nextAgent.persona.codename}`
+          : `@agente-${next.agentId}`;
+      }
+    }
+    return 'Você';
+  };
+
+  const firstUnseenBoardIndex = repoMessages.findIndex((m) => m.timestamp > boardSeenAt);
+
+  const formatBoardTime = (ts: string) =>
+    new Date(ts).toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+  const snippet = (content: string, max = 96) => {
+    const plain = content.replace(/[*_`#[\]]/g, '').replace(/\s+/g, ' ').trim();
+    return plain.length > max ? `${plain.slice(0, max - 1)}…` : plain;
+  };
+
+  const renderStatusChip = (status: MemberStatus) => {
+    if (status === 'working') {
+      return (
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[#2563EB]">
+          <Loader2 className="w-3 h-3 animate-spin" />
+          {STATUS_LABELS.working}
+        </span>
+      );
+    }
+    if (status === 'active') {
+      return (
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[#047857]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#047857]" />
+          {STATUS_LABELS.active}
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[#7C90B8]">
+        <Moon className="w-3 h-3" />
+        {STATUS_LABELS.standing}
+      </span>
+    );
+  };
+
+  const renderMemberRow = (
+    agent: (typeof OFFICIAL_AGENTS)[number],
+    status: MemberStatus
+  ) => {
+    const isSelected = agent.id === selectedAgent.id;
+    const hex = agent.persona.accentHex;
+    const lastIdx = lastAgentMsgIndex.get(agent.id);
+    const lastMsg = lastIdx !== undefined ? repoMessages[lastIdx] : undefined;
+    const isLiveHere = liveState?.currentAgentId === agent.id;
+
+    return (
+      <button
+        key={agent.id}
+        type="button"
+        onClick={() => {
+          onSelectAgent(agent.id);
+          setErrorMsg(null);
+        }}
+        className="w-full text-left p-3 rounded-2xl flex items-start gap-3 transition-all duration-150"
+        style={
+          isSelected
+            ? {
+                background: `linear-gradient(125deg, ${hex}26 0%, var(--color-ink-900) 90%)`,
+                border: `1px solid ${hex}99`,
+                boxShadow: `0 0 22px -10px ${hex}aa`,
+              }
+            : {
+                background: 'transparent',
+                border: '1px solid transparent',
+              }
+        }
+      >
+        <div className="relative shrink-0">
+          <AgentAvatar agent={agent} size="md" />
+          {status === 'working' && (
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#2563EB] border-2 border-[#0B1124] animate-pulse" />
+          )}
+          {status === 'active' && (
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#047857] border-2 border-[#0B1124]" />
+          )}
+          {status === 'standing' && (
+            <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#0B1124] border border-[#334155] flex items-center justify-center">
+              <Moon className="w-2.5 h-2.5 text-[#7C90B8]" />
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-paper-100 truncate">
+              @{`agente-${agent.id}`} · {agent.persona.codename}
+            </span>
+            {renderStatusChip(status)}
+          </div>
+          <div className="text-[11px] truncate mt-0.5" style={{ color: hex }}>
+            {agent.persona.archetype}
+          </div>
+          {lastMsg && (
+            <div className="text-[11px] text-[#A6B7D9] truncate mt-1 leading-snug">
+              <span className="font-mono text-[#5C7099]">#{lastIdx! + 1}</span>{' '}
+              {snippet(lastMsg.content, 72)}
+            </div>
+          )}
+          {isLiveHere && liveState?.activeToolName && (
+            <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#2563EB]/12 border border-[#2563EB]/40 text-[10px] font-mono text-[#2563EB]">
+              <Wrench className="w-2.5 h-2.5" />
+              {liveState.activeToolName}
+            </div>
+          )}
+        </div>
+      </button>
+    );
+  };
+
+  const memberSectionHeader = (label: string, count: number, accentColor: string) => (
+    <div className="flex items-center gap-2 px-1 pt-2 pb-1">
+      <span
+        className="text-[10px] font-bold uppercase tracking-widest"
+        style={{ color: accentColor }}
+      >
+        {label}
+      </span>
+      <span className="text-[10px] font-mono text-[#5C7099] tabular-nums">({count})</span>
+      <span className="h-px flex-1 bg-white/8" />
+    </div>
+  );
+
   return (
     <div className="space-y-6">
-      {/* Top Active Squad Strip + View Mode Switch */}
+      {/* Swarm Suite Header + View Tabs */}
       <section className="neon-card p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="min-w-0 space-y-2.5">
+        <div className="min-w-0 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="font-semibold text-paper-100">
-              Esquadrão em Operação — {activeWave ? activeWave.name : activeRepo.fullName}
+              Enxame — {activeWave ? activeWave.name : activeRepo.fullName}
             </span>
             <span className="text-[#5C7099]" aria-hidden="true">·</span>
             <span className="font-mono text-[#2563EB] tabular-nums">
               {OFFICIAL_AGENTS.length} agentes oficiais (AGENTS.md)
             </span>
           </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            {featuredAgents.map((agent) => {
-              const isSelected = agent.id === selectedAgent.id && viewMode === 'desk';
-              const hex = agent.persona.accentHex;
-              return (
-                <button
-                  key={agent.id}
-                  type="button"
-                  onClick={() => {
-                    onSelectAgent(agent.id);
-                    setViewMode('desk');
-                    setErrorMsg(null);
-                  }}
-                  className="inline-flex items-center gap-2.5 px-3 py-2 rounded-2xl text-left transition-all duration-200"
-                  style={
-                    isSelected
-                      ? {
-                          background: `linear-gradient(135deg, ${hex}2a 0%, var(--color-ink-900) 100%)`,
-                          border: `1.5px solid ${hex}`,
-                          boxShadow: `0 0 22px -6px ${hex}aa`,
-                        }
-                      : {
-                          background: 'var(--color-ink-850)',
-                          border: `1px solid ${hex}44`,
-                        }
-                  }
-                >
-                  <AgentAvatar agent={agent} size="sm" />
-                  <div className="leading-tight">
-                    <div className="text-xs font-semibold text-paper-100">
-                      {agent.id} · {agent.persona.codename}
-                    </div>
-                    <div className="text-[11px]" style={{ color: isSelected ? hex : 'var(--color-paper-400)' }}>
-                      {agent.persona.archetype}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          <p className="text-[11px] text-[#7C90B8]">
+            Membros em operação, quadro de mensagens e execução ao vivo do enxame.
+          </p>
         </div>
 
         <div className="flex items-center gap-1 p-1.5 bg-[#070B16] border border-cyan-400/20 rounded-2xl self-start lg:self-center shrink-0">
           <button
             type="button"
-            onClick={() => setViewMode('desk')}
+            onClick={() => setViewMode('members')}
             className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
-              viewMode === 'desk'
+              viewMode === 'members'
+                ? 'bg-gradient-to-r from-[#2563EB]/25 to-[#7C3AED]/25 text-paper-100 border border-[#2563EB]/55 shadow-[0_0_16px_-6px_rgba(37,99,235,0.8)]'
+                : 'text-[#8FA3C8] hover:text-paper-100 border border-transparent'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Membros</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('board')}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap ${
+              viewMode === 'board'
                 ? 'bg-gradient-to-r from-[#2563EB]/25 to-[#7C3AED]/25 text-paper-100 border border-[#2563EB]/55 shadow-[0_0_16px_-6px_rgba(37,99,235,0.8)]'
                 : 'text-[#8FA3C8] hover:text-paper-100 border border-transparent'
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>Mesa do Bot</span>
+            <span>Quadro ({allRepoMessages.length})</span>
           </button>
           <button
             type="button"
@@ -513,7 +672,7 @@ export function AgentBotsWorkspace({
                       type="button"
                       onClick={() => {
                         onSelectAgent(agent.id);
-                        setViewMode('desk');
+                        setViewMode('members');
                         setErrorMsg(null);
                       }}
                       className="inline-flex items-center gap-1.5 h-9 px-3.5 text-xs font-semibold text-paper-100 rounded-2xl whitespace-nowrap shrink-0 transition-all"
@@ -532,88 +691,340 @@ export function AgentBotsWorkspace({
             })}
           </div>
         </section>
+      ) : viewMode === 'board' ? (
+        <div className="space-y-5 min-w-0">
+          {/* Live Real-Time Execution Activity Panel */}
+          {liveState && (
+            <div className="rounded-3xl bg-[#070B18] text-paper-100 border border-[#2563EB]/55 shadow-[0_0_30px_-10px_rgba(37,99,235,0.65)] p-5 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 text-xs font-semibold">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#2563EB] shrink-0" />
+                  <span>
+                    {liveAgent
+                      ? `${liveAgent.id} · ${liveAgent.persona.codename} em operação (passo ${liveState.currentStep})`
+                      : 'Executando agente...'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  {liveState.activeToolName && (
+                    <span className="text-[11px] font-mono text-[#D97706]">
+                      chamando {liveState.activeToolName}...
+                    </span>
+                  )}
+                  <span className="text-[11px] font-mono text-[#2563EB] tabular-nums">
+                    {elapsedSec}s
+                  </span>
+                </div>
+              </div>
+
+              {liveState.mode === 'swarm' && (
+                <div className="flex flex-wrap items-center gap-2 text-xs pt-2 border-t border-white/10">
+                  {[
+                    { id: '00', label: '00 Núcleo (Planejamento)' },
+                    {
+                      id: swarmSpecialistId,
+                      label: `${swarmSpecialistId} ${swarmSpecialist?.persona.codename ?? 'Especialista'}`,
+                    },
+                    { id: '24', label: '24 Veredito (Auditoria)' },
+                  ].map((stage, idx) => {
+                    const isDone = liveState.completedAgents.includes(stage.id);
+                    const isCurrent = liveState.currentAgentId === stage.id && !isDone;
+                    return (
+                      <div key={stage.id} className="inline-flex items-center gap-1.5">
+                        {idx > 0 && <ArrowRight className="w-3 h-3 text-[#5C7099]" />}
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-mono text-[11px] ${
+                            isDone
+                              ? 'bg-[#047857]/15 text-[#047857] border border-[#047857]/50'
+                              : isCurrent
+                                ? 'bg-[#2563EB]/15 text-[#2563EB] border border-[#2563EB]/60'
+                                : 'bg-white/5 text-[#7C90B8] border border-white/10'
+                          }`}
+                        >
+                          {isDone && <CheckCircle2 className="w-3 h-3" />}
+                          {stage.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {liveState.traces.length > 0 && (
+                <div className="space-y-1.5 pt-2 border-t border-white/10 text-[11px] font-mono">
+                  {liveState.traces.map((tr) => (
+                    <div key={tr.id} className="flex items-center justify-between gap-2 text-[#D6E0F5]">
+                      <span className="text-[#2563EB] shrink-0">
+                        [{tr.agentId}] {tr.toolName}
+                      </span>
+                      <span className="truncate text-[#8FA3C8]">{tr.resultSummary}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Live Error Banner */}
+          {errorMsg && (
+            <div className="p-4 bg-[#DC2626]/12 border border-[#DC2626]/50 rounded-2xl text-xs text-[#E11D48] flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#DC2626]" />
+              <div>{errorMsg}</div>
+            </div>
+          )}
+
+          {/* Swarm Board — chronological agent message feed */}
+          <div className="neon-card overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-cyan-400/15 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-paper-100">
+                <Bot className="w-4 h-4 text-[#2563EB]" />
+                <span>Quadro do Enxame — {activeRepo.fullName}</span>
+              </div>
+
+              <div className="inline-flex p-1 bg-[#070B16] border border-cyan-400/20 rounded-xl text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setFeedScope('all')}
+                  className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                    feedScope === 'all'
+                      ? 'bg-[#2563EB]/20 text-paper-100 border border-[#2563EB]/45'
+                      : 'text-[#8FA3C8] hover:text-paper-100 border border-transparent'
+                  }`}
+                >
+                  Todos ({allRepoMessages.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFeedScope('selected')}
+                  className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                    feedScope === 'selected'
+                      ? 'bg-[#7C3AED]/25 text-paper-100 border border-[#7C3AED]/50'
+                      : 'text-[#8FA3C8] hover:text-paper-100 border border-transparent'
+                  }`}
+                >
+                  Só {selectedAgent.persona.codename}
+                </button>
+              </div>
+            </div>
+
+            <div
+              ref={feedScrollRef}
+              className="p-5 space-y-4 max-h-[560px] overflow-y-auto bg-[#060914]/70"
+            >
+              {repoMessages.length === 0 ? (
+                <div className="text-center py-10 text-xs text-[#8FA3C8]">
+                  Nenhuma mensagem no quadro ainda. Escolha uma diretiva na aba Membros ou envie um comando abaixo.
+                </div>
+              ) : (
+                repoMessages.map((msg: AgentBotMessage, idx: number) => {
+                  const msgAgent = getAgentById(msg.agentId);
+                  const msgHex = msgAgent?.persona.accentHex ?? '#2563EB';
+                  const isUser = msg.role === 'user';
+                  const targetLabel = boardTargetLabel(msg, idx);
+
+                  return (
+                    <div key={msg.id} className="space-y-4">
+                      {idx === firstUnseenBoardIndex && firstUnseenBoardIndex >= 0 && (
+                        <div className="flex items-center gap-3" aria-label="Mensagens novas">
+                          <span className="h-px flex-1 bg-[#2563EB]/60" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#2563EB]">
+                            New
+                          </span>
+                          <span className="h-px flex-1 bg-[#2563EB]/60" />
+                        </div>
+                      )}
+                      <article
+                        className="rounded-2xl p-4 space-y-3 bg-[#0B1124]/95"
+                        style={{
+                          border: `1px solid ${msgHex}44`,
+                          boxShadow: `0 10px 28px -18px ${msgHex}66`,
+                        }}
+                      >
+                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                          <span className="font-mono text-[11px] font-bold text-[#5C7099] tabular-nums">
+                            #{idx + 1}
+                          </span>
+                          {isUser ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-paper-100">
+                              <Bot className="w-3.5 h-3.5 text-[#2563EB]" />
+                              Você
+                            </span>
+                          ) : (
+                            <>
+                              {msgAgent && <AgentAvatar agent={msgAgent} size="sm" />}
+                              <span className="text-xs font-bold text-paper-100">
+                                @{`agente-${msg.agentId}`}
+                                {msgAgent ? ` ${msgAgent.persona.codename}` : ''}
+                              </span>
+                            </>
+                          )}
+                          <span className="text-[#5C7099]" aria-hidden="true">→</span>
+                          <span
+                            className="text-xs font-semibold"
+                            style={{ color: isUser ? '#8FA3C8' : msgHex }}
+                          >
+                            {targetLabel}
+                          </span>
+                          <span className="ml-auto text-[11px] font-mono text-[#7C90B8] tabular-nums">
+                            {formatBoardTime(msg.timestamp)}
+                          </span>
+                        </div>
+
+                        {msg.toolTraces && msg.toolTraces.length > 0 && (
+                          <div className="bg-[#060914] border border-cyan-400/20 rounded-xl p-3 space-y-1.5">
+                            <div className="text-[11px] font-semibold text-[#2563EB] flex items-center gap-1.5">
+                              <Wrench className="w-3 h-3" />
+                              <span>Ações executadas no workspace ({msg.toolTraces.length})</span>
+                            </div>
+                            {msg.toolTraces.map((tr) => (
+                              <div
+                                key={tr.id}
+                                className="text-[11px] font-mono text-[#D6E0F5] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-t border-white/10 pt-1.5"
+                              >
+                                <span className="font-semibold text-[#047857]">{tr.toolName}</span>
+                                <span className="text-[#8FA3C8] truncate">{tr.resultSummary}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <MarkdownMessage content={msg.content} />
+                      </article>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <form
+              onSubmit={handleSubmit}
+              className="p-4 bg-[#080C1A] border-t border-cyan-400/15 flex items-center gap-2.5"
+            >
+              <label htmlFor="bot-command-input" className="sr-only">
+                Enviar comando ao bot selecionado
+              </label>
+              <input
+                id="bot-command-input"
+                type="text"
+                value={promptInput}
+                onChange={(e) => setPromptInput(e.target.value)}
+                disabled={running}
+                placeholder={`Enviar comando para ${selectedAgent.persona.codename} (${selectedAgent.id})...`}
+                className="input flex-1 h-11 !rounded-2xl"
+              />
+              <button
+                type="submit"
+                disabled={running || !promptInput.trim()}
+                className="btn btn-primary h-11 !px-5 !rounded-2xl whitespace-nowrap shrink-0"
+              >
+                {liveState?.mode === 'single' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                <span>{running ? 'Executando...' : 'Executar'}</span>
+              </button>
+            </form>
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-          {/* Character Roster Selector */}
-          <section className="xl:col-span-4 neon-card overflow-hidden">
-            <div className="p-5 border-b border-cyan-400/15 space-y-3">
+          {/* Swarm Members — grouped by execution status */}
+          <section className="xl:col-span-5 neon-card overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-cyan-400/15 space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-sm font-bold text-accent-blue">
-                  Personagens Autônomos ({OFFICIAL_AGENTS.length})
+                  Membros do Enxame
                 </h2>
-                <span className="text-xs font-mono text-[#7C3AED]">19/20 reserv.</span>
+                <span className="text-xs font-mono text-[#7C3AED]">
+                  {squadMembers.length + 1} no repo
+                </span>
               </div>
               <label htmlFor="bot-roster-search" className="sr-only">
-                Filtrar personagens
+                Filtrar membros
               </label>
               <input
                 id="bot-roster-search"
                 type="text"
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
-                placeholder="Buscar codinome, ID ou papel..."
+                placeholder="Buscar membro, ID ou papel..."
                 className="input w-full h-10 !rounded-2xl"
               />
             </div>
 
-            <div className="max-h-64 xl:max-h-[670px] overflow-y-auto p-2.5 space-y-1.5">
-              {visibleRoster.map((agent) => {
-                const isSelected = agent.id === selectedAgent.id;
-                const isWaveActive = waveActiveIds.includes(agent.id);
-                const msgCount = countAgentMessages(agent.id);
-                const hex = agent.persona.accentHex;
-                return (
+            <div className="overflow-y-auto p-3 space-y-1.5 max-h-[760px]">
+              {/* Coordinator highlight */}
+              {coordinatorAgent && (
+                <div className="rounded-2xl p-3.5 mb-2"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(37,99,235,0.16), rgba(124,58,237,0.14))',
+                    border: '1px solid rgba(37,99,235,0.45)',
+                    boxShadow: '0 0 24px -10px rgba(37,99,235,0.7)',
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown className="w-3.5 h-3.5 text-[#2563EB]" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#2563EB]">
+                      Coordenador
+                    </span>
+                    {renderStatusChip(memberStatus('00'))}
+                  </div>
                   <button
-                    key={agent.id}
                     type="button"
                     onClick={() => {
-                      onSelectAgent(agent.id);
+                      onSelectAgent('00');
                       setErrorMsg(null);
                     }}
-                    className="w-full text-left p-3 rounded-2xl flex items-start gap-3 transition-all duration-150"
-                    style={
-                      isSelected
-                        ? {
-                            background: `linear-gradient(125deg, ${hex}26 0%, var(--color-ink-900) 90%)`,
-                            border: `1px solid ${hex}99`,
-                            boxShadow: `0 0 22px -10px ${hex}aa`,
-                          }
-                        : {
-                            background: 'transparent',
-                            border: '1px solid transparent',
-                          }
-                    }
+                    className="w-full text-left flex items-start gap-3"
                   >
-                    <AgentAvatar agent={agent} size="md" />
+                    <div className="relative shrink-0">
+                      <AgentAvatar agent={coordinatorAgent} size="md" />
+                      {memberStatus('00') === 'working' && (
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#2563EB] border-2 border-[#0B1124] animate-pulse" />
+                      )}
+                    </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-paper-100 truncate">
-                          {agent.id} · {agent.persona.codename}
-                        </span>
-                        <span
-                          className="text-[11px] truncate font-medium"
-                          style={{ color: isSelected ? hex : 'var(--color-paper-400)' }}
-                        >
-                          {agent.persona.archetype}
-                        </span>
+                      <div className="text-xs font-bold text-paper-100 truncate">
+                        @agente-00 · {coordinatorAgent.persona.codename}
                       </div>
-                      <div className="text-xs text-[#C9D4E8] truncate mt-0.5">{agent.name}</div>
-                      <div className="text-[11px] truncate mt-0.5 text-[#7C90B8]">
-                        {isWaveActive ? (
-                          <span className="text-[#047857] font-semibold">Ativo na onda · </span>
-                        ) : null}
-                        {msgCount > 0 ? `${msgCount} exec. · ` : ''}
-                        {agent.persona.motto}
+                      <div className="text-[11px] truncate" style={{ color: coordinatorAgent.persona.accentHex }}>
+                        {coordinatorAgent.persona.archetype}
                       </div>
+                      {(() => {
+                        const lastIdx = lastAgentMsgIndex.get('00');
+                        const lastMsg = lastIdx !== undefined ? repoMessages[lastIdx] : undefined;
+                        return lastMsg ? (
+                          <div className="text-[11px] text-[#A6B7D9] truncate mt-1 leading-snug">
+                            <span className="font-mono text-[#5C7099]">#{lastIdx! + 1}</span>{' '}
+                            {snippet(lastMsg.content, 80)}
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
                   </button>
-                );
-              })}
+                </div>
+              )}
+
+              {memberSectionHeader('Active', activeMembers.length, '#2563EB')}
+              <div className="space-y-1.5">
+                {activeMembers.length === 0 && (
+                  <p className="text-[11px] text-[#7C90B8] px-1 py-2">
+                    Nenhum membro ativo neste momento.
+                  </p>
+                )}
+                {activeMembers.map((agent) => renderMemberRow(agent, memberStatus(agent.id)))}
+              </div>
+
+              {memberSectionHeader('Standing by', standingMembers.length, '#7C90B8')}
+              <div className="space-y-1.5">
+                {standingMembers.map((agent) => renderMemberRow(agent, 'standing'))}
+              </div>
             </div>
           </section>
 
           {/* Active Character Command Desk */}
-          <section className="xl:col-span-8 space-y-5 min-w-0">
+          <section className="xl:col-span-7 space-y-5 min-w-0">
             {/* Character Dossier with Dynamic Signature Neon Aura */}
             <div
               className="rounded-3xl overflow-hidden transition-all duration-300"
@@ -722,245 +1133,13 @@ export function AgentBotsWorkspace({
               </div>
             </div>
 
-            {/* Live Real-Time Execution Activity Panel */}
-            {liveState && (
-              <div className="rounded-3xl bg-[#070B18] text-paper-100 border border-[#2563EB]/55 shadow-[0_0_30px_-10px_rgba(37,99,235,0.65)] p-5 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5 text-xs font-semibold">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#2563EB] shrink-0" />
-                    <span>
-                      {liveAgent
-                        ? `${liveAgent.id} · ${liveAgent.persona.codename} em operação (passo ${liveState.currentStep})`
-                        : 'Executando agente...'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    {liveState.activeToolName && (
-                      <span className="text-[11px] font-mono text-[#D97706]">
-                        chamando {liveState.activeToolName}...
-                      </span>
-                    )}
-                    <span className="text-[11px] font-mono text-[#2563EB] tabular-nums">
-                      {elapsedSec}s
-                    </span>
-                  </div>
-                </div>
-
-                {liveState.mode === 'swarm' && (
-                  <div className="flex flex-wrap items-center gap-2 text-xs pt-2 border-t border-white/10">
-                    {[
-                      { id: '00', label: '00 Núcleo (Planejamento)' },
-                      {
-                        id: swarmSpecialistId,
-                        label: `${swarmSpecialistId} ${swarmSpecialist?.persona.codename ?? 'Especialista'}`,
-                      },
-                      { id: '24', label: '24 Veredito (Auditoria)' },
-                    ].map((stage, idx) => {
-                      const isDone = liveState.completedAgents.includes(stage.id);
-                      const isCurrent = liveState.currentAgentId === stage.id && !isDone;
-                      return (
-                        <div key={stage.id} className="inline-flex items-center gap-1.5">
-                          {idx > 0 && <ArrowRight className="w-3 h-3 text-[#5C7099]" />}
-                          <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-mono text-[11px] ${
-                              isDone
-                                ? 'bg-[#047857]/15 text-[#047857] border border-[#047857]/50'
-                                : isCurrent
-                                  ? 'bg-[#2563EB]/15 text-[#2563EB] border border-[#2563EB]/60'
-                                  : 'bg-white/5 text-[#7C90B8] border border-white/10'
-                            }`}
-                          >
-                            {isDone && <CheckCircle2 className="w-3 h-3" />}
-                            {stage.label}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {liveState.traces.length > 0 && (
-                  <div className="space-y-1.5 pt-2 border-t border-white/10 text-[11px] font-mono">
-                    {liveState.traces.map((tr) => (
-                      <div key={tr.id} className="flex items-center justify-between gap-2 text-[#D6E0F5]">
-                        <span className="text-[#2563EB] shrink-0">
-                          [{tr.agentId}] {tr.toolName}
-                        </span>
-                        <span className="truncate text-[#8FA3C8]">{tr.resultSummary}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Live Error Banner */}
+            {/* Live error banner (members view) */}
             {errorMsg && (
               <div className="p-4 bg-[#DC2626]/12 border border-[#DC2626]/50 rounded-2xl text-xs text-[#E11D48] flex items-start gap-2.5">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#DC2626]" />
                 <div>{errorMsg}</div>
               </div>
             )}
-
-            {/* Autonomous Execution Feed */}
-            <div className="neon-card overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-cyan-400/15 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs font-semibold text-paper-100">
-                  <Bot className="w-4 h-4 text-[#2563EB]" />
-                  <span>Linha de Execução Autônoma — {activeRepo.fullName}</span>
-                </div>
-
-                <div className="inline-flex p-1 bg-[#070B16] border border-cyan-400/20 rounded-xl text-[11px]">
-                  <button
-                    type="button"
-                    onClick={() => setFeedScope('all')}
-                    className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
-                      feedScope === 'all'
-                        ? 'bg-[#2563EB]/20 text-paper-100 border border-[#2563EB]/45'
-                        : 'text-[#8FA3C8] hover:text-paper-100 border border-transparent'
-                    }`}
-                  >
-                    Todos ({allRepoMessages.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFeedScope('selected')}
-                    className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
-                      feedScope === 'selected'
-                        ? 'bg-[#7C3AED]/25 text-paper-100 border border-[#7C3AED]/50'
-                        : 'text-[#8FA3C8] hover:text-paper-100 border border-transparent'
-                    }`}
-                  >
-                    Só {selectedAgent.persona.codename}
-                  </button>
-                </div>
-              </div>
-
-              <div
-                ref={feedScrollRef}
-                className="p-5 space-y-4 max-h-[500px] overflow-y-auto bg-[#060914]/70"
-              >
-                {repoMessages.length === 0 ? (
-                  <div className="text-center py-10 text-xs text-[#8FA3C8]">
-                    Nenhuma execução registrada para este filtro ainda. Escolha uma diretiva acima ou envie um comando abaixo.
-                  </div>
-                ) : (
-                  repoMessages.map((msg: AgentBotMessage) => {
-                    const msgAgent = getAgentById(msg.agentId);
-                    const msgHex = msgAgent?.persona.accentHex ?? '#2563EB';
-                    if (msg.role === 'user') {
-                      return (
-                        <div key={msg.id} className="flex justify-end">
-                          <div
-                            className="max-w-[85%] text-paper-100 rounded-2xl px-4 py-3 text-xs space-y-1"
-                            style={{
-                              background:
-                                'linear-gradient(135deg, rgba(37,99,235,0.22), rgba(124,58,237,0.26))',
-                              border: '1px solid rgba(37,99,235,0.45)',
-                            }}
-                          >
-                            <div className="text-[11px] text-[#2563EB] font-mono">
-                              Diretiva → {msgAgent ? `${msgAgent.id} ${msgAgent.persona.codename}` : msg.agentId}
-                            </div>
-                            <div className="whitespace-pre-wrap">{msg.content}</div>
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div
-                        key={msg.id}
-                        className="rounded-2xl p-4 space-y-3 bg-[#0B1124]/95"
-                        style={{
-                          border: `1px solid ${msgHex}44`,
-                          boxShadow: `0 10px 28px -18px ${msgHex}66`,
-                        }}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2.5">
-                            {msgAgent && <AgentAvatar agent={msgAgent} size="sm" />}
-                            <div>
-                              <div className="text-xs font-bold text-paper-100">
-                                {msgAgent
-                                  ? `${msgAgent.id} · ${msgAgent.persona.codename} (${msgAgent.name})`
-                                  : `Agente ${msg.agentId}`}
-                              </div>
-                              <div className="text-[11px] text-[#7C90B8] font-mono tabular-nums">
-                                {new Date(msg.timestamp).toLocaleTimeString('pt-BR')}
-                              </div>
-                            </div>
-                          </div>
-                          {msgAgent && msgAgent.id !== selectedAgent.id && (
-                            <button
-                              type="button"
-                              onClick={() => onSelectAgent(msgAgent.id)}
-                              className="text-[11px] font-semibold text-paper-100 px-3 py-1.5 rounded-xl transition-all"
-                              style={{
-                                background: `${msgHex}1a`,
-                                border: `1px solid ${msgHex}66`,
-                              }}
-                            >
-                              Falar com {msgAgent.persona.codename}
-                            </button>
-                          )}
-                        </div>
-
-                        {msg.toolTraces && msg.toolTraces.length > 0 && (
-                          <div className="bg-[#060914] border border-cyan-400/20 rounded-xl p-3 space-y-1.5">
-                            <div className="text-[11px] font-semibold text-[#2563EB] flex items-center gap-1.5">
-                              <Wrench className="w-3 h-3" />
-                              <span>Ações executadas no workspace ({msg.toolTraces.length})</span>
-                            </div>
-                            {msg.toolTraces.map((tr) => (
-                              <div
-                                key={tr.id}
-                                className="text-[11px] font-mono text-[#D6E0F5] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-t border-white/10 pt-1.5"
-                              >
-                                <span className="font-semibold text-[#047857]">{tr.toolName}</span>
-                                <span className="text-[#8FA3C8] truncate">{tr.resultSummary}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        <MarkdownMessage content={msg.content} />
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              <form
-                onSubmit={handleSubmit}
-                className="p-4 bg-[#080C1A] border-t border-cyan-400/15 flex items-center gap-2.5"
-              >
-                <label htmlFor="bot-command-input" className="sr-only">
-                  Enviar comando ao bot selecionado
-                </label>
-                <input
-                  id="bot-command-input"
-                  type="text"
-                  value={promptInput}
-                  onChange={(e) => setPromptInput(e.target.value)}
-                  disabled={running}
-                  placeholder={`Enviar comando para ${selectedAgent.persona.codename} (${selectedAgent.id})...`}
-                  className="input flex-1 h-11 !rounded-2xl"
-                />
-                <button
-                  type="submit"
-                  disabled={running || !promptInput.trim()}
-                  className="btn btn-primary h-11 !px-5 !rounded-2xl whitespace-nowrap shrink-0"
-                >
-                  {liveState?.mode === 'single' ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
-                  <span>{running ? 'Executando...' : 'Executar'}</span>
-                </button>
-              </form>
-            </div>
           </section>
         </div>
       )}

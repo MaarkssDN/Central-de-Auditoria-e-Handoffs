@@ -35,23 +35,34 @@ interface SidebarProps {
   onCloseMobile: () => void;
 }
 
+type NavGroup = 'Comando' | 'Operação' | 'Governança';
+
+const NAV_GROUPS: Record<NavGroup, string> = {
+  Comando: 'text-accent-blue',
+  'Operação': 'text-accent-cyan',
+  'Governança': 'text-accent-violet',
+};
+
 const NAV_ITEMS: Array<{
   id: NavSection;
   label: string;
   icon: typeof Activity;
   neonHex: string;
+  group: NavGroup;
 }> = [
-  { id: 'home', label: 'Início', icon: LayoutDashboard, neonHex: '#38BDF8' },
-  { id: 'providers', label: 'Conexões de IA', icon: PlugZap, neonHex: '#7C3AED' },
-  { id: 'arquivos', label: 'Arquivos Locais', icon: FolderOpen, neonHex: '#22D3EE' },
-  { id: 'bots', label: 'Personagens e Bots', icon: Bot, neonHex: '#2563EB' },
-  { id: 'ondas', label: 'Ondas e Missões', icon: Activity, neonHex: '#7C3AED' },
-  { id: 'handoffs', label: 'Central de Handoffs', icon: ArrowLeftRight, neonHex: '#DB2777' },
-  { id: 'auditoria', label: 'Auditoria e Parecer 24', icon: ShieldCheck, neonHex: '#DC2626' },
-  { id: 'agentes', label: 'Agentes e Propriedade', icon: Users, neonHex: '#047857' },
-  { id: 'repositorios', label: 'Repositórios', icon: FolderGit2, neonHex: '#D97706' },
-  { id: 'central', label: 'Central Local', icon: Landmark, neonHex: '#22D3EE' },
+  { id: 'home', label: 'Início', icon: LayoutDashboard, neonHex: '#38BDF8', group: 'Comando' },
+  { id: 'providers', label: 'Conexões de IA', icon: PlugZap, neonHex: '#7C3AED', group: 'Operação' },
+  { id: 'arquivos', label: 'Arquivos Locais', icon: FolderOpen, neonHex: '#22D3EE', group: 'Operação' },
+  { id: 'bots', label: 'Personagens e Bots', icon: Bot, neonHex: '#2563EB', group: 'Operação' },
+  { id: 'ondas', label: 'Ondas e Missões', icon: Activity, neonHex: '#7C3AED', group: 'Operação' },
+  { id: 'handoffs', label: 'Central de Handoffs', icon: ArrowLeftRight, neonHex: '#DB2777', group: 'Governança' },
+  { id: 'auditoria', label: 'Auditoria e Parecer 24', icon: ShieldCheck, neonHex: '#DC2626', group: 'Governança' },
+  { id: 'agentes', label: 'Agentes e Propriedade', icon: Users, neonHex: '#047857', group: 'Governança' },
+  { id: 'repositorios', label: 'Repositórios', icon: FolderGit2, neonHex: '#D97706', group: 'Governança' },
+  { id: 'central', label: 'Central Local', icon: Landmark, neonHex: '#22D3EE', group: 'Governança' },
 ];
+
+const GROUP_ORDER: NavGroup[] = ['Comando', 'Operação', 'Governança'];
 
 export function Sidebar({
   activeSection,
@@ -98,63 +109,78 @@ export function Sidebar({
       </div>
 
       {/* Navigation */}
-      <nav aria-label="Navegação principal" className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeSection === item.id;
-          const count =
-            item.id === 'handoffs'
-              ? openHandoffsCount
-              : item.id === 'auditoria'
-                ? pendingAuditCount
-                : undefined;
+      <nav aria-label="Navegação principal" className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
+        {GROUP_ORDER.map((group) => (
+          <div key={group}>
+            <div className={`px-3.5 pb-1.5 text-[9px] font-mono font-bold uppercase tracking-[0.22em] ${NAV_GROUPS[group]}`}>
+              {group}
+            </div>
+            <div className="space-y-1">
+              {NAV_ITEMS.filter((item) => item.group === group).map((item) => {
+                const Icon = item.icon;
+                const isActive = activeSection === item.id;
+                const count =
+                  item.id === 'handoffs'
+                    ? openHandoffsCount
+                    : item.id === 'auditoria'
+                      ? pendingAuditCount
+                      : undefined;
 
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => {
-                onSelectSection(item.id);
-                onCloseMobile();
-              }}
-              aria-current={isActive ? 'page' : undefined}
-              className={`group relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-left transition-all duration-200 ${
-                isActive
-                  ? 'text-paper-100'
-                  : 'text-paper-400 hover:bg-ink-800/60'
-              }`}
-              style={
-                isActive
-                  ? {
-                      background: `linear-gradient(125deg, ${item.neonHex}22 0%, var(--color-ink-900) 85%)`,
-                      border: `1px solid ${item.neonHex}66`,
-                      
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      onSelectSection(item.id);
+                      onCloseMobile();
+                    }}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`group relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-left transition-all duration-200 ${
+                      isActive
+                        ? 'text-paper-100'
+                        : 'text-paper-400 hover:bg-ink-800/60 hover:text-paper-200'
+                    }`}
+                    style={
+                      isActive
+                        ? {
+                            background: `linear-gradient(125deg, ${item.neonHex}26 0%, var(--color-ink-900) 80%)`,
+                            border: `1px solid ${item.neonHex}55`,
+                            boxShadow: `0 0 18px -6px ${item.neonHex}66`,
+                          }
+                        : { border: '1px solid transparent' }
                     }
-                  : { border: '1px solid transparent' }
-              }
-            >
-              <Icon
-                className="w-4 h-4 shrink-0 transition-colors"
-                style={{ color: isActive ? item.neonHex : 'var(--color-paper-400)' }}
-                strokeWidth={2}
-              />
-              <span
-                className="flex-1 text-[13px] font-bold truncate transition-colors"
-                style={{ color: isActive ? item.neonHex : undefined }}
-              >
-                {item.label}
-              </span>
-              {typeof count === 'number' && count > 0 && (
-                <span
-                  className="font-mono text-[11px] font-semibold tabular-nums"
-                  style={{ color: isActive ? item.neonHex : 'var(--color-amberx-500)' }}
-                >
-                  {count}
-                </span>
-              )}
-            </button>
-          );
-        })}
+                  >
+                    {isActive && (
+                      <span
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full"
+                        style={{ background: item.neonHex, boxShadow: `0 0 10px ${item.neonHex}` }}
+                      />
+                    )}
+                    <Icon
+                      className="w-4 h-4 shrink-0 transition-colors"
+                      style={{ color: isActive ? item.neonHex : 'var(--color-paper-500)' }}
+                      strokeWidth={2}
+                    />
+                    <span
+                      className="flex-1 text-[13px] font-bold truncate transition-colors"
+                      style={{ color: isActive ? item.neonHex : undefined }}
+                    >
+                      {item.label}
+                    </span>
+                    {typeof count === 'number' && count > 0 && (
+                      <span
+                        className="font-mono text-[11px] font-semibold tabular-nums"
+                        style={{ color: isActive ? item.neonHex : 'var(--color-amberx-500)' }}
+                      >
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Roster Governance Footer */}

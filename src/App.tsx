@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AgentBotsWorkspace } from './components/AgentBotsWorkspace';
+import { BootSequence } from './components/BootSequence';
 import { AgentsRosterView } from './components/AgentsRosterView';
 import { AuditReviewView } from './components/AuditReviewView';
 import { CentralAuditView } from './components/CentralAuditView';
@@ -46,6 +47,9 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [activeSection, setActiveSection] = useState<NavSection>('home');
+  const [bootDone, setBootDone] = useState(() => {
+    try { return sessionStorage.getItem('gov360-booted') === '1'; } catch { return true; }
+  });
   const [userName, setUserName] = useState('Operador');
   const [selectedBotAgentId, setSelectedBotAgentId] = useState<string>('00');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -82,6 +86,18 @@ export default function App() {
       })
       .catch(() => {});
   }, [authenticated]);
+
+  function navigate(section: NavSection) {
+    const apply = () => setActiveSection(section);
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => { finished: Promise<void> };
+    };
+    if (doc.startViewTransition) {
+      doc.startViewTransition(apply);
+    } else {
+      apply();
+    }
+  }
 
   function handleLogout() {
     fetch('/api/auth/logout', { method: 'POST' }).finally(() => {
@@ -482,7 +498,7 @@ export default function App() {
     <div className="min-h-screen flex bg-ink-950 text-paper-100 blueprint-grid">
       <Sidebar
         activeSection={activeSection}
-        onSelectSection={setActiveSection}
+        onSelectSection={navigate}
         openHandoffsCount={openHandoffsCount}
         pendingAuditCount={pendingAuditCount}
         mobileOpen={mobileMenuOpen}
@@ -541,7 +557,7 @@ export default function App() {
               userName={userName}
               theme={theme}
               onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-              onNavigate={setActiveSection}
+              onNavigate={navigate}
             />
           )}
 
@@ -640,6 +656,14 @@ export default function App() {
         onAddRepository={handleAddRepository}
       />
       <ChatBootWidget />
+      {authenticated && !bootDone && (
+        <BootSequence
+          onDone={() => {
+            try { sessionStorage.setItem('gov360-booted', '1'); } catch { /* noop */ }
+            setBootDone(true);
+          }}
+        />
+      )}
     </div>
   );
 }
