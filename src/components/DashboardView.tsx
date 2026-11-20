@@ -22,6 +22,8 @@ import type { NavSection } from './Sidebar';
 import type { ThemeMode } from './ThemeToggle';
 import type { Handoff, IndependentReview, Mission, WorkspaceState } from '../types/governance';
 import { OFFICIAL_AGENTS } from '../data/agentsRoster';
+import { ParticleField } from './ParticleField';
+import { TelemetryCanvas } from './TelemetryCanvas';
 
 interface DashboardViewProps {
   workspace: WorkspaceState;
@@ -285,6 +287,20 @@ export function DashboardView({ workspace, userName, theme, onToggleTheme, onNav
     { label: 'Agentes no elenco', value: stats.agents, sub: 'prontos para dispatch', icon: Users, color: 'text-ok-400', bg: 'bg-ok-500/10' },
   ];
 
+  const telemetry = useMemo(() => {
+    const days: number[] = Array(14).fill(0);
+    const nowT = new Date();
+    const items = [...(workspace.handoffs as Handoff[]), ...(workspace.reviews as IndependentReview[]), ...(workspace.missions as Mission[])];
+    for (const it of items) {
+      const d = new Date((it as { createdAt?: string; resolution?: { resolvedAt?: string } }).resolution?.resolvedAt || (it as { createdAt?: string }).createdAt || 0).getTime();
+      if (Number.isNaN(d)) continue;
+      const dayIndex = Math.floor((nowT.getTime() - d) / 86400000);
+      if (dayIndex >= 0 && dayIndex < 14) days[13 - dayIndex] += 1;
+    }
+    return days;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspace]);
+
   const activity = useMemo(() => buildActivity(workspace), [workspace]);
   const notifications = useMemo(() => {
     const list: { icon: typeof Bell; text: string; tone: 'alert' | 'amber' | 'signal' | 'ok' }[] = [];
@@ -332,14 +348,26 @@ export function DashboardView({ workspace, userName, theme, onToggleTheme, onNav
 
   return (
     <div className="space-y-5">
-      {/* ── Cabeçalho de comando ── */}
-      <div className="dash-rise flex flex-wrap items-end justify-between gap-5">
+      {/* ── Cabeçalho de comando (hero cinematográfico) ── */}
+      <div className="panel relative overflow-hidden rounded-3xl dash-rise">
+        <ParticleField className="absolute inset-0 w-full h-full opacity-70 pointer-events-none" />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(700px 300px at 15% 0%, rgba(37,99,235,0.14), transparent 60%), radial-gradient(500px 260px at 90% 100%, rgba(167,139,250,0.10), transparent 60%)' }}
+        />
+        <div className="relative flex flex-wrap items-end justify-between gap-5 p-6 lg:p-8">
         <div>
-          <h1 className="font-display text-4xl font-bold tracking-tight leading-none">
+          <div className="flex items-center gap-2.5 mb-3">
+            <span className="w-2 h-2 rounded-full bg-ok-400 dash-blink" />
+            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.24em] text-ok-400">
+              Deck de comando · operacional
+            </span>
+          </div>
+          <h1 className="font-display text-4xl lg:text-5xl font-bold tracking-tight leading-none">
             <span className="text-amberx-300">Sala de </span>
             <span className="text-signal-400">Comando</span>
           </h1>
-          <p className="text-sm mt-2.5 capitalize">
+          <p className="text-sm mt-3 capitalize">
             <span className="text-violet-300">{dateStr}</span>
             <span className="text-paper-400"> — olá, </span>
             <span className="text-amberx-400 font-bold">{firstName(userName)}</span>
@@ -365,6 +393,7 @@ export function DashboardView({ workspace, userName, theme, onToggleTheme, onNav
               </div>
             )}
           </div>
+        </div>
         </div>
       </div>
 
@@ -457,8 +486,20 @@ export function DashboardView({ workspace, userName, theme, onToggleTheme, onNav
           )}
         </div>
 
-        {/* Direita: notificações + calendário + sugestões */}
+        {/* Direita: telemetria + notificações + calendário */}
         <div className="lg:col-span-4 space-y-4">
+          <div className="panel rounded-2xl p-4 dash-rise dash-rise-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-signal-400" />
+                <h3 className="font-display text-sm font-bold text-signal-300">Telemetria · 14 dias</h3>
+              </div>
+              <span className="text-[10px] font-mono text-paper-400 tabular-nums">
+                {telemetry.reduce((a, b) => a + b, 0)} eventos
+              </span>
+            </div>
+            <TelemetryCanvas series={telemetry} height={130} />
+          </div>
           <div className="panel rounded-2xl p-4 dash-rise dash-rise-4">
             <div className="flex items-center gap-2 mb-3">
               <Bell className="w-4 h-4 text-amberx-400" />
@@ -497,6 +538,23 @@ export function DashboardView({ workspace, userName, theme, onToggleTheme, onNav
               </li>
             ))}
           </ul>
+        </div>
+      </div>
+
+      {/* ── Elenco em marquee ── */}
+      <div className="dash-marquee panel rounded-2xl py-3 overflow-hidden dash-rise dash-rise-5">
+        <div className="dash-marquee-track items-center">
+          {[0, 1].map((copy) => (
+            <div key={copy} className="flex items-center shrink-0">
+              {OFFICIAL_AGENTS.map((a) => (
+                <span key={`${copy}-${a.id}`} className="flex items-center gap-2 px-5">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: a.persona.accentHex }} />
+                  <span className="font-display text-sm font-bold" style={{ color: a.persona.accentHex }}>{a.persona.codename}</span>
+                  <span className="text-[10px] font-mono text-paper-500 uppercase tracking-wider">{a.name}</span>
+                </span>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
 
