@@ -2,7 +2,7 @@ import { spawn, execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-export type AdapterKind = 'cli' | 'devin' | 'subagente' | 'manual' | 'mock';
+export type AdapterKind = 'cli' | 'devin' | 'gemini' | 'subagente' | 'manual' | 'mock';
 
 export type ExecutionStatus = 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'TIMEOUT' | 'CANCELLED';
 
@@ -251,6 +251,44 @@ export function createManualAdapter(): ProviderAdapter {
   };
 }
 
+export function createGeminiAdapter(): ProviderAdapter {
+  return {
+    kind: 'gemini',
+    async execute(req: AdapterRequest): Promise<AdapterResult> {
+      const startedAt = new Date();
+      try {
+        const { getGeminiClient, GEMINI_DEFAULT_MODEL } = await import('../geminiService');
+        const ai = getGeminiClient();
+        const response = await ai.models.generateContent({
+          model: GEMINI_DEFAULT_MODEL,
+          contents: req.prompt,
+        });
+
+        const output = response.text || '(Sem saída textual gerada pelo Gemini)';
+        return {
+          executionId: req.executionId,
+          status: 'SUCCEEDED',
+          exitCode: 0,
+          output,
+          startedAt: startedAt.toISOString(),
+          endedAt: new Date().toISOString(),
+          durationMs: Date.now() - startedAt.getTime(),
+        };
+      } catch (err) {
+        return {
+          executionId: req.executionId,
+          status: 'FAILED',
+          exitCode: 1,
+          error: err instanceof Error ? err.message : String(err),
+          startedAt: startedAt.toISOString(),
+          endedAt: new Date().toISOString(),
+          durationMs: Date.now() - startedAt.getTime(),
+        };
+      }
+    },
+  };
+}
+
 const registry = new Map<AdapterKind, ProviderAdapter>();
 
 export function registerAdapter(kind: AdapterKind, adapter: ProviderAdapter): void {
@@ -263,6 +301,7 @@ export function getAdapter(kind: AdapterKind): ProviderAdapter {
   switch (kind) {
     case 'cli': return createCliAdapter();
     case 'devin': return createDevinAdapter();
+    case 'gemini': return createGeminiAdapter();
     case 'manual': return createManualAdapter();
     case 'mock': return createMockAdapter();
     case 'subagente': return createManualAdapter();
@@ -295,6 +334,7 @@ export function runCliSync(cmd: string, opts?: { cwd?: string; timeoutMs?: numbe
 export default {
   createCliAdapter,
   createDevinAdapter,
+  createGeminiAdapter,
   createMockAdapter,
   createManualAdapter,
   registerAdapter,

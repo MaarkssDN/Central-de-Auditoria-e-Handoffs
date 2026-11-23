@@ -7,8 +7,10 @@ import {
   Clock,
   Copy,
   FileText,
+  Loader2,
   Plus,
   Search,
+  Sparkles,
   X,
 } from 'lucide-react';
 import { DEFAULT_PRIORITY_BLOCKERS, OFFICIAL_AGENTS } from '../data/agentsRoster';
@@ -71,6 +73,55 @@ export function HandoffsCenterView({
   const [expectedTest, setExpectedTest] = useState('');
   const [additionalContext, setAdditionalContext] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Gemini Diagnosis State
+  const [geminiPrompt, setGeminiPrompt] = useState('');
+  const [geminiLoading, setGeminiLoading] = useState(false);
+  const [geminiExplanation, setGeminiExplanation] = useState<string | null>(null);
+  const [geminiError, setGeminiError] = useState<string | null>(null);
+
+  async function handleGeminiDiagnose() {
+    if (!geminiPrompt.trim()) return;
+    setGeminiLoading(true);
+    setGeminiError(null);
+    setGeminiExplanation(null);
+    try {
+      const res = await fetch('/api/gemini/diagnose-handoff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          problemDescription: geminiPrompt.trim(),
+          repo: waves[0] ? { id: repoId, name: repoId } : undefined,
+          fromAgentId,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(err.error || `Erro HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (data.toAgentId) setToAgentId(data.toAgentId);
+      if (data.slug) setSlug(data.slug);
+      if (data.priority) setPriority(data.priority);
+      if (data.blockerRef) setBlockerRef(data.blockerRef);
+      if (data.problem) setProblem(data.problem);
+      if (Array.isArray(data.filesInvolved) && data.filesInvolved.length > 0) {
+        setFilesText(data.filesInvolved.join('\n'));
+      }
+      if (data.evidence) setEvidence(data.evidence);
+      if (data.requiredChange) setRequiredChange(data.requiredChange);
+      if (data.expectedTest) setExpectedTest(data.expectedTest);
+      if (data.ownershipExplanation) {
+        setGeminiExplanation(data.ownershipExplanation);
+      }
+    } catch (error) {
+      setGeminiError(error instanceof Error ? error.message : 'Falha ao diagnosticar com Gemini.');
+    } finally {
+      setGeminiLoading(false);
+    }
+  }
 
   const filtered = handoffs.filter((h) => {
     const matchStatus = statusFilter === 'all' || h.status === statusFilter;
@@ -592,6 +643,65 @@ export function HandoffsCenterView({
                   {formError}
                 </div>
               )}
+
+              {/* Gemini Handoff Diagnostician Assistant */}
+              <div className="p-3.5 rounded-xl border border-sky-500/30 bg-sky-500/10 text-xs space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-sky-600 shrink-0" />
+                  <div>
+                    <span className="font-semibold text-slate-900">Diagnóstico Inteligente com Gemini (§15 & §18)</span>
+                    <p className="text-[11px] text-slate-600">
+                      Descreva o sintoma ou erro. O Gemini identifica a propriedade de arquivos (§15) e preenche a especificação oficial do handoff.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={geminiPrompt}
+                    onChange={(e) => setGeminiPrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleGeminiDiagnose();
+                      }
+                    }}
+                    placeholder="ex: Erro de violação de tenant no Supabase RLS ao alterar credencial"
+                    className="flex-1 h-8 px-2.5 text-xs border border-sky-300 rounded-lg bg-white"
+                  />
+                  <button
+                    type="button"
+                    disabled={geminiLoading || !geminiPrompt.trim()}
+                    onClick={handleGeminiDiagnose}
+                    className="h-8 px-3 text-xs font-medium text-white bg-sky-600 hover:bg-sky-700 disabled:opacity-50 rounded-lg flex items-center gap-1.5 shrink-0"
+                  >
+                    {geminiLoading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Diagnosticando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Diagnosticar com Gemini</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {geminiExplanation && (
+                  <div className="text-[11px] p-2 rounded-lg bg-sky-50 text-sky-800 border border-sky-200">
+                    <strong>Atribuição §15:</strong> {geminiExplanation}
+                  </div>
+                )}
+
+                {geminiError && (
+                  <div className="text-[11px] p-2 rounded-lg bg-rose-50 text-rose-800 border border-rose-200">
+                    {geminiError}
+                  </div>
+                )}
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>

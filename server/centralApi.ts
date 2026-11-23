@@ -27,6 +27,12 @@ import {
 import { appendEvent } from './phase1/executions';
 import { registerWorktree, findOrphanedWorktrees, listWorktrees } from './phase1/worktree';
 import { getAdapter, type AdapterKind } from './phase1/adapters';
+import {
+  getDbStats,
+  getChatMessages,
+  saveChatMessage,
+  clearChatMessages,
+} from './db';
 import './centralNotify';
 
 function currentStatusOf(relPath: string): string {
@@ -44,6 +50,66 @@ export function createCentralRouter(): Router {
   router.get('/events/recent', (_req, res) => res.json({ events: recentCentralEvents(100) }));
 
   router.get('/metrics', (_req, res) => res.json(getCentralMetrics()));
+
+  // ── SQLite: status e histórico de chat ────────────────────────────────
+  router.get('/db-stats', (_req, res) => {
+    try {
+      res.json(getDbStats());
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  router.get('/chat/messages', (req, res) => {
+    const { sessionId = 'default', limit, offset } = req.query as {
+      sessionId?: string;
+      limit?: string;
+      offset?: string;
+    };
+    try {
+      const messages = getChatMessages(
+        sessionId,
+        limit ? Number(limit) : 100,
+        offset ? Number(offset) : 0,
+      );
+      res.json({ messages });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  router.post('/chat/messages', (req, res) => {
+    const { sessionId = 'default', role, content, agentId } = req.body as {
+      sessionId?: string;
+      role?: string;
+      content?: string;
+      agentId?: string;
+    };
+    if (!role || !content) {
+      res.status(400).json({ error: 'Informe role e content para a mensagem.' });
+      return;
+    }
+    try {
+      const id = saveChatMessage(sessionId, role, content, agentId);
+      res.status(201).json({ id, ok: true });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
+
+  router.delete('/chat/messages', (req, res) => {
+    const { sessionId } = req.query as { sessionId?: string };
+    try {
+      const changes = clearChatMessages(sessionId);
+      res.json({ cleared: changes, ok: true });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ error: msg });
+    }
+  });
 
   router.get('/executions', (req, res) => {
     const { days, handoff, limit, active } = req.query as Record<string, string>;
@@ -361,7 +427,7 @@ export function createCentralRouter(): Router {
       worktree, branch, repoPath,
     });
 
-    const kind = (provider || 'cli') as AdapterKind;
+    const kind = (provider === 'gemini-api' ? 'gemini' : provider || 'cli') as AdapterKind;
     const adapter = getAdapter(kind);
     appendEvent({
       executionId, handoff: relHandoff, type: 'ADAPTER_STARTED', actor: owner,

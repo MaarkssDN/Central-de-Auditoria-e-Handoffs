@@ -24,7 +24,7 @@ export const PROVIDER_CATALOG: ProviderDef[] = [
   { id: 'codex', nome: 'OpenAI Codex', kind: 'cli', detect: ['codex'], descricao: 'Codex CLI — `codex exec` no worktree do agente.' },
   { id: 'claude', nome: 'Claude (Code)', kind: 'cli', detect: ['claude'], descricao: 'Claude Code CLI — `claude -p` no worktree.' },
   { id: 'chatgpt', nome: 'ChatGPT (API)', kind: 'api', envKeys: ['OPENAI_API_KEY'], defaultModel: 'gpt-4o-mini', descricao: 'API OpenAI — respostas e dispatch via chat completions.' },
-  { id: 'gemini', nome: 'Gemini', kind: 'api', envKeys: ['GEMINI_API_KEY'], defaultModel: 'gemini-2.0-flash', descricao: 'Google Gemini API (já usada pelo runtime de bots).' },
+  { id: 'gemini', nome: 'Gemini', kind: 'api', envKeys: ['GEMINI_API_KEY'], defaultModel: 'gemini-4-hydrogen', descricao: 'Google Gemini API (usada pelos agentes e auditoria independente).' },
   { id: 'antigravity', nome: 'Antigravity', kind: 'manual', descricao: 'Sem CLI headless — pacote de prompt em central/estado/fila/.' },
   { id: 'devin', nome: 'Devin', kind: 'api', envKeys: ['DEVIN_API_KEY'], descricao: 'API Devin — cria sessões remotas (adapter existente).' },
   { id: 'copilot', nome: 'GitHub Copilot', kind: 'cli', detect: ['copilot'], descricao: 'Copilot CLI no VS Code/terminal — shim interativo.' },
@@ -150,7 +150,7 @@ export async function dispatchToProvider(providerId: string, prompt: string): Pr
     try {
       let output: string;
       if (providerId === 'gemini') {
-        output = await callGemini({ apiKey: key, model: cfg.model || def.defaultModel || 'gemini-2.0-flash', prompt });
+        output = await callGemini({ apiKey: key, model: cfg.model || def.defaultModel || 'gemini-4-hydrogen', prompt });
       } else if (providerId === 'devin') {
         const base = process.env.DEVIN_API_BASE || 'https://api.devin.ai/v1';
         const res = await fetch(`${base}/sessions`, {

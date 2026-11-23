@@ -20,34 +20,7 @@ import {
   getAgentById,
   resolveFileOwnership,
 } from '../src/utils/governanceEngine';
-
-const MODEL_ID = 'gemini-4-hydrogen';
-
-function getGeminiClient(): GoogleGenAI {
-  // Prioridade: env → config salva em Conexões de IA (SQLite local).
-  let apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    try {
-      const row = getDb()
-        .prepare("SELECT config FROM provider_configs WHERE provider_id = 'gemini'")
-        .get() as { config: string } | undefined;
-      apiKey = row ? (JSON.parse(row.config) as { apiKey?: string }).apiKey : undefined;
-    } catch { /* db indisponível */ }
-  }
-  if (!apiKey) {
-    throw new Error(
-      'GEMINI_API_KEY não configurada. Configure a chave no painel Conexões de IA ou em Settings > Secrets para executar agentes autônomos.'
-    );
-  }
-  return new GoogleGenAI({
-    apiKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      },
-    },
-  });
-}
+import { getGeminiClient, GEMINI_DEFAULT_MODEL as MODEL_ID } from './geminiService';
 
 async function fetchGitHubFileContent(fullName: string, branch: string, filePath: string): Promise<string> {
   const cleanPath = filePath.replace(/^\/+/, '');
