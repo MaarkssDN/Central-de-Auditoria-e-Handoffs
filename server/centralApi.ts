@@ -404,6 +404,12 @@ export function createCentralRouter(): Router {
       return;
     }
 
+    // HD-10: provider 'gemini' é restrito às rotas /api/gemini/* — não executa handoffs via dispatch.
+    if ((provider || 'cli') === 'gemini' || provider === 'gemini-api') {
+      res.status(400).json({ error: "Provider 'gemini' é restrito às rotas /api/gemini/* e não pode executar handoffs via dispatch." });
+      return;
+    }
+
     const owner = agentId || provider || 'executor';
     const claim = claimLock({ handoffRelPath: handoff, owner, worktree });
     if (!claim.ok) {
@@ -427,7 +433,7 @@ export function createCentralRouter(): Router {
       worktree, branch, repoPath,
     });
 
-    const kind = (provider === 'gemini-api' ? 'gemini' : provider || 'cli') as AdapterKind;
+    const kind = (provider || 'cli') as AdapterKind;
     const adapter = getAdapter(kind);
     appendEvent({
       executionId, handoff: relHandoff, type: 'ADAPTER_STARTED', actor: owner,
