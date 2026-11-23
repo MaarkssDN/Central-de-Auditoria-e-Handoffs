@@ -31,3 +31,23 @@ Decisões já respondidas (registradas em `central/decisoes/PENDENTES.md`, **nã
 | HD-13 | Corte de release / SHA candidato | Define urgência real do ARQ-13 (30/11) | Definir data ou deixar waivers expirarem | Se release ≤30/11 → ARQ-13 P0 imediato | PENDENTE |
 
 **Regra:** nenhuma destas foi aprovada por inferência. Itens PENDENTE bloqueiam apenas as tarefas listadas em `09-MATRIZ-DEPENDENCIAS.md`.
+
+---
+
+## Atualização — respostas do Orquestrador Humano (2026-11-23)
+
+| ID | Decisão | Resultado |
+|---|---|---|
+| HD-01 | Commitar trabalho de 21/11 | **APROVADA e EXECUTADA** — branch `feat/gemini-provider-chat`, commits `fc55d73` + `0fd177b` (HD-10), pushed |
+| HD-02 | PRs #9–12 | **APROVADA e EXECUTADA** — mergeados em ordem (#9→#12); main em `311ee22` |
+| HD-03 | Versionamento de `central/estado/` | **CONFLITO REGISTRADO** — decidido "ignorar tudo", porém sessão paralela commitou o estado volátil no commit `743c6d7` ("1") na branch feat. Untrack fica pendente de reconciliação com essa sessão |
+| HD-04 | Podar branches/worktrees | **APROVADA e EXECUTADA** — 3 worktrees removidos, 10 branches locais + 9 remotas deletadas; consolidacao Antigravity preservada em `central/consolidacao-antigravity-20261121/` |
+| HD-05 | Senha admin | PENDENTE — usuário definirá a senha |
+| HD-06 | Webhook | **DECIDIDO** — sem notificações por ora (env permanece vazio) |
+| HD-07 | Landing órfã | **DECIDIDO** — manter como está |
+| HD-08 | Multi-usuário | **DECIDIDO** — manter single-user |
+| HD-09 | Revisor plataforma | **DECIDIDO** — sessão revisora separada (`subagent_explore`) por entrega |
+| HD-10 | Adapter Gemini p/ dispatch | **APROVADA e EXECUTADA** — restrito a `/api/gemini/*`; dispatch rejeita provider gemini (commit `0fd177b`) |
+| HD-11 | Merges produto | **DECIDIDO** — aguardar pareceres 24 antes de qualquer merge |
+| HD-12 | Drop stash Birthub | **APROVADA e EXECUTADA** — `stash@{0}` dropado em `C:\Github\Birthub-360` |
+| HD-13 | Data de release produto | **ESCLARECIDO** — Birthub-360 é trilha separada da Central; ARV-13/waivers segue como pendência do produto sem data definida nesta governança |

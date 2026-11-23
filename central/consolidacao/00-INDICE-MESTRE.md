@@ -47,6 +47,10 @@
 - Governança: `central/COORDENADOR.md`, `central/README.md`, `central/TEMPLATE-HANDOFF.md`
 - Consolidado anterior da onda: `central/HANDOFF-ENCERRAMENTO-20261120.md`
 
+## Arquivo histórico
+
+`central/consolidacao-antigravity-20261121/` — consolidação anterior produzida por sessão Antigravity em 21/11, preservada antes da remoção do worktree. **Não é fonte de verdade**; a fonte é esta pasta (00–17).
+
 ## Avisos
 
 - Os documentos desta pasta foram escritos na working tree. **Estado de versionamento: ver `01-ESTADO-GLOBAL-CENTRAL.md` §Versionamento** — não assumir commit/push.
