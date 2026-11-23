@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist de Handoffs — Auditoria Release-Readiness 2026-11-18</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#8b949e; --accent:#58a6ff;
+    --green:#3fb950; --amber:#d29922; --red:#f85149; --blue:#58a6ff; --gray:#8b949e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.55;padding:32px 20px}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{font-size:26px;margin-bottom:6px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:24px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:28px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+  .card .num{font-size:30px;font-weight:700}
+  .card .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .c-green .num{color:var(--green)} .c-amber .num{color:var(--amber)}
+  .c-red .num{color:var(--red)} .c-blue .num{color:var(--blue)} .c-gray .num{color:var(--gray)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;font-size:13px;color:var(--muted)}
+  .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11.5px;font-weight:600;white-space:nowrap}
+  .b-done{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.4)}
+  .b-partial{background:rgba(210,153,34,.15);color:var(--amber);border:1px solid rgba(210,153,34,.4)}
+  .b-improve{background:rgba(248,81,73,.12);color:#ff9b94;border:1px solid rgba(248,81,73,.4)}
+  .b-open{background:rgba(139,148,158,.15);color:var(--gray);border:1px solid rgba(139,148,158,.4)}
+  .b-branch{background:rgba(88,166,255,.12);color:var(--blue);border:1px solid rgba(88,166,255,.4)}
+  details{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden}
+  summary{cursor:pointer;padding:16px 18px;list-style:none;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  summary::-webkit-details-marker{display:none}
+  summary .agent{font-weight:700;font-size:15px;min-width:110px}
+  summary .file{color:var(--muted);font-size:12px;font-family:Consolas,monospace}
+  summary .verdict{margin-left:auto}
+  .body{padding:0 18px 18px;border-top:1px solid var(--border)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--border)}
+  td{padding:9px 10px;border-bottom:1px solid #21262d;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.id{font-family:Consolas,monospace;font-size:12px;color:var(--accent);white-space:nowrap}
+  td.ev{color:var(--muted);font-size:12px}
+  .note{background:var(--panel2);border-left:3px solid var(--amber);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;margin:10px 0;color:#e8d9a8}
+  .note.blue{border-color:var(--blue);color:#c9defc}
+  footer{margin-top:30px;color:var(--muted);font-size:12px;text-align:center}
+  .pct{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Checklist de Handoffs — Release-Readiness 2026-11-18</h1>
+<p class="sub">Verificação item a item dos 19 handoffs de <code>central/ondas/release-readiness-2026-11-18/handoffs/</code> contra o código em <code>C:\Github\Birthub-360</code> (branch <code>agente/00-integracao-skills</code> = <code>origin/main @ 5174664b2</code>). Gerado em 20/11/2026.</p>
+
+<div class="cards">
+  <div class="card c-green"><div class="num">4</div><div class="lbl">Concluídos</div></div>
+  <div class="card c-amber"><div class="num">12</div><div class="lbl">Parciais</div></div>
+  <div class="card c-red"><div class="num">2</div><div class="lbl">Precisa melhoria</div></div>
+  <div class="card c-gray"><div class="num">1</div><div class="lbl">Não feito</div></div>
+</div>
+
+<div class="legend">
+  <span><span class="badge b-done">CONCLUÍDO</span> evidência completa no código</span>
+  <span><span class="badge b-partial">PARCIAL</span> parte entregue, resto pendente</span>
+  <span><span class="badge b-branch">EM BRANCH</span> fix existe mas não mergeado em main</span>
+  <span><span class="badge b-improve">PRECISA MELHORIA</span> tocado mas insuficiente</span>
+  <span><span class="badge b-open">NÃO FEITO</span> sem evidência de correção</span>
+</div>
+
+<div class="note blue">
+<strong>Contexto decisório (central/decisoes/PENDENTES.md, respostas de 19/11):</strong>
+D-02 mobile é escopo Day-1 · D-03 voz+enxame no escopo · D-04 defaults de retenção propostos (ratificação pendente) ·
+D-05 consentimento IA deve persistir no banco · D-06 clusters gated devem ser REINTEGRADOS (não removidos).
+Vários itens antes "condicionais" viraram bloqueadores reais.
+</div>
+
+<!-- ============ 00 ============ -->
+<details open>
+<summary><span class="agent">00 → 00</span><span class="file">00-para-00-decisoes-e-higiene.md</span><span class="badge b-improve verdict">PRECISA DE MELHORIA</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0052</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>public/design-lab/</code> continua na raiz pública; <code>agente-codigo-local/</code> segue como segundo app no repo.</td></tr>
+<tr><td class="id">DEBT-0053</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev">4 componentes com <code>// @ts-nocheck</code> ainda presentes: BirthHubOrbit360, Gamified3DOrb, BrandOrb, RevenueSignalOrb.</td></tr>
+<tr><td class="id">DEBT-0054</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev"><code>framer-motion@13.1.1</code> e <code>motion@13.4.3</code> coexistem em package.json; <code>knip.json</code> existe mas deps mortas não foram podadas; stacks LLM não consolidadas.</td></tr>
+<tr><td class="id">DEBT-0055</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>.gitleaks.toml:88</code> mantém allowlist ampla <code>\.agents/runs/.*\.md$</code>.</td></tr>
+<tr><td class="id">ARQ-14</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>docs/release/PRODUCTION-READINESS.md</code> ainda declara "RELEASE APPROVED" de 08/10 sem re-emissão contra commit atual.</td></tr>
+<tr><td class="id">ARQ-11</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>scripts/create-user-marcelin.ts:23</code> mantém fallback de senha <code>'00000000'</code>.</td></tr>
+<tr><td class="id">ARQ-04/15</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Clusters mortos persistem: <code>src/features/voice/</code>, <code>prospecting/outbound/</code> (gated 503), voice-hub frontend, temporal-workers/crawlee fora do tsconfig — coerente com D-06 (reintegrar), mas reintegração não executada.</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 01 ============ -->
+<details open>
+<summary><span class="agent">00 → 01</span><span class="file">00-para-01-schema-rls-migrations.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<div class="note">Resolução registrada na branch <code>agente/01-schema-rls-migrations</code> (commit 150c1686c) — <strong>não mergeada em main</strong>.</div>
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0006</td><td><span class="badge b-branch">EM BRANCH</span></td><td class="ev">Main ainda usa <code>process.env.BITRIX24_WEBHOOK_URL</code> cru em <code>LeadUseCases.ts:575</code> e <code>bitrix/service/settings.ts:15</code>; env não declarada em <code>env.ts</code>. Fix (allowlist fail-closed) só existe na branch.</td></tr>
+<tr><td class="id">DEBT-0018</td><td><span class="badge b-branch">EM BRANCH</span></td><td class="ev">Main: <code>contact.service.ts</code>/<code>PrismaContactRepository.ts</code> não validam tenant da company. <code>assertCompanyBelongsToOrg</code> ausente em main.</td></tr>
+<tr><td class="id">DEBT-0020</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>bitrix/service/leads.ts:329</code> e <code>deals.ts:441</code> usam <code>runInTransaction</code> por item (company+contact+lead+audit atômicos; enrichment pós-commit).</td></tr>
+<tr><td class="id">DEBT-0056</td><td><span class="badge b-branch">EM BRANCH</span></td><td class="ev">Main: <code>AUDITABLE_MODELS</code> ainda com 9 models (<code>prisma-interceptors.ts:162</code>). Extensão p/ Agent, AgentSession, CadenceSequence, CopilotoConversation, Workflow só na branch.</td></tr>
+<tr><td class="id">DEBT-0057</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>scripts/security/check-rls-coverage.ts</code> continua gate estático por schema/migrations; sem inventário explícito de tabelas filhas nem verificação runtime vs <code>pg_policy</code>.</td></tr>
+<tr><td class="id">DEBT-0058</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev"><code>tests/integration/proposalVersioning.test.ts</code> mantém 2× <code>it.skip</code> no fluxo "Pago" (linhas 221, 289); <code>piiSearchIndex*</code> ausente do repo.</td></tr>
+<tr><td class="id">DEBT-DB-08</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev">Lacunas FK/tenant P3 sem evidência de correção (DataSubjectRequest.contactId, Setting.organizationId nullable etc.).</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 01A ============ -->
+<details>
+<summary><span class="agent">00 → 01A</span><span class="file">00-para-01A-retencao.md</span><span class="badge b-open verdict">NÃO FEITO (bloqueado por D-04)</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0021</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>src/shared/services/retentionPurge.service.ts</code> continua sem nenhum caller/agendador em main; único purge agendado é <code>bitrix-extraction-purge</code> (worker.ts:202). D-04 propôs defaults de retenção — ratificação formal pendente.</td></tr>
+<tr><td class="id">VOZ-01/02</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev">VoiceCallLog/Note/Activity/ThreeCXCallEvent.rawPayload seguem fora do inventário de expurgo.</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 02 ============ -->
+<details open>
+<summary><span class="agent">00 → 02</span><span class="file">00-para-02-ux-crm.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0024</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Botão morto removido da CommandPalette (comentário "no-op" em CommandPalette.tsx:306-309); porém LeadForm/DealForm e consumo de intent no CrmBoard <strong>ainda não existem</strong> — criação manual de lead/oportunidade segue impossível.</td></tr>
+<tr><td class="id">UX-10</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>CrmBoard.tsx:96-130</code>: colunas de deal agora derivam de <code>CrmPipelineStage</code> dinâmico (<code>resolveDealPipelineColumns</code>); DEAL_COLUMNS hardcoded virou apenas fallback.</td></tr>
+<tr><td class="id">UX-03</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>GamificationView.tsx:40-56</code>: erro de API agora seta <code>loadError</code> com mensagem — não vira mais empty state silencioso.</td></tr>
+<tr><td class="id">UX-07</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>SinglePageDashboard.tsx:82,174</code>: <code>pipelineValue ?? null</code> com render condicional "—" em vez de R$ 0.</td></tr>
+<tr><td class="id">UX-02</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>PlaybooksHub.tsx:225</code>: "Abrir Roteiros" navega para <code>/app/roteiros</code> → <code>RoteirosHub</code> real (AppLayout.tsx:484).</td></tr>
+<tr><td class="id">UX-08</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev"><code>PillarSettingsPlaceholder.tsx</code> ainda existe; abas settings_pillar parcialmente placeholder.</td></tr>
+<tr><td class="id">UX-11</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>CrmBoard.tsx:194</code>: deep link <code>?lead=</code> lido via <code>useSearchParams</code>.</td></tr>
+<tr><td class="id">UX-04/09</td><td><span class="badge b-open">NÃO VERIFICADO</span></td><td class="ev">War Room heurística e perfil read-only sem evidência de mudança nesta verificação.</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 04 ============ -->
+<details open>
+<summary><span class="agent">00 → 04</span><span class="file">00-para-04-crm-integridade.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0016</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>LeadUseCases.ts:735-775</code>: status+owner/tags na mesma escrita via <code>updateLeadStatus(..., extraFields)</code>; <code>organizationId</code> no where; failedCount honesto por item.</td></tr>
+<tr><td class="id">DEBT-0017</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>mesaTratamento.routes.ts:290-318</code> ainda grava <code>data.status</code> direto via <code>prisma.lead.update</code> (sem LeadStageHistory/pipeline/closedAt, where sem orgId). <code>aiPendingAction.service.ts:258-263</code> (start_cadence) usa <code>updateMany</code> direto — orgId adicionado, mas fora do fluxo canônico.</td></tr>
+<tr><td class="id">DEBT-0018</td><td><span class="badge b-branch">EM BRANCH</span></td><td class="ev">Ver handoff 01 — correção não mergeada.</td></tr>
+<tr><td class="id">DEBT-0019</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>PrismaCompanyRepository.ts:181-185</code>: <code>prisma.company.delete</code> hard delete; deletedAt/deletedBy/deleteReason do schema seguem sem uso.</td></tr>
+<tr><td class="id">DEBT-0028</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>PrismaCrm360Repository.ts:484-505</code>: convertLead zera <code>closedAt</code> incondicionalmente, sem validação de estado terminal.</td></tr>
+<tr><td class="id">DEBT-0030</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>leadStageHistory.service.ts:44-50</code>: catch segue engolindo erro (best-effort) — P2 mantido.</td></tr>
+<tr><td class="id">DEBT-0031/0032</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev"><code>contact.service.ts:71,78</code> agora inclui orgId no where de update/delete; <code>PrismaActivityRepository.ts:176</code> update ainda <code>where:{id}</code> sem orgId; fallback de funil hardcoded permanece em CrmBoard.</td></tr>
+<tr><td class="id">DEBT-CRM-10/11</td><td><span class="badge b-open">NÃO VERIFICADO</span></td><td class="ev">TMQ null por stageName e getMetrics mascarando erro — sem evidência de correção.</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 05 ============ -->
+<details open>
+<summary><span class="agent">00 → 05</span><span class="file">00-para-05-prospeccao-cold-email.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0005</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>webScraper.service.ts:42-69</code>: isSafeUrl continua string-compare (sem 169.254/IPv6/CGNAT/0.0.0.0, sem DNS pinning); fetch segue redirects sem revalidar; <code>crawlee/crawler.ts:66</code> usa o mesmo guard fraco; <code>POST /enrich</code> (prospecting.routes.ts:585) segue sem requireRole. Guards canônicos (<code>src/shared/security/urlGuard.ts safeFetch/assertSafeExternalUrl</code>) existem mas não são usados pelo scraper.</td></tr>
+<tr><td class="id">DEBT-0010</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Cadência: sufixos WA/email implementados (<code>CadenceDispatchers.ts:100-102</code>). Cold-email: nenhum sufixo/List-Unsubscribe garantido no serviço — depende do corpo enviado pelo caller.</td></tr>
+<tr><td class="id">DEBT-0011+0044</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev"><code>/cold-email</code> agora tem requireRole e valida legalBasis/dataSource (cold-email.service.ts:79); mas segue sem persistência de Activity/EmailMessage, sem idempotência, legalBasis não gravada em registro, sem Zod, e falha ainda colapsa em 500 (prospecting.routes.ts:361-363).</td></tr>
+<tr><td class="id">DEBT-0035</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>providerBudget.ts</code>: <code>consumeProspectingProviderCredit</code> atômico pré-chamada chamado em apollo/people.ts, organizationSearch/Enrich e hunter.service.ts — janela de concorrência fechada.</td></tr>
+<tr><td class="id">DEBT-0045</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">requireRole presente em várias rotas de prospecting; intelligence.routes.ts tem requireRole parcial (8 ocorrências p/ ~25 rotas); socialSelling/salesOrchestration.routes.ts têm <strong>zero</strong> requireRole; validação Zod ainda ausente em vários POSTs.</td></tr>
+<tr><td class="id">PRO-08</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>InMemoryOptOutRepository.ts:37-47</code>: list() sem default 200 — limite opcional com clamp 500.</td></tr>
+<tr><td class="id">PRO-05/11/12/13/14</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Rate limit por processo e module-gate em /cadence|/prospecting não confirmados como corrigidos; dead code outbound segue gated.</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 06 ============ -->
+<details>
+<summary><span class="agent">00 → 06</span><span class="file">00-para-06-integracoes-bitrix.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0020</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>runInTransaction</code> por item em leads.ts:329 e deals.ts:441 — ver handoff 01.</td></tr>
+<tr><td class="id">DEBT-0006</td><td><span class="badge b-branch">EM BRANCH</span></td><td class="ev">Fallback global segue em main (LeadUseCases.ts:575, settings.ts:15); correção na branch agente/01 não mergeada. D-01: envs tratadas como ausentes até prova → severidade permanece ALTA.</td></tr>
+<tr><td class="id">DB-02</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Outbound legado segue gated 503 (routes.ts:65) — risco contido; migração para organizationId canônico + RLS permanece pendente (correto não reativar antes).</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 07 ============ -->
+<details open>
+<summary><span class="agent">00 → 07</span><span class="file">00-para-07-ia-gateway-custos.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0012</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>AgentExecutor.ts:219-276</code>: executeWithTools segue via <code>buildModelWithFallback</code>+createReactAgent direto — sem recursionLimit explícito, sem logAiUsage/tokenQuota/assertAiBudget por iteração. Commit 6d37c68b5 (#431) apenas auditou/documentou o gap. D-03 tornou o enxame escopo real → gap estrutural aberto.</td></tr>
+<tr><td class="id">DEBT-0014</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Fail-open mantido por decisão, agora observável: contador <code>ai_token_quota_fail_open_total</code> em tokenQuota.service.ts (commit #431). Producers verificados dentro de requestContext.</td></tr>
+<tr><td class="id">DEBT-0015</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>scriptAndPromptTool.ts:103-131</code>: fallback fabricado removido — falha do gateway retorna erro honesto sem persistir; teste de regressão adicionado (#431).</td></tr>
+<tr><td class="id">DEBT-0013</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Tabela <code>OrganizationAiConsent</code> existe (schema.prisma:5399) + trilha de auditoria (commercialMissionTrace.service.ts:399-405); porém o gate real (<code>hasPiiExternalConsent</code>, ~28 chokepoints) continua lendo <strong>só env allowlist</strong>. D-05 exige persistido → gate precisa migrar.</td></tr>
+<tr><td class="id">DEBT-0036</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>automation.engine.ts:430-455</code>: <code>to</code> vazio → PermanentAutomationError antes do envio; MailerNotConfiguredError e falhas SMTP tratadas honestamente.</td></tr>
+<tr><td class="id">IA-07</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev"><code>AIPendingActions.tsx</code> tem approve/outcome/delete; reexecução de ação approved+!executed por falha transitória não confirmada.</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 08 ============ -->
+<details>
+<summary><span class="agent">00 → 08</span><span class="file">00-para-08-qa-gates.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0026</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>sonar-project.properties</code>: lcov.reportPaths agora inclui <code>coverage/integration/lcov.info</code>; ci.yml:319-331 roda test:integration --coverage e <code>verify:integrations</code>/<code>verify:ai</code> como steps bloqueantes.</td></tr>
+<tr><td class="id">QA-03/04</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>ci.yml:278</code> eval:golden e :297 verify:migration-drift seguem <code>continue-on-error</code>; 9 GHSA allowlisted na linha 60 sem expiração; sem baseline de drift conhecido.</td></tr>
+<tr><td class="id">QA-05/06</td><td><span class="badge b-open">NÃO VERIFICADO</span></td><td class="ev">E2E serial ~73min e bypass visual/snapshots — sem evidência de mudança nesta verificação.</td></tr>
+<tr><td class="id">QA-08/09</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Skips "Pago" em proposalVersioning.test.ts persistem (linhas 221, 289).</td></tr>
+<tr><td class="id">QA-11</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev">Sem evidência de novos E2E cobrindo LGPD ponta a ponta, Bitrix real, IA real, fila/retry e jornada de receita completa.</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 09 ============ -->
+<details>
+<summary><span class="agent">00 → 09</span><span class="file">00-para-09-mobile-decisao.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0004</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev"><code>capacitor.config.ts:41</code> → DEFAULT_APP_URL <code>app.birthhub360.com.br</code> + fail-fast sem CAPACITOR_SERVER_URL em CI. Porém <code>AndroidManifest.xml:54-58</code> App Link autoVerify ainda aponta <code>birthhub-360.onrender.com</code>; DNS/TLS/assetlinks.json pendentes (D-01). D-02 confirmou mobile Day-1 → bloqueador real aberto.</td></tr>
+<tr><td class="id">INF-05/06</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Splash #0B132B consistente (verificado); divergência de identidade visual Neon×Gold/Iris permanece: <code>brand.ts</code>/<code>globals.css</code> seguem Neon canônico enquanto <code>identidade-visual/</code> documenta paleta própria — dono 11, sem reconciliação.</td></tr>
+<tr><td class="id">DEBT-0025</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">D-06 decidiu REINTEGRAR todos os clusters; reintegração não executada — ai-voice/voice, proposals, design-lab (public/), temporal-workers/crawlee e agente-codigo-local seguem como código morto/ocioso.</td></tr>
+<tr><td class="id">ARQ-07/08/09/10</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev">4× ts-nocheck, framer-motion+motion duplicados, deps mortas e stacks LLM paralelas persistem.</td></tr>
+<tr><td class="id">ARQ-13</td><td><span class="badge b-open">NÃO VERIFICADO</span></td><td class="ev">13 exceções hotspot + ~30 waivers Trivy (vencimento 30/11) sem evidência de renovação — urgência mantida.</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 10 ============ -->
+<details open>
+<summary><span class="agent">00 → 10</span><span class="file">00-para-10-infra-backup-deploy.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0001</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev"><code>deploy-ec2.sh</code>: migrate deploy + healthcheck fail-closed /health/ready + deploy-history.log (linhas 74-105). <strong>Porém</strong> <code>deploy-ec2.ps1</code> (46 linhas) segue com restart inline sem migrate/healthcheck — divergência exatamente como o handoff alertou.</td></tr>
+<tr><td class="id">DEBT-0002</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev"><code>scripts/db/backup-encrypted.sh</code> e <code>restore-test.sh</code> reescritos (pg_dump real + AES-256 + fail-closed). Mas <strong>nenhum BACKUP-RESTORE-DRILL-RESULT*.json existe no repo</strong> — restore real ainda não executado (depende de envs no host, D-01).</td></tr>
+<tr><td class="id">DEBT-0037</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Mecanismo dist-backup-* existe; <code>docs/deploy/ROLLBACK-RUNBOOK.md</code> não encontrado — runbook único de rollback não criado.</td></tr>
+<tr><td class="id">DEBT-0038</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>EXPOSE_METRICS=false</code> default (.env.example:96); <code>prometheus.yml</code> só tem target <code>app:3000</code> (rede docker) — prod EC2 segue sem scrape/Alertmanager (depende D-01).</td></tr>
+<tr><td class="id">INF-08/09</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>.env.example:282</code> mantém <code>LEAD_CAPTURE_EMAIL=marcelinmark@gmail.com</code> (e-mail pessoal); bloco STORAGE duplicado persiste (linhas 89-93 e 148-150).</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 12 ============ -->
+<details open>
+<summary><span class="agent">00 → 12</span><span class="file">00-para-12-voz-lgpd-workers.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO (P1s abertos)</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0023</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>src/features/voice/voice-command-executor.service.ts</code> continua em cluster morto (sem importadores). Porém D-03 incluiu voz no escopo e D-06 mandou reintegrar → o risco "se reativado" virou risco real de lançamento.</td></tr>
+<tr><td class="id">DEBT-0022</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>voiceResult.webhook.ts:246-287</code>: Note com transcrição + VoiceCallLog (transcript/recordingUrl) gravados incondicionalmente; consent detectado (linha 377) mas não gateia persistência; DSR/retenção não cobrem VoiceCallLog/ThreeCXCallEvent.</td></tr>
+<tr><td class="id">DEBT-0007</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>threecx.routes.ts:35</code>: <code>env.THREECX_WEBHOOK_SECRET</code> global único para todas as orgs; tenant resolvido por ramal; sem segredo por conexão/connectionId na rota.</td></tr>
+<tr><td class="id">VOZ-04..07</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Melhoria real: webhook 3CX agora tem HMAC sobre corpo cru + <code>validateWebhookTimestamp</code> + <code>claimWebhookDelivery</code> anti-replay (threecx.routes.ts:55-76). SIP/WebRTC bridge dormente e VoiceHubView engolindo erro não reverificados.</td></tr>
+<tr><td class="id">WRK-04</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev"><code>outboundCallService.ts:63-70</code> tem dedupe <code>createOutboundPhoneSessionIfNoneInFlight</code>; mas <code>callLead</code> (birthVoice) e <code>make3CXCall</code> (3CX) não mostram dedupe equivalente → double-dial ainda possível nesses caminhos.</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 13 ============ -->
+<details>
+<summary><span class="agent">00 → 13</span><span class="file">00-para-13-enxame-consentimento.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0012</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev">Loop ReAct fora do gateway — ver handoff 07.</td></tr>
+<tr><td class="id">DEBT-0013</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">OrganizationAiConsent persistido + audit chain existem; gate de enforcement ainda env-only. D-05 exigiu persistência → migração do gate pendente.</td></tr>
+<tr><td class="id">IA-07</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Retry visível de AIPendingAction não confirmado.</td></tr>
+<tr><td class="id">IA-10</td><td><span class="badge b-open">NÃO VERIFICADO</span></td><td class="ev">Runbook de habilitação por org não localizado.</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 15 ============ -->
+<details>
+<summary><span class="agent">00 → 15</span><span class="file">00-para-15-seguranca-rotas.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0005</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev">SSRF residual do scraper mantido — ver handoff 05.</td></tr>
+<tr><td class="id">DEBT-0006/0007</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Checklist de envs: D-01 decidiu tratar BITRIX24_WEBHOOK_URL/THREECX_WEBHOOK_SECRET como ausentes → severidade ALTA mantida; código dos fallbacks não corrigido em main.</td></tr>
+<tr><td class="id">SEC-04</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>team.service.ts:115-119</code>: findUnique por email sem org → 409 ainda revela existência cross-tenant.</td></tr>
+<tr><td class="id">SEC-05</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>socialSelling.routes.ts</code> e <code>salesOrchestration.routes.ts</code>: zero requireRole — POSTs de IA/escrita acessíveis a VISUALIZADOR.</td></tr>
+<tr><td class="id">SEC-06</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>PrismaEnrichmentRepository.ts:53-60</code>: updateCompany/findContactsEmailsAndPhones/createContacts sem organizationId no where — só RLS cobre.</td></tr>
+<tr><td class="id">SEC-07</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev"><code>process.env.BITRIX24_WEBHOOK_URL</code> cru persiste (LeadUseCases.ts:575, settings.ts:15).</td></tr>
+</table>
+<div class="note">Base saudável confirmada e não reaberta: auth map, webhooks HMAC fail-closed, RBAC, RLS FORCE, SQL parametrizado, PII redact, DSR tokens 32B.</div>
+</div>
+</details>
+
+<!-- ============ 16 ============ -->
+<details open>
+<summary><span class="agent">00 → 16</span><span class="file">00-para-16-workers-filqs.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0003</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>worker.ts:35-36,136-137,187-188</code>: createBitrixOutboundWorker e createExternalCrmOutboundWorker registrados nos workers dedicados (commit #440).</td></tr>
+<tr><td class="id">WRK-02</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">QUEUE-001 adicionou defaultJobOptions em <code>lib/queue/index.ts:27</code> e várias filas (enrichment, knowledgeIngestion, search, whatsappCommand, outbound×2). Porém <code>queueDefaults.ts</code> da branch não existe em main; scans bitrixSync/coldCall seguem <code>attempts:1</code> deliberado; filas agent/newsMonitor/whatsappSignal etc. sem padronização confirmada.</td></tr>
+<tr><td class="id">WRK-03</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev"><code>outboxRelay.service.ts:148</code> purgeExpired existe, mas <code>start()</code> (linha 155) só faz tick de dispatch — nenhum agendamento diário implementado; requeueDeadLetters segue sem rota admin.</td></tr>
+<tr><td class="id">WRK-05</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev">Filas voice-hub (webhooks, auditLogs, callLogRetention, platformSlaCheck) sem registerQueueForMetrics — nenhum encontrado em src/lib/voice-hub.</td></tr>
+<tr><td class="id">WRK-06</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>webhook.service.ts:119-121</code>: dispatch segue catch+log sem counter/DLQ próprio (<code>webhook_dispatch_dropped_total</code> ausente).</td></tr>
+<tr><td class="id">WRK-04</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Ver handoff 12 — dedupe existe no outboundCallService, ausente em callLead/make3CXCall.</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 17 ============ -->
+<details open>
+<summary><span class="agent">00 → 17</span><span class="file">00-para-17-cadencia.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0008</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>hasLeadReplied.ts:21-46</code>: parâmetro <code>since</code> aplicado nas 3 queries (WhatsAppMessage.receivedAt, EmailMessage.receivedAt, VoiceCallLog.createdAt); propagado via deps — cadenceService.ts:205,323 passa <code>run.startedAt</code>.</td></tr>
+<tr><td class="id">DEBT-0009</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>cadenceService.ts:190-202</code>: sweeper <code>expireStalePendingTouchAttempts</code> converte pending expirado em failed a cada ciclo — run não trava eterno.</td></tr>
+<tr><td class="id">DEBT-0010</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Sufixos de opt-out em todos os dispatchers de cadência (CadenceDispatchers.ts:100-102,221,351); mas cold-email avulso não garante instrução — ver handoff 05.</td></tr>
+<tr><td class="id">DEBT-0034</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Melhorias: opt-outs aceitam leadId/email/phone (cadence.routes.ts:135-160); TOCTOU reduzido por re-leitura freshRun+hasLeadReplied antes do dispatch (cadenceService.ts:299-323). Persistem: dispatchers só checam opt-out quando contactId existe; recordContactOptOut ainda marca optOutWhatsApp:true para todos os leads vinculados independente do canal (optOutCheck.service.ts:~380).</td></tr>
+<tr><td class="id">PRO-08</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev">Ver handoff 05.</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ 18 ============ -->
+<details>
+<summary><span class="agent">00 → 18</span><span class="file">00-para-18-contratos-api.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0042</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev"><code>docs/openapi.yaml:7082,7374</code> ainda documenta <code>/cadence/opt-outs/check</code> e <code>/cadence/runs/{id}/events</code> — endpoints inexistentes em cadence.routes.ts; verify-openapi-drift.ts só checa código→doc (undocumented-path/method), nunca doc→código.</td></tr>
+<tr><td class="id">DEBT-0043</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev">35+ arquivos de rotas com <code>{success:false,error}</code> manual; <code>dsrRequest.routes.ts:74</code> usa envelope público <code>{ok:true}</code> que apiFetch não desembrulha; AppError canônico não migrado.</td></tr>
+<tr><td class="id">DEBT-0044</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">idempotencyKey implementado em producers do outbox/DomainEventMesh (commits f634da0c1, 442fa3bc9) e webhooks; porém booking, promote, convert, mesa register e cold-email seguem sem Idempotency-Key/dedupe.</td></tr>
+<tr><td class="id">DEBT-0045</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">requireRole adicionado em parte das rotas; ~24 endpoints de intelligence/prospecção ainda sem role/Zod consistente; socialSelling/salesOrchestration zerados (ver SEC-05).</td></tr>
+<tr><td class="id">API-05/06/09-12</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Confirmado: mesaTratamento.routes.ts:192 <code>findMany</code> sem <code>take</code> (poll ilimitado). Demais sub-itens P3 não reverificados individualmente.</td></tr>
+</table>
+<div class="note">~31k LOC de contratos mortos (voice-hub, settings.routes, job-roles, outbound/*) permanecem no repo — coerente com D-06, mas sem auditoria de reativação.</div>
+</div>
+</details>
+
+<!-- ============ 21 ============ -->
+<details>
+<summary><span class="agent">00 → 21</span><span class="file">00-para-21-lgpd-voz-consentimento.md</span><span class="badge b-partial verdict">PARCIALMENTE CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">DEBT-0022</td><td><span class="badge b-open">NÃO FEITO</span></td><td class="ev">Voz persiste PII sem gate de consentimento/retention — ver handoff 12. D-03 incluiu voz no escopo → P1 real.</td></tr>
+<tr><td class="id">DEBT-0013</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">Decisão D-05: persistir no banco. Infra existe (OrganizationAiConsent + audit chain); enforcement do gate ainda env-only.</td></tr>
+<tr><td class="id">Janelas retenção</td><td><span class="badge b-partial">PARCIAL</span></td><td class="ev">D-04: defaults propostos (AuditLog 730d, AILog 365d, SyncLogs 180d, AgentMemory 90d, WA/ConversationSignal/TimelineEvent 365d, EnrichmentLog 180d) aguardando ratificação. EnrichmentLog já tem purge real (enrichmentRetention). Demais modelos sem worker de retenção.</td></tr>
+</table>
+<div class="note">Contexto positivo confirmado: DSR público com tokens 32B/hash/72h e erasure LGPD transacional seguem presentes.</div>
+</div>
+</details>
+
+<!-- ============ 24 ============ -->
+<details>
+<summary><span class="agent">00 → 24</span><span class="file">00-para-24-release-readiness-audit.md</span><span class="badge b-done verdict">CONCLUÍDO</span></summary>
+<div class="body">
+<table>
+<tr><th>Item</th><th>Status</th><th>Evidência</th></tr>
+<tr><td class="id">Revisão independente</td><td><span class="badge b-done">CONCLUÍDO</span></td><td class="ev"><code>revisoes/24-revisao-release-readiness-audit-2026-11-18.md</code>: vereditos emitidos — NO-GO APROVADO, inventário APROVADO c/ ressalvas, plano APROVADO c/ ressalvas; amostragem 12/12 achados confirmados; omissões listadas (DB-02, PRO-06/07).</td></tr>
+</table>
+</div>
+</details>
+
+<!-- ============ FILA ============ -->
+<details>
+<summary><span class="agent">Fila de despacho</span><span class="file">central/estado/fila/*.md (12 arquivos)</span><span class="badge b-gray verdict">DUPLICATAS</span></summary>
+<div class="body">
+<p style="font-size:13px;color:var(--muted)">Os 12 arquivos em <code>estado/fila/</code> (2026-11-19) são cópias de despacho dos mesmos handoffs acima (mobile-decisao, infra-backup-deploy, workers-filqs, schema-rls-migrations, retencao, ux-crm, crm-integridade, prospeccao-cold-email + 4 reviews do Agente 24). Avaliados junto com os originais — sem itens adicionais.</p>
+</div>
+</details>
+
+<footer>
+Checklist gerado por verificação estática de código — não executa testes nem valida comportamento em runtime.
+Base: main @ 5174664b2 (20/11/2026). Itens marcados "NÃO VERIFICADO" exigem checagem manual ou runtime.
+</footer>
+
+</div>
+</body>
+</html><|end_message|><|message_model|><|content_thinking|>I accidentally left duplicate closing tags at the end. Fix.<|end_message|><|message_model|>edit<|content_invoke_tool_json|>{
