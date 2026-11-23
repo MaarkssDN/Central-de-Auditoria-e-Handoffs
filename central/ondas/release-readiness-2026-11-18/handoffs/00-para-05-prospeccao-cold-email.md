@@ -1,6 +1,6 @@
 - De: 00
 - Para: 05 (Prospecção/Outbound)
-- Status: PENDENTE
+- Status: EM_EXECUÇÃO
 - Prioridade: P1
 
 ## Achados

@@ -34,5 +34,41 @@
     "owner": "devin",
     "registeredAt": "2026-11-19T18:24:51.298Z",
     "status": "ACTIVE"
+  },
+  {
+    "path": "C:\\Github\\Birthub-360-wt\\ag-01a",
+    "branch": "agente/01a-retencao",
+    "repoPath": "C:\\Github\\Birthub-360",
+    "handoff": "ondas/release-readiness-2026-11-18/handoffs/00-para-01A-retencao.md",
+    "owner": "devin",
+    "registeredAt": "2026-11-19T21:00:43.566Z",
+    "status": "ACTIVE"
+  },
+  {
+    "path": "C:\\Github\\Birthub-360-wt\\ag-02",
+    "branch": "agente/02-ux-crm",
+    "repoPath": "C:\\Github\\Birthub-360",
+    "handoff": "ondas/release-readiness-2026-11-18/handoffs/00-para-02-ux-crm.md",
+    "owner": "devin",
+    "registeredAt": "2026-11-19T21:01:09.335Z",
+    "status": "ACTIVE"
+  },
+  {
+    "path": "C:\\Github\\Birthub-360-wt\\ag-04",
+    "branch": "agente/04-crm-integridade",
+    "repoPath": "C:\\Github\\Birthub-360",
+    "handoff": "ondas/release-readiness-2026-11-18/handoffs/00-para-04-crm-integridade.md",
+    "owner": "devin",
+    "registeredAt": "2026-11-19T21:01:39.597Z",
+    "status": "ACTIVE"
+  },
+  {
+    "path": "C:\\Github\\Birthub-360-wt\\ag-05",
+    "branch": "agente/05-prospeccao-cold-email",
+    "repoPath": "C:\\Github\\Birthub-360",
+    "handoff": "ondas/release-readiness-2026-11-18/handoffs/00-para-05-prospeccao-cold-email.md",
+    "owner": "devin",
+    "registeredAt": "2026-11-19T21:02:08.867Z",
+    "status": "ACTIVE"
   }
 ]
