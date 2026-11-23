@@ -4,6 +4,7 @@
 - **Destino:** Nova Central de Coordenação
 - **Data:** 2026-11-20
 - **Status:** PARCIAL — pipeline coordenador→worktree→execução→revisão 24→push/PR validado ponta a ponta; 4 handoffs entregues e aprovados, 4 em execução, ~11 deferred
+- **Adendo 2026-11-21:** este documento foi publicado via PR #5 (`chore/handoff-central-auditoria-20261120`, merge `ce27d35`) e está em `main`. PRs #473–#476 (Birthub-360) permanecem **abertos, não mergeados** — merges aguardam gates de integração + merge order aprovado. PRs #7 e #8 (outros handoffs de encerramento) também mergeados em `main` (`84897a8`).
 
 ---
 
