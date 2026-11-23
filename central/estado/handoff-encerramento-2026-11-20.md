@@ -106,3 +106,13 @@ Referência: `central/ondas/release-readiness-2026-11-18/handoffs/` e `central/e
 - Usuário comunica em pt-BR, tom direto; feedback visual é binário ("horrível"/"piorou" → refazer do zero com Impeccable).
 - Impeccable skill ativa: invocar antes de qualquer redesign; ler `reference/craft-floor.md` antes de editar UI.
 - Ao retomar trabalho de agente/coordinator, respeitar locks em `central/estado/locks/` e a máquina de estados em `server/phase1/stateMachine.ts`.
+
+---
+
+## Atualização — estado final verificado (2026-11-20)
+
+- Este documento foi versionado via **PR #8** (`chore/handoff-doc-sessao-devin`, commit `5a03237`), **mergeado** na main como `84897a8` e publicado em `origin/main`.
+- PRs paralelos de outras sessões também foram mergeados: **#5** (`ce27d35`), **#6** e **#7** (`1db8fc9`) — juntos versionaram 5 documentos de encerramento de sessões da central.
+- `main` local e remota estão sincronizadas (`84897a8`); `git status` limpo exceto artefatos de runtime do coordinator (`central/estado/fila/`, `locks/`, handoffs `.md` modificados, `worktrees.json`) — mantidos fora de versionamento por serem estado vivo.
+- Commit local `635e3d1` (outra sessão) também está publicado em `origin/main`.
+- **Não resta pendência de publicação para este handoff.**
