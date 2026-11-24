@@ -1,6 +1,6 @@
 - De: 00
 - Para: 02 (Produto/UX)
-- Status: PENDENTE
+- Status: EM_EXECUÇÃO
 - Prioridade: P1 (jornada core)
 
 ## Achados (relatório: auditoria/ux-completude.md)

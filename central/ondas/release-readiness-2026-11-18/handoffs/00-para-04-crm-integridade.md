@@ -1,6 +1,6 @@
 - De: 00
 - Para: 04 (CRM/BI)
-- Status: PENDENTE
+- Status: EM_EXECUÇÃO
 - Prioridade: P1
 
 ## Achados

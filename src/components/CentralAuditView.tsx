@@ -13,6 +13,7 @@ import {
   Radio,
   RefreshCw,
   Send,
+  Sparkles,
   Trash2,
   XCircle,
 } from 'lucide-react';
@@ -80,6 +81,19 @@ interface CentralMetrics {
   };
 }
 
+interface ExecutiveSummary {
+  healthStatus: 'SAUDAVEL' | 'EM_RISCO' | 'BLOQUEADO';
+  headline: string;
+  summary: string;
+  criticalPath: string[];
+  recommendedActions: Array<{
+    priority: 'P0' | 'P1' | 'P2';
+    action: string;
+    targetAgent: string;
+  }>;
+  releaseReadinessScore: number;
+}
+
 type Tab = 'geral' | 'handoffs' | 'decisoes' | 'ondas' | 'docs' | 'agentes';
 
 const TABS: { id: Tab; label: string }[] = [
@@ -103,6 +117,48 @@ export function CentralAuditView() {
   const [liveEvents, setLiveEvents] = useState<CentralEvent[]>([]);
   const [liveConnected, setLiveConnected] = useState(false);
   const [metrics, setMetrics] = useState<CentralMetrics | null>(null);
+
+  // Gemini Executive Summary
+  const [executiveSummary, setExecutiveSummary] = useState<ExecutiveSummary | null>(null);
+  const [generatingSummary, setGeneratingSummary] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+
+  async function generateSummary() {
+    if (!data) return;
+    setGeneratingSummary(true);
+    setSummaryError(null);
+    try {
+      const res = await fetch('/api/gemini/executive-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          generatedAt: data.generatedAt,
+          state: data.state,
+          waves: data.waves,
+          handoffs: data.handoffs.map((h) => ({
+            name: h.name,
+            title: h.title,
+            de: h.de,
+            para: h.para,
+            status: h.status,
+            prioridade: h.prioridade,
+          })),
+          decisions: data.decisions.map((d) => ({ id: d.id, title: d.title })),
+          metrics,
+        }),
+      });
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(err.error || `Erro HTTP ${res.status}`);
+      }
+      const result = (await res.json()) as ExecutiveSummary;
+      setExecutiveSummary(result);
+    } catch (err) {
+      setSummaryError(err instanceof Error ? err.message : 'Falha ao gerar síntese executiva.');
+    } finally {
+      setGeneratingSummary(false);
+    }
+  }
 
   const load = useCallback(async () => {
     try {
@@ -295,6 +351,97 @@ export function CentralAuditView() {
       {tab === 'geral' && (
         <div className="rise-in rise-in-3 grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="panel panel-corner p-5 lg:col-span-2 space-y-4">
+            {/* Gemini Executive Summary Card */}
+            <div className="p-4 rounded-xl border border-violet-500/30 bg-violet-500/10 space-y-3">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-violet-400 shrink-0" />
+                  <span className="font-semibold text-sm text-paper-100">
+                    Síntese Executiva da Onda — Gemini 4 Hydrogen
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  disabled={generatingSummary}
+                  onClick={generateSummary}
+                  className="btn !py-1 text-xs text-white bg-violet-600 hover:bg-violet-700 disabled:opacity-50 flex items-center gap-1.5 shrink-0"
+                >
+                  {generatingSummary ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Analisando Onda…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{executiveSummary ? 'Atualizar Síntese' : 'Gerar Síntese com Gemini'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {summaryError && (
+                <div className="p-2.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+                  {summaryError}
+                </div>
+              )}
+
+              {executiveSummary && (
+                <div className="space-y-3 text-xs pt-1">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <span className="text-sm font-bold text-paper-100">
+                      {executiveSummary.headline}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="chip !py-0.5 !px-2 font-mono text-[10px]" data-tone={
+                        executiveSummary.healthStatus === 'SAUDAVEL' ? 'ok'
+                        : executiveSummary.healthStatus === 'EM_RISCO' ? 'warn' : 'alert'
+                      }>
+                        {executiveSummary.healthStatus}
+                      </span>
+                      <span className="chip !py-0.5 !px-2 font-mono text-[10px] bg-violet-500/20 text-violet-300 border-violet-500/40">
+                        Score: {executiveSummary.releaseReadinessScore}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-paper-300 leading-relaxed text-[12px] bg-ink-950/60 p-3 rounded-lg border border-ink-800">
+                    {executiveSummary.summary}
+                  </p>
+
+                  {executiveSummary.criticalPath.length > 0 && (
+                    <div className="space-y-1">
+                      <span className="font-semibold text-alert-400 text-[11px]">Caminho Crítico (Gargalos):</span>
+                      <ul className="list-disc list-inside text-paper-300 text-[11px] space-y-0.5">
+                        {executiveSummary.criticalPath.map((item, idx) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {executiveSummary.recommendedActions.length > 0 && (
+                    <div className="space-y-1.5 pt-1">
+                      <span className="font-semibold text-paper-200 text-[11px]">Próximas Ações Recomendadas:</span>
+                      <div className="grid gap-1.5 sm:grid-cols-3">
+                        {executiveSummary.recommendedActions.map((act, idx) => (
+                          <div key={idx} className="p-2 rounded bg-ink-900/80 border border-ink-700 space-y-0.5">
+                            <div className="flex items-center justify-between font-mono text-[10px]">
+                              <span className={act.priority === 'P0' ? 'text-alert-400 font-bold' : 'text-amberx-400'}>
+                                {act.priority}
+                              </span>
+                              <span className="text-paper-400">→ {act.targetAgent}</span>
+                            </div>
+                            <p className="text-paper-200 text-[11px] leading-snug">{act.action}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center gap-2">
               <Radio className="w-4 h-4 text-signal-400" />
               <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-paper-200">Bloqueios ativos</h3>

@@ -13,9 +13,15 @@ import {
   type WebhookEventType,
 } from './src/utils/webhookNotifier';
 import { runAgentBotTurn, runSwarmSequence } from './server/agentRuntime';
+import {
+  generateGeminiAuditReview,
+  diagnoseGeminiHandoff,
+  auditFileWithGemini,
+  generateExecutiveSummaryWithGemini,
+} from './server/geminiService';
 import { createCentralRouter } from './server/centralApi';
 import { ensureAdminUser, authRouter, requireAuth } from './server/auth';
-import { closeDb, getDb } from './server/db';
+import { closeDb, getDb, getDbStats } from './server/db';
 import { fsRouter } from './server/fsApi';
 import { providersRouter } from './server/providers';
 import { atomicWriteFile, withFileLockSync } from './server/persistence';
@@ -92,7 +98,15 @@ async function startServer() {
 
   // Auth local: login/logout/me são públicos; todo o resto de /api exige sessão.
   app.use('/api/auth', authRouter());
-  app.use('/api/health', (_req, res) => res.json({ ok: true }));
+  app.use('/api/health', (_req, res) => {
+    try {
+      const stats = getDbStats();
+      res.json({ ok: true, sqlite: stats });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      res.json({ ok: true, sqlite: { connected: false, error: message } });
+    }
+  });
   app.use('/api', requireAuth);
 
   app.use('/api/central', createCentralRouter());
@@ -512,6 +526,69 @@ async function startServer() {
       res.end();
     } finally {
       clearInterval(heartbeat);
+    }
+  });
+
+  app.post('/api/gemini/generate-review', agentQueue.middleware, async (req, res) => {
+    const input = req.body;
+    try {
+      const result = await generateGeminiAuditReview(input);
+      res.json(result);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao gerar parecer com Gemini.';
+      const status = message.includes('GEMINI_API_KEY') ? 503 : 502;
+      res.status(status).json({ error: message });
+    }
+  });
+
+  app.post('/api/gemini/diagnose-handoff', agentQueue.middleware, async (req, res) => {
+    const input = req.body;
+    if (!input?.problemDescription || !input.problemDescription.trim()) {
+      res.status(400).json({ error: 'Informe a descrição do problema para diagnóstico.' });
+      return;
+    }
+    try {
+      const result = await diagnoseGeminiHandoff(input);
+      res.json(result);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao diagnosticar handoff com Gemini.';
+      const status = message.includes('GEMINI_API_KEY') ? 503 : 502;
+      res.status(status).json({ error: message });
+    }
+  });
+
+  app.post('/api/gemini/audit-file', agentQueue.middleware, async (req, res) => {
+    const input = req.body as { filePath?: string; content?: string };
+    if (!input?.filePath || typeof input.content !== 'string') {
+      res.status(400).json({ error: 'Informe filePath e content para auditoria de arquivo.' });
+      return;
+    }
+    try {
+      const result = await auditFileWithGemini({
+        filePath: input.filePath,
+        content: input.content,
+      });
+      res.json(result);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao auditar arquivo com Gemini.';
+      const status = message.includes('GEMINI_API_KEY') ? 503 : 502;
+      res.status(status).json({ error: message });
+    }
+  });
+
+  app.post('/api/gemini/executive-summary', agentQueue.middleware, async (req, res) => {
+    const input = req.body;
+    if (!input || !Array.isArray(input.handoffs)) {
+      res.status(400).json({ error: 'Informe os dados da central para gerar a síntese executiva.' });
+      return;
+    }
+    try {
+      const result = await generateExecutiveSummaryWithGemini(input);
+      res.json(result);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Erro ao gerar síntese executiva com Gemini.';
+      const status = message.includes('GEMINI_API_KEY') ? 503 : 502;
+      res.status(status).json({ error: message });
     }
   });
 

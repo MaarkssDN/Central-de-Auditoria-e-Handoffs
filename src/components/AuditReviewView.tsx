@@ -9,8 +9,10 @@ import {
   FileCode2,
   FileDown,
   FileText,
+  Loader2,
   Plus,
   ShieldCheck,
+  Sparkles,
   X,
   XCircle,
 } from 'lucide-react';
@@ -78,6 +80,68 @@ export function AuditReviewView({
   const [tenancyLgpdChecked, setTenancyLgpdChecked] = useState(true);
   const [verdict, setVerdict] = useState<ReviewVerdict>('APROVADO');
   const [formError, setFormError] = useState<string | null>(null);
+  const [geminiLoading, setGeminiLoading] = useState(false);
+  const [geminiNotice, setGeminiNotice] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+
+  async function handleGeminiAudit() {
+    setGeminiLoading(true);
+    setGeminiNotice(null);
+    try {
+      const selectedMission = missions.find((m) => m.id === missionId);
+      const res = await fetch('/api/gemini/generate-review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          repo: activeRepo,
+          wave: activeWave,
+          mission: selectedMission,
+          authorAgentId,
+          commitOrHashes,
+          scopeSummary,
+          commandsText,
+          evidence,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(err.error || `Erro HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (data.verdict) setVerdict(data.verdict);
+      if (data.scopeSummary) setScopeSummary(data.scopeSummary);
+      if (Array.isArray(data.commandsExecuted) && data.commandsExecuted.length > 0) {
+        setCommandsText(
+          data.commandsExecuted
+            .map((c: { command: string; result: string }) => `${c.command} -> ${c.result}`)
+            .join('\n')
+        );
+      }
+      if (Array.isArray(data.findings) && data.findings.length > 0) {
+        setFindingsText(data.findings.join('\n'));
+      }
+      if (Array.isArray(data.pendingItems) && data.pendingItems.length > 0) {
+        setPendingText(data.pendingItems.join('\n'));
+      }
+      if (data.evidence) setEvidence(data.evidence);
+      if (typeof data.p1ToP4Compliant === 'boolean') setP1ToP4Compliant(data.p1ToP4Compliant);
+      if (typeof data.ownershipCompliant === 'boolean') setOwnershipCompliant(data.ownershipCompliant);
+      if (typeof data.tenancyLgpdChecked === 'boolean') setTenancyLgpdChecked(data.tenancyLgpdChecked);
+
+      setGeminiNotice({
+        kind: 'success',
+        text: `Parecer 24 analisado pelo Gemini (${data.verdict}): ${data.rationale || 'Critérios preenchidos.'}`,
+      });
+    } catch (error) {
+      setGeminiNotice({
+        kind: 'error',
+        text: error instanceof Error ? error.message : 'Falha ao auditar com Gemini.',
+      });
+    } finally {
+      setGeminiLoading(false);
+    }
+  }
 
   const technicalReport = useMemo(() => {
     if (!activeRepo) return null;
@@ -738,6 +802,50 @@ export function AuditReviewView({
                   {formError}
                 </div>
               )}
+
+              {/* Gemini 24 AI Audit Assistant Banner */}
+              <div className="p-3.5 rounded-xl border border-violet-500/30 bg-violet-500/10 text-xs space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-violet-600 shrink-0" />
+                    <div>
+                      <span className="font-semibold text-slate-900">Auditoria com Gemini (Agente 24)</span>
+                      <p className="text-[11px] text-slate-600">
+                        Examina escopo, comandos e propriedade (§15) com Gemini 4 Hydrogen para emitir o veredito oficial.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={geminiLoading}
+                    onClick={handleGeminiAudit}
+                    className="h-8 px-3 text-xs font-medium text-white bg-violet-600 hover:bg-violet-700 disabled:opacity-50 rounded-lg flex items-center justify-center gap-1.5 shadow-sm shrink-0"
+                  >
+                    {geminiLoading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Auditando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Preencher com Gemini</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                {geminiNotice && (
+                  <div
+                    className={`text-[11px] p-2 rounded-lg border ${
+                      geminiNotice.kind === 'success'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        : 'bg-rose-50 text-rose-800 border-rose-200'
+                    }`}
+                  >
+                    {geminiNotice.text}
+                  </div>
+                )}
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
